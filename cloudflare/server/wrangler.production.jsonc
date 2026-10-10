@@ -11,7 +11,8 @@
   "secrets": {
     "required": [
       "NORULO_GITHUB_CLIENT_SECRET",
-      "NORULO_GITHUB_TOKEN_KEY"
+      "NORULO_GITHUB_TOKEN_KEY",
+      "NORULO_EMAIL_CODE_SECRET"
     ]
   },
   "routes": [
@@ -28,6 +29,7 @@
     "NORULO_PREVIEW_BUSINESS_CLEAR_ID": "",
     "NORULO_PREVIEW_BUSINESS_CLEAR_MANIFEST": "",
     "NORULO_EMAIL_AUTH_ENABLED": "0",
+    "NORULO_EMAIL_FROM": "login@auth.norulo.com",
     "NORULO_APP_URL": "https://norulo.com",
     "NORULO_GITHUB_CALLBACK_URL": "https://norulo.com/api/auth/github/callback",
     "NORULO_GITHUB_CLIENT_ID": "Iv23li78ZPeUgSxJkLUj",

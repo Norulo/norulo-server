@@ -90,8 +90,8 @@ management options, Client Secret validity and real login remain unverified; see
 [current App checklist](../design/github-project-ledger/github-app-permissions.md).
 The App and its Secrets are configured on a temporary paused Worker, with no D1
 or Durable Object binding. Its api.norulo.com Custom Domain is enabled with
-previews disabled, and all 18 public production variables were applied while
-retaining the two Secrets by name-only inheritance.
+previews disabled. Earlier on 2026-10-10, all 18 public production variables were
+applied while retaining the two GitHub Secrets by name-only inheritance.
 A fresh token-encryption key was securely uploaded, and the user subsequently
 saved NORULO_GITHUB_CLIENT_SECRET. Both Secret names were confirmed without
 reading values; live OAuth remains unverified. The full ledger application has
@@ -107,10 +107,20 @@ no Set-Cookie. Published branding assets matched local hashes. This establishes
 the frontend and paused transport, not real OAuth or ledger acceptance. See the current
 [production readiness record](production-readiness-2026-10-10.md).
 
-Before a separately authorized deployment, configure independent Norulo D1 and
-Worker/DO resources, the App's callbacks and credentials, verified domains/DNS,
-mail sender,
-Creem products/secrets and optional AI transport/quality gates. Existing source
+The subsequent sender-preparation stage set NORULO_EMAIL_FROM=login@auth.norulo.com
+and securely uploaded NORULO_EMAIL_CODE_SECRET. The bootstrap now has 19 public
+variables and three Secrets, preserving both GitHub Secrets. Sending-domain
+authentication is pending because its API returned 403; Account → Email Sending
+→ Edit was requested for the existing token. There is no EMAIL send binding, and
+D1/email-auth flags remain 0. Production email login still needs an independent
+admission implementation and real delivery/code/session acceptance. This does
+not change the published frontend or paused full-server status.
+
+Before full production activation, configure independent Norulo D1 resources,
+the full Worker application, and the App's callbacks/credentials. The requested
+email login additionally needs sending-domain authentication, its EMAIL binding
+and independent production admission. Creem products/secrets, AI transport/quality
+gates and background recurrence are optional feature work. Existing source
 provider IDs and historical approvals are not Norulo requirements or permissions.
 Database/provider acceptance, email delivery and real payment flows have not been
 claimed as local setup results. Keep secret values in secure settings.

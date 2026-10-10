@@ -6,7 +6,8 @@ reference; source databases, data, unconfirmed provider credentials and old
 publication permissions are not production Norulo bindings. Keep the existing
 environment CLOUDFLARE_API_TOKEN and every other configured secret intact.
 
-This document describes readiness and required configuration. The new Norulo
+This document describes readiness and required configuration as of the
+2026-10-10 sender-preparation stage. The new Norulo
 GitHub App's public identity and minimal permissions have now been verified;
 this does not establish saved callbacks or real OAuth. The Web Worker has now
 been published, and api.norulo.com is attached to the temporary paused bootstrap.
@@ -56,7 +57,8 @@ Cache-Control: no-store; it has no database or provider access. workers_dev and
 preview_urls were explicitly disabled and read back as false. At that initial
 Secret-setup stage no D1 binding or route was added. The full Python ledger
 application remains unpublished.
-Twelve public configuration variables were set, including the verified App
+At that earlier stage on 2026-10-10, twelve public configuration variables were
+set, including the verified App
 Client ID, slug and intended OAuth callback. One fresh NORULO_GITHUB_TOKEN_KEY Secret
 was generated and uploaded securely; only its name was read back. The user then
 saved NORULO_GITHUB_CLIENT_SECRET securely in the Cloudflare Dashboard. A fresh
@@ -73,11 +75,16 @@ successful live OAuth. No secret value belongs in release evidence.
 - Cloudflare accepted the api.norulo.com Custom Domain on
   norulo-server-production; readback confirms enabled=true and
   previews_enabled=false. workers_dev and preview_urls remain false.
-- The bootstrap's settings now contain all 18 public variables matching the
-  production config and exactly the two required secret_text bindings. There are
-  no D1 or Durable Object bindings. The settings PATCH used the multipart part
-  named settings, with name-only inherit bindings for both Secrets; Cloudflare
-  returned success and the subsequent readback confirmed they were retained.
+- Earlier on 2026-10-10, the bootstrap settings contained all 18 public variables
+  and the two GitHub secret_text bindings. The settings PATCH used the multipart
+  part named settings, with name-only inherit bindings for both Secrets;
+  Cloudflare returned success and readback confirmed they were retained.
+- The subsequent sender-preparation stage added
+  NORULO_EMAIL_FROM=login@auth.norulo.com and a securely generated/uploaded
+  NORULO_EMAIL_CODE_SECRET. The current bootstrap has 19 public variables and
+  three Secrets, preserving both GitHub Secrets without reading their values.
+  It has no D1, Durable Object or EMAIL send binding. NORULO_D1_ACCESS_ENABLED and
+  NORULO_EMAIL_AUTH_ENABLED remain 0.
 - The JavaScript bootstrap still has only the fixed 503 SERVICE_SETUP_PENDING
   handler. No Python ledger upload, database/schema operation, live OAuth,
   provider acceptance or business activation occurred in this stage.
@@ -95,6 +102,58 @@ feature switches disabled; do not deploy the full production config with its
 placeholder database binding. Preview remains undeployed. The safe local stage
 record is /workspace/.norulo-environment/cloudflare-production-stage.json; it
 contains public configuration, status booleans and Secret names, never values.
+The subsequent local system-sender-plan.json records the sender preparation;
+neither local evidence file establishes sending-domain authentication or delivery.
+
+## Prepared system sender; email login remains disabled
+
+The user requested login@auth.norulo.com for system authentication emails.
+NORULO_EMAIL_FROM is set to that address, and NORULO_EMAIL_CODE_SECRET is stored
+securely. The Secret is a random string of at least 32 characters used to protect
+code/challenge hashes; it is not an SMTP credential. Its value is not included in
+this document or local evidence. The same gateway also uses this From address
+for recurring-failure notifications; the code defines no separate Reply-To.
+Server system emails do not require a receiving mailbox for this address.
+
+The sending-domain API returned HTTP 403. The user has been asked to add
+Account → Email Sending → Edit to the existing Cloudflare token, retaining its
+other permissions and the token binding. Sending-domain authentication/DNS and
+the EMAIL send binding have not been completed. A read-only entitlement check
+reports email.sending.enabled=true. The official documentation does not map that
+entitlement value to Workers Paid eligibility; it is not evidence of a second
+account blocker. The current confirmed infrastructure blocker is the domain API
+permission error. After adding the requested permission, use the actual onboarding
+response and later delivery acceptance to verify recipient eligibility.
+
+Prepare the remaining email infrastructure without activating the paused app:
+
+1. Once the permission is available, onboard/authenticate auth.norulo.com for
+   login@auth.norulo.com. Use the DNS records generated by this onboarding and
+   check their actual presence and domain status; preserve norulo.com's existing
+   contact Email Routing DNS. Set the sending domain's preview_enabled=false
+   after onboarding so verification email contents are not retained as previews.
+2. Prepare the send_email binding named EMAIL, restricting
+   allowed_sender_addresses to login@auth.norulo.com. Retain all three Secret
+   bindings through explicit name-only inheritance on later uploads.
+3. Implement an independent production durable IP/email admission path and its
+   deployment guard/tests. Never attach production to the preview budget,
+   namespace or validation journal merely to make the current adapter callable.
+4. After the deferred database and complete Python application are ready, verify
+   actual delivery, code expiry/single use, resend and abuse limits, trusted
+   Origin, and the browser challenge/session cookies through the Web proxy.
+   Enable NORULO_EMAIL_AUTH_ENABLED only with the reviewed production path and
+   these acceptance checks. Keep it and NORULO_D1_ACCESS_ENABLED at 0 now.
+
+The inherited implementation is blocked independently of sender configuration:
+[WorkerEmailGateway](../../norulo_server/cloudflare_email_gateway.py) needs an
+enabled flag, EMAIL binding and valid sender;
+[email authentication](../../norulo_server/cloudflare_email_auth.py) additionally
+requires the Secret and a callable admission adapter.
+[The entry point](../../cloudflare/server/src/entry.py) currently obtains that
+adapter only from VALIDATION_BUDGET, while
+[the deployment guard](../../scripts/check-ledger-s01.py) permits enabled email
+only under coordinated preview and rejects preview controls in active production.
+These are implementation changes still to be made, not completed configuration.
 
 ## Required platform behavior for the full application
 
@@ -142,17 +201,19 @@ an old identity/key was authorized for Norulo. Check only presence, decoded key
 length and readiness, and report booleans/errors without printing secret values.
 Secrets embedded in a Worker cannot be recovered by listing their names.
 
-The production config declares exactly these two secrets in secrets.required.
-Pinned Wrangler 4.136.3 generates inherit bindings for them during deployment,
-so the full Python upload retains the values already configured on this Worker.
+At the earlier GitHub setup stage, secrets.required declared these two names.
+The production config now also declares NORULO_EMAIL_CODE_SECRET, matching the
+three prepared remote Secrets. Pinned Wrangler 4.136.3 generates inherit bindings
+for all three during deployment, so the full Python upload retains the values
+already configured on this Worker, including the email Secret while mail is disabled.
 If a required binding is absent, strict inheritance rejects publication instead
 of silently removing or substituting it. This declaration contains names only.
 It does not use keep_vars or inherit unrelated Dashboard configuration, and it
 does not establish secret validity or a successful OAuth exchange. A packaging
 dry-run does not contact Cloudflare to check secret presence; verify names before
-the separately requested full release.
-Declare any subsequently enabled provider Secrets explicitly before publishing
-their feature; the current precise inheritance covers the two GitHub bindings.
+production activation.
+Declare any additional provider Secrets explicitly before subsequent uploads;
+the current precise inheritance covers the GitHub pair and email-code Secret.
 
 The App management page must be checked for:
 
@@ -175,16 +236,21 @@ The Client ID/Secret/slug must identify a GitHub App because repository discover
 uses /user/installations and App user access tokens. An ordinary OAuth App or a
 numeric App ID is insufficient. Current code persists provider access/refresh
 credentials and their lifetimes; provider refresh must be enabled by the intended
-App registration if automatic renewal is expected. User-authorized OAuth and
-installation are prerequisites; a successful Worker upload does not prove them.
+App registration if automatic renewal is expected. User-authorized OAuth is
+required for GitHub login; installation is additionally required for repository
+associations. A successful Worker upload does not prove either flow.
 
-## Optional provider secrets and feature requirements
+## Provider secrets and feature requirements
+
+Payments, AI and scheduled recurrence are optional for the core GitHub/free-ledger
+release. Email login is also separate from that core path, but its requirements
+below are mandatory for the email-login feature explicitly requested by the user.
 
 | Feature | Secrets | Public settings/bindings | Current production behavior |
 | --- | --- | --- | --- |
-| Creem subscriptions | NORULO_CREEM_API_KEY and NORULO_CREEM_WEBHOOK_SECRET | NORULO_CREEM_API_BASE_URL=https://api.creem.io; NORULO_CREEM_PRODUCT_IDS_JSON maps pro/max to explicit month/year live product IDs | Core ledger works without payment configuration; checkout/changes fail closed with BILLING_NOT_CONFIGURED or BILLING_UNAVAILABLE |
+| Creem subscriptions | NORULO_CREEM_API_KEY and NORULO_CREEM_WEBHOOK_SECRET | NORULO_CREEM_API_BASE_URL=https://api.creem.io; NORULO_CREEM_PRODUCT_IDS_JSON maps pro/max to explicit month/year live product IDs | Core free ledger does not require payments; checkout/changes fail closed, and an unconfigured public price catalog is unavailable |
 | Jev assistance | TYPESAFE_API_KEY | Both NORULO_JEV_SUGGESTIONS_ENABLED and NORULO_JEV_SUGGESTIONS_EVALUATED must be 1 after actual runtime/quality acceptance | Both flags remain 0; explicit-category manual expense entry remains available |
-| Email verification | NORULO_EMAIL_CODE_SECRET, at least 32 characters | NORULO_EMAIL_AUTH_ENABLED=1; EMAIL send binding; verified NORULO_EMAIL_FROM such as login@auth.norulo.com; durable IP/email admission | Not production-ready in the inherited implementation; remains disabled |
+| Email verification | NORULO_EMAIL_CODE_SECRET, at least 32 characters; securely prepared | NORULO_EMAIL_FROM=login@auth.norulo.com is set; authenticated sending domain, EMAIL send binding, independent durable IP/email admission and acceptance must precede NORULO_EMAIL_AUTH_ENABLED=1 | Sender and Secret prepared; sending-domain API permission, binding and production admission remain pending; flag stays 0 |
 | Scheduled recurring execution | No extra provider secret | Scheduler plus coordinated durable accounting | Not production-ready in the inherited implementation; no production cron |
 
 Creem IDs are public configuration, not prices or secrets. The JSON must be a
@@ -201,8 +267,11 @@ normal production config has no VALIDATION_BUDGET binding, the static guard only
 permits enabled mail under coordinated preview, and the runtime's current
 admission class belongs to that preview coordinator. Setting a sender, Secret and
 flag alone does not make production email login work. A separate production
-admission design and tests are required before enabling it; never bind production
+admission implementation and tests are required before enabling it; never bind production
 to the preview validation journal merely to satisfy this dependency.
+The gateway's email-auth flag also gates recurring-failure emails. The notification
+path falls back to the application inbox and does not retry an unknown delivery;
+do not interpret sender preparation as acceptance of those notifications.
 
 The recurring scheduler's _recurring_enabled guard requires preview mode and the
 preview product coordinator. Adding production cron/flags alone does not execute
@@ -211,6 +280,26 @@ future background posting is unavailable in production until a distinct reviewed
 production scheduler/coordinator is implemented. Keep the flag disabled and no
 production triggers; communicate this release limit without claiming full
 background recurrence acceptance.
+
+## Remaining release checklist
+
+The database remains deferred by user choice. The following distinguishes work
+needed for the core release from feature-specific work; it is not a request to
+resume database operations now.
+
+| Scope | Remaining work besides D1 | Acceptance required |
+| --- | --- | --- |
+| Core GitHub/free ledger — required | Verify the App's saved callback/Setup URL/options; retain the prepared Secrets; replace the JavaScript bootstrap with the reviewed complete Python Worker once schema/resources permit activation | Real GitHub authorization/callback, secure challenge/session cookies, sign-out and credential refresh behavior; authenticated Web-to-Server projects/expense/report journey, origin checks and owner isolation |
+| Requested email login — required for that feature | Complete sending-domain permission/authentication and restricted EMAIL binding; implement independent production admission and guard/tests; keep flag 0 until ready | Actual mail delivery and six-digit code verification, expiry/single use, bounded resend/abuse handling and browser session through the Web proxy |
+| GitHub repository associations — optional | A user's App installation and chosen repository grants; no numeric App ID/private key required | Actual installation Setup callback with server-issued state and authorized repository discovery/synchronization; standalone projects do not need installation |
+| Paid plans — optional | Independent live Creem products for the available plan/cadence pairs, API/webhook Secrets and explicit inheritance, signed webhook registration | Accurate public prices and idempotent entitlement changes from verified webhooks; no charge or subscription mutation is part of core acceptance |
+| Jev AI assistance — optional | TYPESAFE_API_KEY, reviewed model transport/quality and both feature gates | Owner's paid entitlement/monthly allowance, actual bounded suggestions and safe manual fallback |
+| Future recurring posting — optional | Distinct production scheduler/coordinator implementation and tests; then reviewed triggers/flag | Finite scheduled execution with idempotency, permissions/quota fences, failures/inbox behavior and truthful delivery reporting |
+
+Production domains, frontend assets, the paused proxy transport and the three
+prepared Secret names are already recorded above. They do not need new secret
+values from the user and do not establish live application behavior. No additional
+receiving mailbox is required by the Server for its system sender.
 
 ## Publication sequence and validation
 
@@ -245,7 +334,8 @@ disabled optional features. The subsequent App public metadata verification does
 not establish Cloudflare write permissions, saved callbacks, secret readiness or
 live login acceptance.
 
-After adding the exact two GitHub names to secrets.required, the pinned Wrangler
+At the earlier GitHub setup stage on 2026-10-10, after adding the exact two GitHub
+names to secrets.required, the pinned Wrangler
 schema accepted the production config and the frozen Python packaging dry-run
 passed again without contacting Cloudflare. The 36 existing deployment/config/
 production-runtime tests and 18 subtests, and both paused/activation-overlay S01
@@ -255,3 +345,9 @@ checks preserve the D1 placeholder and disabled optional features; they do not
 verify Client Secret validity or D1 access. The subsequent name-only query
 confirmed both required Secrets are present; the fresh D1 create attempt still
 failed with Authentication error.
+
+At the subsequent sender-preparation stage, S01 static production configuration
+validation passed with the sender, three required Secret names and disabled
+features. The existing email-auth/deployment-contract tests passed: 39 tests and
+18 subtests. This is offline configuration/regression evidence, not authenticated
+sending-domain setup, remote Secret-value validation, delivery or live email login.

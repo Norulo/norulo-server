@@ -22,8 +22,14 @@ enabled with previews disabled, while no D1 or Durable Object binding exists.
 A fresh token-encryption key was
 securely uploaded, and the user has now saved NORULO_GITHUB_CLIENT_SECRET in the
 Cloudflare Dashboard. Both Secret names were read back without inspecting values.
-All 18 public production variables were subsequently applied, preserving both
-Secrets through inherit bindings and verified without reading their values.
+Earlier on 2026-10-10, all 18 public production variables were applied, preserving
+both GitHub Secrets through inherit bindings without reading their values.
+The subsequent sender-preparation stage set NORULO_EMAIL_FROM=login@auth.norulo.com
+and securely generated/uploaded NORULO_EMAIL_CODE_SECRET. The bootstrap now has
+19 public variables and three Secrets, with the GitHub pair preserved.
+Sending-domain authentication is pending: the domain API returned 403, and the
+user was asked to add Account → Email Sending → Edit to the existing token.
+No EMAIL send binding exists; D1 access and email authentication remain disabled.
 The Web Worker has been published, but the full Python application and business
 service remain inactive. The user explicitly deferred D1 setup; do not request
 immediate permission changes or retry database creation during this stage.
@@ -65,11 +71,32 @@ NORULO_GITHUB_CLIENT_SECRET, NORULO_GITHUB_TOKEN_KEY, NORULO_CREEM_API_KEY,
 NORULO_CREEM_WEBHOOK_SECRET and optional email/model credentials belong in Secrets.
 NORULO_GITHUB_TOKEN_KEY is 32 cryptographically random bytes encoded as unpadded
 base64url; the fresh Norulo key is already stored securely and must be retained.
-Production secrets.required lists exactly the two GitHub Secret names, causing
-pinned Wrangler to inherit their existing bindings and reject a missing required
-Secret during real publication. A dry-run does not verify remote presence. Do not
+Production secrets.required lists the two GitHub Secret names and
+NORULO_EMAIL_CODE_SECRET, causing pinned Wrangler to inherit all three existing
+bindings and reject a missing required Secret during real publication. The email
+Secret is prepared while its feature remains disabled; keep it through later
+uploads. A dry-run does not verify remote presence. Do not
 paste credentials into chat or saved instructions. Keep the existing environment
 CLOUDFLARE_API_TOKEN binding intact.
+
+NORULO_EMAIL_CODE_SECRET must be a securely generated string of at least 32
+characters. It protects code/challenge hashes; it is not an SMTP password.
+The prepared sender login@auth.norulo.com sends system verification codes and
+recurring-failure notifications. Before configuring the future send_email
+binding named EMAIL, authenticate its sending domain and verify sending eligibility;
+restrict allowed_sender_addresses to that one sender. Email Sending entitlement
+is reported enabled; the actual onboarding response and delivery acceptance will
+verify recipient eligibility. The current domain API permission error is the
+confirmed infrastructure blocker. These steps do not enable production email login:
+the current admission adapter depends on the preview-only VALIDATION_BUDGET
+coordinator, which production must never reuse. Implement and test an independent
+production admission path, then complete real delivery, code verification and
+session acceptance before setting NORULO_EMAIL_AUTH_ENABLED=1. Keep the current
+full-server bootstrap paused and do not deploy a placeholder DB binding.
+
+The [remaining release checklist](../../docs/validation/production-readiness-2026-10-10.md#remaining-release-checklist)
+separates the core GitHub/ledger release, the requested email-login feature and
+optional payment, AI and background recurrence work.
 
 The deployment checker validates explicit pause switches, host/origin isolation,
 separate database identities, no source-service databases, provider separation,

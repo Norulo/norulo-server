@@ -25,9 +25,17 @@ remain unavailable in this stage.
 The user has registered [Norulo's GitHub App](https://github.com/apps/norulo);
 its public identity and Metadata-only permission were verified on 2026-10-10.
 The user has securely saved NORULO_GITHUB_CLIENT_SECRET, and
-the fresh token-encryption key is also present. Cloudflare confirmed both Secret
-names without exposing values; all 18 public production variables also matched
-the configuration. This proves presence and settings consistency, not credential validity.
+the fresh token-encryption key is also present. The subsequent sender-preparation
+stage added NORULO_EMAIL_FROM=login@auth.norulo.com and securely generated/uploaded
+NORULO_EMAIL_CODE_SECRET. The bootstrap now has 19 public variables and three
+Secrets, with both GitHub Secrets retained. These checks establish presence and
+settings consistency, not credential validity or email delivery.
+The sending-domain API is still blocked by permission; the user was asked to add
+Account → Email Sending → Edit to the existing token. Sending-domain authentication
+and an EMAIL send binding remain pending. NORULO_D1_ACCESS_ENABLED and
+NORULO_EMAIL_AUTH_ENABLED remain 0. Production email login also needs an independent
+durable admission implementation and actual delivery/code/session acceptance;
+setting a sender and Secret alone does not enable it.
 Saved GitHub callbacks and real login remain unverified; see the
 [registration checklist](docs/design/github-project-ledger/github-app-permissions.md).
 The current release targets norulo.com and api.norulo.com in production only.
@@ -68,11 +76,21 @@ email, payments, AI providers or remote Cloudflare behavior.
 The [Worker guide](cloudflare/server/README.md) explains local and remote setup.
 Preview and production configs are paused, use unconfigured D1 and optional
 provider placeholders and have no schedules or mail bindings. Production's public
-GitHub Client ID and slug identify the verified Norulo App. Its two required
-Secrets are declared by name for inheritance during the full upload; secret and
-callback readiness are separate checks. The execution guard rejects
+GitHub Client ID and slug identify the verified Norulo App. The two GitHub Secrets
+and the prepared email-code Secret are declared by name for inheritance during
+the full upload; secret, callback and email readiness are separate checks.
+The execution guard rejects
 placeholders and the source service's resource IDs. Configure independent Norulo
-resources and callbacks before a separately authorized release.
+resources and callbacks before production activation.
+
+Apart from the deferred D1 step, the core release still needs the complete Python
+Worker upload, verification of the App's saved settings, real GitHub sign-in and
+cookie/session checks, and an authenticated Web-to-ledger acceptance journey.
+The requested email-login feature additionally needs authenticated sending-domain
+setup, the restricted EMAIL binding and independent production admission. Creem
+payments, Jev AI assistance and scheduled recurring execution are optional;
+production background recurrence requires implementation work before activation.
+See the [remaining release checklist](docs/validation/production-readiness-2026-10-10.md#remaining-release-checklist).
 
 Credentials belong in secure environment settings or Cloudflare Secrets, never
 in Git or chat. Existing CLOUDFLARE_API_TOKEN configuration is retained. Local
