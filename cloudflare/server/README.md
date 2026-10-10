@@ -2,10 +2,12 @@
 
 The source main branch has been imported and rebranded. The existing
 wrangler.jsonc is explicitly local: no routes, remote=false, NORULO_MODE=local.
-wrangler.preview.jsonc and wrangler.production.jsonc are unconfigured deployment
-proposals. Both keep D1 access, schema upgrades, mail, scheduled recurrence and
-AI provider dispatch disabled. Their database UUIDs and GitHub/provider settings
-must be configured for independent Norulo resources before remote execution.
+wrangler.preview.jsonc remains an undeployed offline reference.
+wrangler.production.jsonc is the paused full-application proposal, with a D1
+placeholder and prepared account, domain, GitHub App and email settings described
+below. Both keep D1 access, schema upgrades, email authentication, scheduled
+recurrence and AI provider dispatch disabled. Independent database resources and
+feature-specific readiness are required before business activation.
 The imported source's remote databases, providers, domain registrations and
 historic publication approval have not been transferred. The user now authorizes
 production-only publication with new Norulo resources. The production proposal
@@ -27,9 +29,14 @@ both GitHub Secrets through inherit bindings without reading their values.
 The subsequent sender-preparation stage set NORULO_EMAIL_FROM=login@auth.norulo.com
 and securely generated/uploaded NORULO_EMAIL_CODE_SECRET. The bootstrap now has
 19 public variables and three Secrets, with the GitHub pair preserved.
-Sending-domain authentication is pending: the domain API returned 403, and the
-user was asked to add Account → Email Sending → Edit to the existing token.
-No EMAIL send binding exists; D1 access and email authentication remain disabled.
+The earlier domain API 403 was resolved after the token permission update.
+auth.norulo.com is now enabled, with DNS status ready, no reported errors and
+preview_enabled=false. Six new DNS records belong only to the auth subdomain;
+the eight existing DNS records and two contact routing rules were preserved.
+The Worker now has the EMAIL send binding restricted to login@auth.norulo.com,
+with no recipient restriction; all 19 public variables and three Secrets were
+retained. No actual email delivery was tested. D1 access and email authentication
+remain disabled.
 The Web Worker has been published, but the full Python application and business
 service remain inactive. The user explicitly deferred D1 setup; do not request
 immediate permission changes or retry database creation during this stage.
@@ -82,12 +89,12 @@ CLOUDFLARE_API_TOKEN binding intact.
 NORULO_EMAIL_CODE_SECRET must be a securely generated string of at least 32
 characters. It protects code/challenge hashes; it is not an SMTP password.
 The prepared sender login@auth.norulo.com sends system verification codes and
-recurring-failure notifications. Before configuring the future send_email
-binding named EMAIL, authenticate its sending domain and verify sending eligibility;
-restrict allowed_sender_addresses to that one sender. Email Sending entitlement
-is reported enabled; the actual onboarding response and delivery acceptance will
-verify recipient eligibility. The current domain API permission error is the
-confirmed infrastructure blocker. These steps do not enable production email login:
+recurring-failure notifications. Its auth.norulo.com sending domain is authenticated
+and the send_email binding named EMAIL permits only this sender, without recipient
+restrictions. No additional mail-provider Secret or SMTP credential is needed
+for the native binding. Email Sending entitlement and domain status are enabled;
+actual delivery to user recipients has not been tested. These settings do not
+enable production email login:
 the current admission adapter depends on the preview-only VALIDATION_BUDGET
 coordinator, which production must never reuse. Implement and test an independent
 production admission path, then complete real delivery, code verification and

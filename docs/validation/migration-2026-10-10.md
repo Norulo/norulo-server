@@ -109,17 +109,23 @@ the frontend and paused transport, not real OAuth or ledger acceptance. See the 
 
 The subsequent sender-preparation stage set NORULO_EMAIL_FROM=login@auth.norulo.com
 and securely uploaded NORULO_EMAIL_CODE_SECRET. The bootstrap now has 19 public
-variables and three Secrets, preserving both GitHub Secrets. Sending-domain
-authentication is pending because its API returned 403; Account → Email Sending
-→ Edit was requested for the existing token. There is no EMAIL send binding, and
-D1/email-auth flags remain 0. Production email login still needs an independent
+variables and three Secrets, preserving both GitHub Secrets. At that earlier
+stage, the sending-domain API returned 403 and no EMAIL binding existed.
+After the token permission update, auth.norulo.com was enabled with DNS status
+ready, no errors and preview_enabled=false. The Worker now has the EMAIL send
+binding restricted to login@auth.norulo.com, without recipient restrictions.
+Six added DNS records are confined to the auth subdomain; the existing eight DNS
+records and two contact routing rules were preserved. The 19 public variables and
+three Secrets were retained, and D1/email-auth flags remain 0. No actual email
+was sent for acceptance. Production email login still needs an independent
 admission implementation and real delivery/code/session acceptance. This does
 not change the published frontend or paused full-server status.
 
 Before full production activation, configure independent Norulo D1 resources,
 the full Worker application, and the App's callbacks/credentials. The requested
-email login additionally needs sending-domain authentication, its EMAIL binding
-and independent production admission. Creem products/secrets, AI transport/quality
+email login additionally needs independent production admission and real
+delivery/code/session acceptance; its sending domain and EMAIL binding are now
+prepared. Creem products/secrets, AI transport/quality
 gates and background recurrence are optional feature work. Existing source
 provider IDs and historical approvals are not Norulo requirements or permissions.
 Database/provider acceptance, email delivery and real payment flows have not been

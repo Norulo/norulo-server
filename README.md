@@ -30,12 +30,15 @@ stage added NORULO_EMAIL_FROM=login@auth.norulo.com and securely generated/uploa
 NORULO_EMAIL_CODE_SECRET. The bootstrap now has 19 public variables and three
 Secrets, with both GitHub Secrets retained. These checks establish presence and
 settings consistency, not credential validity or email delivery.
-The sending-domain API is still blocked by permission; the user was asked to add
-Account → Email Sending → Edit to the existing token. Sending-domain authentication
-and an EMAIL send binding remain pending. NORULO_D1_ACCESS_ENABLED and
-NORULO_EMAIL_AUTH_ENABLED remain 0. Production email login also needs an independent
+The earlier sending-domain API 403 was resolved after the token permission update.
+auth.norulo.com is now enabled with DNS status ready and sending previews disabled.
+The Worker has an EMAIL send binding restricted to login@auth.norulo.com, with no
+recipient restriction. Existing contact Email Routing DNS/rules were preserved.
+No email has been sent for acceptance. NORULO_D1_ACCESS_ENABLED and
+NORULO_EMAIL_AUTH_ENABLED remain 0. Production email login still needs an independent
 durable admission implementation and actual delivery/code/session acceptance;
-setting a sender and Secret alone does not enable it.
+the prepared domain and binding do not enable it by themselves. No additional
+mail-provider Secret is required for this native Cloudflare binding.
 Saved GitHub callbacks and real login remain unverified; see the
 [registration checklist](docs/design/github-project-ledger/github-app-permissions.md).
 The current release targets norulo.com and api.norulo.com in production only.
@@ -75,7 +78,8 @@ email, payments, AI providers or remote Cloudflare behavior.
 
 The [Worker guide](cloudflare/server/README.md) explains local and remote setup.
 Preview and production configs are paused, use unconfigured D1 and optional
-provider placeholders and have no schedules or mail bindings. Production's public
+provider placeholders and have no schedules. Production has the prepared EMAIL
+send binding while email authentication stays disabled. Production's public
 GitHub Client ID and slug identify the verified Norulo App. The two GitHub Secrets
 and the prepared email-code Secret are declared by name for inheritance during
 the full upload; secret, callback and email readiness are separate checks.
@@ -86,8 +90,9 @@ resources and callbacks before production activation.
 Apart from the deferred D1 step, the core release still needs the complete Python
 Worker upload, verification of the App's saved settings, real GitHub sign-in and
 cookie/session checks, and an authenticated Web-to-ledger acceptance journey.
-The requested email-login feature additionally needs authenticated sending-domain
-setup, the restricted EMAIL binding and independent production admission. Creem
+The requested email-login feature still needs independent production admission
+and actual delivery/code/session acceptance. Its sending domain and restricted
+EMAIL binding are prepared. Creem
 payments, Jev AI assistance and scheduled recurring execution are optional;
 production background recurrence requires implementation work before activation.
 See the [remaining release checklist](docs/validation/production-readiness-2026-10-10.md#remaining-release-checklist).

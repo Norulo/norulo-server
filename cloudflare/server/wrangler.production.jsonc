@@ -43,6 +43,14 @@
     "NORULO_JEV_SUGGESTIONS_EVALUATED": "0",
     "NORULO_RECURRING_EXPENSES_ENABLED": "0"
   },
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_sender_addresses": [
+        "login@auth.norulo.com"
+      ]
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",
