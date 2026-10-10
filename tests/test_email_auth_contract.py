@@ -102,6 +102,72 @@ def test_email_work_cannot_activate_production(checker, monkeypatch, tmp_path):
         validate_fixture(checker, monkeypatch, tmp_path, config, "production")
 
 
+def enabled_production():
+    config = configured_runtime("production", email=True)
+    config["vars"]["NORULO_D1_ACCESS_ENABLED"] = "1"
+    return config
+
+
+def test_production_email_requires_its_independent_sqlite_admission(checker, monkeypatch, tmp_path):
+    config = enabled_production()
+    assert config["durable_objects"]["bindings"] == [
+        {"name": "EMAIL_ADMISSION", "class_name": "EmailAdmission"}]
+    assert config["migrations"] == [
+        {"tag": "norulo-email-admission-v1", "new_sqlite_classes": ["EmailAdmission"]}]
+    validate_fixture(checker, monkeypatch, tmp_path, config, "production")
+
+
+@pytest.mark.parametrize("case", [
+    "no_namespace", "wrong_name", "preview_class", "foreign_worker", "duplicate_binding",
+    "preview_coordinator", "no_migration", "preview_migration", "non_sqlite_class", "wrong_tag",
+    "code_secret_missing", "preview_host", "preview_app", "preview_callback", "source_database",
+    "paused_database", "missing_sender", "restricted_recipient", "extra_sender",
+])
+def test_production_email_rejects_missing_or_contaminated_controls(checker, monkeypatch, tmp_path, case):
+    config = enabled_production()
+    binding = config["durable_objects"]["bindings"][0]
+    if case == "no_namespace":
+        config.pop("durable_objects")
+    elif case == "wrong_name":
+        binding["name"] = "VALIDATION_BUDGET"
+    elif case == "preview_class":
+        binding["class_name"] = "ValidationBudget"
+    elif case == "foreign_worker":
+        binding["script_name"] = "norulo-server-preview"
+    elif case == "duplicate_binding":
+        config["durable_objects"]["bindings"].append(copy.deepcopy(binding))
+    elif case == "preview_coordinator":
+        config["durable_objects"]["bindings"].append({"name": "VALIDATION_BUDGET", "class_name": "ValidationBudget"})
+    elif case == "no_migration":
+        config.pop("migrations")
+    elif case == "preview_migration":
+        config["migrations"][0]["new_sqlite_classes"].append("ValidationBudget")
+    elif case == "non_sqlite_class":
+        config["migrations"][0]["new_classes"] = config["migrations"][0].pop("new_sqlite_classes")
+    elif case == "wrong_tag":
+        config["migrations"][0]["tag"] = "preview-v1"
+    elif case == "code_secret_missing":
+        config["secrets"]["required"].remove("NORULO_EMAIL_CODE_SECRET")
+    elif case == "preview_host":
+        config["routes"][0]["pattern"] = "preview-api.norulo.com"
+    elif case == "preview_app":
+        config["vars"]["NORULO_APP_URL"] = config["vars"]["NORULO_ALLOWED_ORIGINS"] = "https://preview.norulo.com"
+    elif case == "preview_callback":
+        config["vars"]["NORULO_GITHUB_CALLBACK_URL"] = "https://preview.norulo.com/api/auth/github/callback"
+    elif case == "source_database":
+        config["d1_databases"][0]["database_id"] = next(iter(checker.SOURCE_DATABASE_IDS))
+    elif case == "paused_database":
+        config["vars"]["NORULO_D1_ACCESS_ENABLED"] = "0"
+    elif case == "missing_sender":
+        config.pop("send_email")
+    elif case == "restricted_recipient":
+        config["send_email"][0]["allowed_destination_addresses"] = ["alice@example.test"]
+    else:
+        config["send_email"][0]["allowed_sender_addresses"].append("other@auth.norulo.com")
+    with pytest.raises(ValueError):
+        validate_fixture(checker, monkeypatch, tmp_path, config, "production")
+
+
 def test_auth_operations_do_not_inherit_ledger_api_key_authority(checker):
     checker.validate_contract()
     contract = yaml.safe_load((ROOT / "openapi/ledger-v1.yaml").read_text())

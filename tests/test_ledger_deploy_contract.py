@@ -231,12 +231,15 @@ class LedgerDeployContractTests(unittest.TestCase):
             fake_uv = folder / "uv"
             fake_uv.write_text("#!/usr/bin/env bash\nprintf '%s\\n' \"$PWD\" \"$@\"\n")
             fake_uv.chmod(0o755)
-            for environment, activate in (("preview", False), ("production", False), ("production", True)):
+            for environment, activate, email in (("preview", False, False), ("production", False, False),
+                                                ("production", True, False), ("production", True, True)):
                 args = [BASH, "scripts/deploy-cloudflare.sh", "--environment", environment,
                         "--execute", "--local-checks-passed"]
                 if activate:
                     args.append("--activate-production")
-                with self.subTest(environment=environment, activate=activate):
+                if email:
+                    args.append("--activate-email-auth")
+                with self.subTest(environment=environment, activate=activate, email=email):
                     result = subprocess.run(args, cwd=repo,
                         text=True, capture_output=True, check=False,
                         env={**os.environ, "NORULO_PYTHON": Path(sys.executable).as_posix(),
@@ -245,9 +248,62 @@ class LedgerDeployContractTests(unittest.TestCase):
                     self.assertIn(worker.as_posix(), result.stdout)
                     self.assertIn("run\n--frozen\n--python\n3.14.2\npywrangler\ndeploy\n--config\nwrangler."+environment+".jsonc", result.stdout)
                     self.assertEqual("--var\nNORULO_D1_ACCESS_ENABLED:1" in result.stdout, activate)
+                    self.assertEqual("--var\nNORULO_EMAIL_AUTH_ENABLED:1" in result.stdout, email)
+                    self.assertEqual("Explicit production email authentication activation overlay" in result.stdout, email)
                     self.assertNotIn("d1 migrations apply", result.stdout)
             paused = json.loads((ROOT / "cloudflare/server/wrangler.production.jsonc").read_text())
             self.assertEqual(paused["vars"]["NORULO_D1_ACCESS_ENABLED"], "0")
+            self.assertEqual(paused["vars"]["NORULO_EMAIL_AUTH_ENABLED"], "0")
+
+    def test_email_activation_options_require_explicit_production_d1_activation(self):
+        for cli in ((BASH, SCRIPT.relative_to(ROOT).as_posix()),
+                    (sys.executable, "scripts/check-ledger-s01.py")):
+            for args in (("--environment", "production"), ("--environment", "preview"), ()):
+                with self.subTest(cli=cli, args=args):
+                    result = subprocess.run([*cli, *args, "--activate-email-auth"], cwd=ROOT,
+                        text=True, capture_output=True, check=False,
+                        env={**os.environ, "NORULO_PYTHON": Path(sys.executable).as_posix()})
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertNotIn("Dry run only", result.stdout)
+                    self.assertNotIn("S01 static checks passed", result.stdout)
+
+    def test_email_activation_dry_run_proposes_both_overlays_without_changing_configs(self):
+        before = (ROOT / "cloudflare/server/wrangler.production.jsonc").read_bytes()
+        result = subprocess.run([BASH, SCRIPT.relative_to(ROOT).as_posix(),
+            "--environment", "production", "--activate-production", "--activate-email-auth"],
+            cwd=ROOT, text=True, capture_output=True, check=False,
+            env={**os.environ, "NORULO_PYTHON": Path(sys.executable).as_posix()})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Dry run only", result.stdout)
+        self.assertIn("--var NORULO_D1_ACCESS_ENABLED:1 --var NORULO_EMAIL_AUTH_ENABLED:1", result.stdout)
+        self.assertNotIn("d1 migrations apply", result.stdout)
+        self.assertEqual((ROOT / "cloudflare/server/wrangler.production.jsonc").read_bytes(), before)
+
+    def test_email_activation_checker_requires_the_independent_namespace(self):
+        spec = importlib.util.spec_from_file_location("email_activation_checker", ROOT / "scripts/check-ledger-s01.py")
+        checker = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(checker)
+        config = configured_runtime("production")
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            (folder / "src").mkdir()
+            (folder / "src/entry.py").touch()
+            path = folder / "wrangler.production.jsonc"
+            before = json.dumps(config)
+            path.write_text(before)
+            with patch.object(checker, "SERVER", folder):
+                checker.validate_config("production", False, activate_production=True,
+                                        activate_email_auth=True)
+                self.assertEqual(path.read_text(), before)
+                for environment, activate_production in (("production", False), ("preview", True)):
+                    with self.subTest(environment=environment), self.assertRaises(ValueError):
+                        checker.validate_config(environment, False,
+                            activate_production=activate_production, activate_email_auth=True)
+                config.pop("durable_objects")
+                path.write_text(json.dumps(config))
+                with self.assertRaisesRegex(ValueError, "independent SQLite admission"):
+                    checker.validate_config("production", False, activate_production=True,
+                                            activate_email_auth=True)
 
     def test_production_activation_option_cannot_target_preview(self):
         result = subprocess.run([BASH, SCRIPT.relative_to(ROOT).as_posix(),

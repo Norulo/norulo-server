@@ -6,9 +6,10 @@ environment=""
 execute=0
 local_checks=0
 activate_production=0
+activate_email_auth=0
 
 usage() {
-  echo "Usage: $0 --environment preview|production [--execute --local-checks-passed] [--activate-production]" >&2
+  echo "Usage: $0 --environment preview|production [--execute --local-checks-passed] [--activate-production [--activate-email-auth]]" >&2
 }
 
 while (($#)); do
@@ -21,6 +22,7 @@ while (($#)); do
     --execute) execute=1; shift ;;
     --local-checks-passed) local_checks=1; shift ;;
     --activate-production) activate_production=1; shift ;;
+    --activate-email-auth) activate_email_auth=1; shift ;;
     *) usage; exit 2 ;;
   esac
 done
@@ -28,6 +30,10 @@ done
 [[ "$environment" == preview || "$environment" == production ]] || { usage; exit 2; }
 if ((activate_production)) && [[ "$environment" != production ]]; then
   echo "--activate-production requires --environment production." >&2
+  exit 2
+fi
+if ((activate_email_auth)) && { [[ "$environment" != production ]] || ((!activate_production)); }; then
+  echo "--activate-email-auth requires --environment production --activate-production." >&2
   exit 2
 fi
 if ((execute && !local_checks)); then
@@ -38,11 +44,13 @@ fi
 cd "$repo_root"
 checker_args=(--environment "$environment")
 if ((activate_production)); then checker_args+=(--activate-production); fi
+if ((activate_email_auth)); then checker_args+=(--activate-email-auth); fi
 if ((!execute)); then checker_args+=(--allow-placeholders); fi
 "${NORULO_PYTHON:-python3}" scripts/check-ledger-s01.py "${checker_args[@]}"
 config="wrangler.${environment}.jsonc"
 deploy_args=(--config "$config")
 if ((activate_production)); then deploy_args+=(--var NORULO_D1_ACCESS_ENABLED:1); fi
+if ((activate_email_auth)); then deploy_args+=(--var NORULO_EMAIL_AUTH_ENABLED:1); fi
 wrangler="cloudflare/server/node_modules/wrangler/wrangler-dist/cli.js"
 if ((execute)); then
   [[ -f "$wrangler" ]] || { echo "Pinned local Wrangler installation is missing." >&2; exit 2; }
@@ -51,6 +59,9 @@ if ((execute)); then
   echo "D1 migrations remain outside this command."
   if ((activate_production)); then
     echo "Explicit production D1 activation overlay; the checked-in config remains paused."
+    if ((activate_email_auth)); then
+      echo "Explicit production email authentication activation overlay; the checked-in email flag remains paused."
+    fi
   else
     echo "Runtime switches stay as configured."
   fi

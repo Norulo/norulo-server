@@ -51,6 +51,22 @@
       ]
     }
   ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "EMAIL_ADMISSION",
+        "class_name": "EmailAdmission"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "norulo-email-admission-v1",
+      "new_sqlite_classes": [
+        "EmailAdmission"
+      ]
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

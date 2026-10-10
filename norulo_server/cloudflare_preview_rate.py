@@ -117,7 +117,7 @@ class EmailRateLimit(Exception):
 
 
 class EmailRateLimiter:
-    """Synchronous OTP admission in the existing coordinator's DO SQLite.
+    """Synchronous OTP admission in the caller's isolated DO SQLite.
 
     Call before sending mail or checking a code. Successful admission remains
     consumed when delivery/checking fails or has an unknown outcome; there is

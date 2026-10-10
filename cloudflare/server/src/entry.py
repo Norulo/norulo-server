@@ -18,6 +18,10 @@ from norulo_server.cloudflare_validation_budget import (
 from norulo_server.cloudflare_http_contract import handle_http_request
 from norulo_server.cloudflare_github_identity_http import handle_identity_request
 from norulo_server.cloudflare_email_auth import handle_email_request
+from norulo_server.cloudflare_email_admission import (
+    EMAIL_ADMISSION_SCOPE, production_email_admission_enabled,
+    require_email_admission, validate_admission_subjects,
+)
 from norulo_server.cloudflare_email_gateway import WorkerEmailGateway
 from norulo_server.cloudflare_github_gateway import GitHubFailure, WorkerGitHubGateway
 from norulo_server.cloudflare_billing_mutations import handle_billing_mutation
@@ -373,20 +377,25 @@ def _email_ip_subject(request):
 
 
 def _remote_email_admission(env, request):
-    namespace = getattr(env, "VALIDATION_BUDGET", None)
+    # Production must never reach the preview accounting namespace. Local
+    # fixtures inject admission explicitly; preview stays inside its coordinator.
+    if not production_email_admission_enabled(env):
+        return None
+    namespace = getattr(env, "EMAIL_ADMISSION", None)
     if namespace is None:
         return None
     ip_subject = _email_ip_subject(request)
 
     async def admit(kind, email_subject):
-        stub = namespace.get(namespace.idFromName(BUDGET_SCOPE))
-        result = await stub.admitEmail(kind, email_subject, ip_subject)
-        if not bool(_field(result, "ok", False)):
-            retry_after = _field(result, "retryAfter", None)
-            if retry_after is not None:
-                raise EmailRateLimit(retry_after)
-            raise RuntimeError("EMAIL_ADMISSION_UNAVAILABLE")
-        return True
+        try:
+            validate_admission_subjects(kind, email_subject, ip_subject)
+            stub = namespace.get(namespace.idFromName(EMAIL_ADMISSION_SCOPE))
+            result = await stub.admitEmail(kind, email_subject, ip_subject)
+        except Exception:
+            # Provider/native ValueError must not become a public input error.
+            # The call is never automatically retried after a lost response.
+            raise RuntimeError("EMAIL_ADMISSION_UNAVAILABLE") from None
+        return require_email_admission(result)
     return admit
 
 
@@ -440,6 +449,51 @@ class Default(WorkerEntrypoint):
             return _unavailable("VALIDATION_UNAVAILABLE")
 
 
+class EmailAdmission(DurableObject):
+    """One production OTP limiter; SQLite DO counters only, never D1/provider IO."""
+    def __init__(self, ctx, env):
+        self.ctx, self.env = ctx, env
+        self.rate_limiter = None
+
+    async def fetch(self, request):
+        # There is no public HTTP admission, reset, refund or diagnostic API.
+        return Response.json({"error": {"code": "METHOD_NOT_ALLOWED"}}, status=405,
+            headers={"Cache-Control": "no-store"})
+
+    async def admitEmail(self, kind, email_subject, ip_subject):
+        if not production_email_admission_enabled(self.env):
+            return {"ok": False, "error": "EMAIL_AUTH_NOT_CONFIGURED"}
+        try:
+            validate_admission_subjects(kind, email_subject, ip_subject)
+            if self.rate_limiter is None:
+                self.rate_limiter = EmailRateLimiter(self.ctx.storage.sql)
+            # No await inside the admission turn: check all buckets and persist
+            # the reservation before an application can touch D1 or send mail.
+            now = time.time()
+            def reserve():
+                try:
+                    self.rate_limiter.email(kind, email_subject64hex=email_subject,
+                        ip_subject64hex=ip_subject, now=now)
+                except EmailRateLimit as error:
+                    # A numeric result preserves the known rejection across the
+                    # Python/JS callback bridge without relying on exception type.
+                    return float(error.retry_after)
+                return 0.0
+            retry_after = self.ctx.storage.transactionSync(reserve)
+            if type(retry_after) not in {int, float}:
+                raise RuntimeError("EMAIL_ADMISSION_UNAVAILABLE")
+            if retry_after != 0:
+                if not (1 <= retry_after <= 3600 and int(retry_after) == retry_after):
+                    raise RuntimeError("EMAIL_ADMISSION_UNAVAILABLE")
+                return {"ok": False, "retryAfter": int(retry_after)}
+            return {"ok": True}
+        except EmailRateLimit as error:
+            return {"ok": False, "retryAfter": error.retry_after}
+        except Exception:
+            # Unknown storage outcomes stay reserved and do not authorize work.
+            return {"ok": False, "error": "EMAIL_ADMISSION_UNAVAILABLE"}
+
+
 class ValidationBudget(DurableObject):
     def __init__(self, ctx, env):
         self.ctx, self.env = ctx, env
@@ -459,7 +513,9 @@ class ValidationBudget(DurableObject):
 
     def _email_admit(self, kind, email_subject, ip_subject):
         if (str(getattr(self.env, "NORULO_D1_ACCESS_ENABLED", "0")) != "1"
-                or str(getattr(self.env, "NORULO_EMAIL_AUTH_ENABLED", "0")) != "1"):
+                or str(getattr(self.env, "NORULO_EMAIL_AUTH_ENABLED", "0")) != "1"
+                or getattr(self.env, "NORULO_MODE", "") != "preview"
+                or str(getattr(self.env, "NORULO_PREVIEW_PRODUCT_ENABLED", "0")) != "1"):
             return {"ok": False, "error": "EMAIL_AUTH_NOT_CONFIGURED"}
         if self.email_rate_limiter is None:
             self.email_rate_limiter = EmailRateLimiter(self.ctx.storage.sql)
@@ -468,7 +524,7 @@ class ValidationBudget(DurableObject):
         return {"ok": True}
 
     async def admitEmail(self, kind, email_subject, ip_subject):
-        """Binding-only admission for non-preview email auth; never accesses D1."""
+        """Preview-only admission; production owns a separate namespace."""
         try:
             return self._email_admit(kind, email_subject, ip_subject)
         except EmailRateLimit as error:

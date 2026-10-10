@@ -22,7 +22,10 @@ EMAIL_SENDER = "login@auth.norulo.com"
 
 
 def validate_config(environment: str, allow_placeholders: bool,
-                    activate_production: bool = False) -> None:
+                    activate_production: bool = False,
+                    activate_email_auth: bool = False) -> None:
+    if activate_email_auth and (environment != "production" or not activate_production):
+        raise ValueError("email authentication activation requires production D1 activation")
     config_path = SERVER / f"wrangler.{environment}.jsonc"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     if config.get("name") != f"norulo-server-{environment}":
@@ -49,6 +52,8 @@ def validate_config(environment: str, allow_placeholders: bool,
             raise ValueError("production activation requires the production environment")
         # Validate the explicit deploy overlay without changing the paused file.
         vars_["NORULO_D1_ACCESS_ENABLED"] = "1"
+    if activate_email_auth:
+        vars_["NORULO_EMAIL_AUTH_ENABLED"] = "1"
     product_preview = (environment == "preview" and
                        vars_.get("NORULO_PREVIEW_PRODUCT_ENABLED") == "1")
     access = vars_.get("NORULO_D1_ACCESS_ENABLED")
@@ -73,12 +78,20 @@ def validate_config(environment: str, allow_placeholders: bool,
         raise ValueError("email authentication must be explicitly enabled or disabled")
     if email_auth == "1":
         email_bindings = config.get("send_email", [])
-        if (not product_preview or access != "1"
+        if (not (product_preview or environment == "production") or access != "1"
                 or vars_.get("NORULO_EMAIL_FROM") != EMAIL_SENDER
                 or not isinstance(email_bindings, list) or len(email_bindings) != 1
                 or not isinstance(email_bindings[0], dict)
                 or email_bindings[0] != {"name": "EMAIL", "allowed_sender_addresses": [EMAIL_SENDER]}):
-            raise ValueError("enabled email authentication requires coordinated preview and one fixed EMAIL sender without recipient restrictions")
+            raise ValueError("enabled email authentication requires D1 access and one fixed EMAIL sender without recipient restrictions")
+        if environment == "production":
+            bindings = config.get("durable_objects", {}).get("bindings", [])
+            migrations = config.get("migrations", [])
+            if (bindings != [{"name": "EMAIL_ADMISSION", "class_name": "EmailAdmission"}]
+                    or migrations != [{"tag": "norulo-email-admission-v1",
+                                       "new_sqlite_classes": ["EmailAdmission"]}]
+                    or "NORULO_EMAIL_CODE_SECRET" not in config.get("secrets", {}).get("required", [])):
+                raise ValueError("production email authentication requires its independent SQLite admission namespace, migration and code secret")
     crons = config.get("triggers", {}).get("crons", [])
     recurring = vars_.get("NORULO_RECURRING_EXPENSES_ENABLED", "0")
     if recurring not in {"0", "1"}:
@@ -211,12 +224,17 @@ def main() -> int:
     parser.add_argument("--allow-placeholders", action="store_true")
     parser.add_argument("--activate-production", action="store_true",
                         help="Validate an explicit production D1 activation overlay; no remote actions")
+    parser.add_argument("--activate-email-auth", action="store_true",
+                        help="Validate production email activation with --activate-production; no remote actions")
     args = parser.parse_args()
     if args.activate_production and args.environment != "production":
         parser.error("--activate-production requires --environment production")
+    if args.activate_email_auth and (args.environment != "production" or not args.activate_production):
+        parser.error("--activate-email-auth requires --environment production --activate-production")
     try:
         for environment in ((args.environment,) if args.environment else ("preview", "production")):
-            validate_config(environment, args.allow_placeholders, args.activate_production)
+            validate_config(environment, args.allow_placeholders, args.activate_production,
+                            args.activate_email_auth)
         validate_contract()
     except (ValueError, KeyError, OSError, ImportError) as exc:
         print(f"S01 check failed: {exc}", file=sys.stderr)
