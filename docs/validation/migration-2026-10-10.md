@@ -18,8 +18,8 @@ installed in norulo-web/public/norulo-logo.png. Its SHA256 is
 Derived icons and branding assets have been replaced and audited; no further
 user asset upload is required.
 
-Both remote configurations are paused with placeholder databases/providers and
-no scheduled jobs or email dispatch. The deployment checker rejects the source
+At import, both remote configurations were paused with placeholder databases and
+providers, and no scheduled jobs or email dispatch. The deployment checker rejects the source
 service's database IDs, shared preview/production databases and execution with
 unconfigured UUIDs. The inherited Builds plan contains no transferred trigger or
 active approval. Historical AGENTS deployment permissions were replaced with
@@ -83,8 +83,17 @@ startup scripts own the long-running development process after validation.
 
 ## Remaining remote prerequisites
 
+The user subsequently registered the real Norulo GitHub App. On 2026-10-10,
+GitHub's public API verified Client ID Iv23li78ZPeUgSxJkLUj, slug norulo, owner
+Norulo and only Metadata read permission with no events. Saved callbacks,
+management options, secrets and real login remain unverified; see the
+[current App checklist](../design/github-project-ledger/github-app-permissions.md).
+The current step configures that App only, without deployment, database changes
+or secret operations.
+
 Before a separately authorized deployment, configure independent Norulo D1 and
-Worker/DO resources, GitHub Apps and callbacks, verified domains/DNS, mail sender,
+Worker/DO resources, the App's callbacks and credentials, verified domains/DNS,
+mail sender,
 Creem products/secrets and optional AI transport/quality gates. Existing source
 provider IDs and historical approvals are not Norulo requirements or permissions.
 Database/provider acceptance, email delivery and real payment flows have not been

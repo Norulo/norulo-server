@@ -1,15 +1,11 @@
-# Migration status
-
-This imported document describes source-service GitHub App history. Names and
-URLs in the retained text were mechanically rebranded; old numeric App IDs,
-Client IDs and historical review statements do not identify or authorize Norulo
-Apps. Norulo GitHub App identities, permissions, callbacks and credentials remain
-to be created/configured and verified by their owner. Use the current Worker
-README and paused placeholder configs for Norulo setup.
-
 # 当前版本的 GitHub App 权限
 
-2026-10-06。当前 Organization 关联、多仓库项目和账本邀请不需要新增
+2026-10-10。本文记录新注册的真实 Norulo App 和当前代码要求，替代迁移时
+机械替换名称的源服务 App 设置说明。源服务历史 App ID、Client ID 和验收
+记录不是该 Norulo App 的身份或验收证据。当前步骤仅配置 GitHub App，
+不部署、不创建数据库，也不生成或上传应用密钥。
+
+当前 Organization 关联、多仓库项目和账本邀请不需要新增
 Organization 或 Account 权限。以下是代码实际调用所需的最小配置。
 
 | GitHub App 设置区域 | 权限 | 当前需要 |
@@ -46,27 +42,51 @@ Where can this GitHub App be installed? 需允许 Any account。
 成员身份不会自动授予 Norulo Owner/Admin/Editor/Viewer。账本角色由
 Norulo 显式邀请和成员权限管理决定。
 
-## 正式 App 的现有设置与修改目标
+## 已核实的 Norulo App 公开信息
 
-2026-10-06 09:25 UTC 的公开 GitHub App 元数据读取确认：正式 App 为
-`Norulo`，slug `norulo`，App ID `3631508`，注册账户为
-Organization `Norulo`。公开注册权限为 Contents write、Pull requests
-write、Email addresses read 和 Metadata read，events 为空。
+用户已新建 App。2026-10-10 通过 GitHub `GET /apps/norulo` 只读核对：
 
-按当前实现，修改目标为 Contents → No access、Pull requests → No access、
-Email addresses → No access，保留 Metadata → Read-only。Organization
-permissions 无需增加。公开元数据不包含安装范围设置，未将 Any account
-视作已核实的现有值。
+| 字段 | 已核实值 |
+| --- | --- |
+| Name | Norulo |
+| Owner | Organization Norulo |
+| Slug | norulo |
+| OAuth Client ID | Iv23li78ZPeUgSxJkLUj |
+| Permissions | 仅 Metadata read |
+| Events | 空列表 |
 
-设置入口：[正式 Norulo App 权限](https://github.com/organizations/Norulo/settings/apps/norulo/permissions)。
-此入口需要有注册 App 管理权限的 GitHub 网页登录会话。当前连接提供仓库
-读写接口，不提供 App 注册设置编辑接口或已登录的 GitHub 浏览器会话；
-本次只读核对尚未保存上述 App 设置修改，也不表示已发送安装审批请求。
-GitHub 官方说明撤除权限立即生效，不需要安装方批准；新增权限才需要
-安装方接受。权限页面修改后点击 Save changes 保存。
+公开页面：[Norulo App](https://github.com/apps/norulo)。
+管理入口：[Norulo App 设置](https://github.com/organizations/Norulo/settings/apps/norulo)。
+管理入口需要拥有该 App 管理权限的 GitHub 网页登录会话。Client ID 和 slug
+是公开配置；当前用户令牌实现不需要数字 App ID、App private key 或 webhook
+secret，历史 App ID 不应填入当前配置。
 
-该设置核对属于 GitHub App 管理操作，独立于 Preview 发布验收。生产 D1
-仍暂停，未因用户授权修改 App 设置而启用。
+## 管理页面需核对的设置
+
+| 设置 | 当前代码需要的值 |
+| --- | --- |
+| Homepage URL | https://norulo.com |
+| Callback URL | https://norulo.com/api/auth/github/callback |
+| Setup URL | https://norulo.com/api/integrations/github/callback |
+| Expire user authorization tokens | 开启 |
+| Request user authorization (OAuth) during installation | 关闭 |
+| Redirect on update | 关闭 |
+| Enable Device Flow | 关闭 |
+| Webhook Active | 关闭；Webhook URL、secret 和事件不填 |
+| Where can this GitHub App be installed? | Any account |
+
+代码分开签发登录和安装的一次性 state。安装时请求 OAuth 授权会使 GitHub
+不提供 Setup URL，而改跳 OAuth Callback；自动 Redirect on update 也可能
+缺少当前安装流程签发的 state，因此两项关闭。当前代码使用浏览器 OAuth
+与 PKCE，不使用 Device Flow 或 GitHub webhook；保留令牌过期以配合已实现
+的 refresh token 轮换。
+
+公开 App API 未核实上述 callbacks、后台选项、安装范围或 Client Secret。
+events 为空也不能单独证明 Webhook Active 已关闭。管理者需在网页逐项保存
+并核对；本次公开元数据检查没有编辑这些设置，也没有完成真实登录或安装
+验收。之后将同一 App 的 Client Secret 安全配置到
+`NORULO_GITHUB_CLIENT_SECRET`，不得写入文档、Git 或聊天。此次步骤不进行
+该 Secret 操作，生产 D1 仍暂停。
 
 官方依据：
 
@@ -74,6 +94,7 @@ GitHub 官方说明撤除权限立即生效，不需要安装方批准；新增�
 - [用户可访问的 App 安装](https://docs.github.com/en/rest/apps/installations#list-app-installations-accessible-to-the-user-access-token)
 - [当前用户](https://docs.github.com/en/rest/users/users#get-the-authenticated-user)、[公开用户查询](https://docs.github.com/en/rest/users/users#get-a-user)
 - [GitHub App user access token](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)
+- [注册 GitHub App 的 callbacks 和选项](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app)
 - [安装 App 到组织](https://docs.github.com/en/apps/using-github-apps/installing-a-github-app-from-a-third-party)
 - [请求 Organization Owner 安装](https://docs.github.com/en/apps/using-github-apps/requesting-a-github-app-from-your-organization-owner)
 - [组织成员接口](https://docs.github.com/en/rest/orgs/members)

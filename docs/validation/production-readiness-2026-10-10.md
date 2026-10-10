@@ -6,8 +6,11 @@ reference; source databases, data, unconfirmed provider credentials and old
 publication permissions are not production Norulo bindings. Keep the existing
 environment CLOUDFLARE_API_TOKEN and every other configured secret intact.
 
-This document describes readiness and required configuration. It does not claim
-that a Worker, database, domain or provider has already been configured or deployed.
+This document describes readiness and required configuration. The new Norulo
+GitHub App's public identity and minimal permissions have now been verified;
+this does not establish saved callbacks, secrets, real OAuth or a deployed Worker,
+database or domain. The current step is GitHub App configuration only, with no
+publication, database changes or application-secret operations.
 The normal application and all 2,553 reference tests already passed local
 verification; the local native acceptance record remains separate from production.
 
@@ -23,8 +26,8 @@ verification; the local native acceptance record remains separate from productio
 | NORULO_ALLOWED_ORIGINS | https://norulo.com | Browser writes fail trusted-Origin validation |
 | NORULO_COOKIE_SAME_SITE | None with Secure/HttpOnly cookies | Must remain consistent with the reviewed browser/API transport |
 | NORULO_GITHUB_CALLBACK_URL | https://norulo.com/api/auth/github/callback | OAuth exchanges/callback registration do not match |
-| NORULO_GITHUB_CLIENT_ID | The OAuth Client ID of the intended GitHub App, not its numeric App ID | Empty yields GITHUB_NOT_CONFIGURED; a placeholder can redirect to an invalid OAuth client |
-| NORULO_GITHUB_APP_SLUG | Registered slug of the same GitHub App as the Client ID and Secret | Installation flow yields GITHUB_APP_NOT_CONFIGURED or targets the wrong registration |
+| NORULO_GITHUB_CLIENT_ID | Iv23li78ZPeUgSxJkLUj, verified against the new Norulo GitHub App; not its numeric App ID | Empty yields GITHUB_NOT_CONFIGURED; a placeholder can redirect to an invalid OAuth client |
+| NORULO_GITHUB_APP_SLUG | norulo, verified with the same App's Client ID | Installation flow yields GITHUB_APP_NOT_CONFIGURED or targets the wrong registration |
 | NORULO_PLAN_LIMITS_JSON | Current checked-in canonical per-plan JSON policy | Invalid policy yields PLAN_POLICY_INVALID |
 | Web NORULO_SERVER binding | norulo-server-production HTTP service binding | Web API transport cannot reach the intended Server |
 
@@ -61,10 +64,15 @@ OAuth success; the operator must verify those separately.
 These are the minimum application secrets for a working GitHub login on a fresh
 production ledger. The platform CLOUDFLARE_API_TOKEN authorizes setup/deployment;
 it is not an application Secret and should not be copied into the Worker.
-The current proposal leaves Client ID and slug empty. A direct local validation
-proved that a blank Client ID returns 503 GITHUB_NOT_CONFIGURED before database
-or provider access, rather than redirecting users to an invalid placeholder App.
-Health and unauthenticated session acceptance do not establish a working login.
+The user has registered [Norulo](https://github.com/apps/norulo). On 2026-10-10,
+GitHub GET /apps/norulo confirmed owner Norulo, name Norulo, slug norulo, Client ID
+Iv23li78ZPeUgSxJkLUj, only metadata read permission and no events. These public
+values replace the earlier blank App configuration. A prior local check proved
+that a blank Client ID fails closed with GITHUB_NOT_CONFIGURED; that check did
+not validate this App. Its saved callbacks, options and Client Secret cannot be
+verified from the public App response, and real login/installation remains
+unverified. Health and unauthenticated session acceptance do not establish a
+working login.
 
 Generate a new encryption key securely for the new empty Norulo database. Once
 credentials are stored, retain that same key: changing it prevents decryption of
@@ -73,7 +81,7 @@ an old identity/key was authorized for Norulo. Check only presence, decoded key
 length and readiness, and report booleans/errors without printing secret values.
 Secrets embedded in a Worker cannot be recovered by listing their names.
 
-The intended GitHub App must register:
+The App management page must be checked for:
 
 - Homepage: https://norulo.com.
 - OAuth callback: https://norulo.com/api/auth/github/callback.
@@ -81,6 +89,14 @@ The intended GitHub App must register:
 - Repository Metadata read permission; installation/repository grants belong to
   each actual user. No organization/account permission or private key is required
   by this user-token gateway.
+- Expire user authorization tokens enabled; Request user authorization during
+  installation, Redirect on update, Device Flow and Webhook Active disabled.
+- Any account installation scope for users outside the registration account.
+
+The complete registration checklist and the distinction between verified public
+metadata and unverified management settings are recorded in
+[GitHub App permissions](../design/github-project-ledger/github-app-permissions.md).
+The current implementation does not need a numeric App ID or App private key.
 
 The Client ID/Secret/slug must identify a GitHub App because repository discovery
 uses /user/installations and App user access tokens. An ordinary OAuth App or a
@@ -147,6 +163,8 @@ The production deployment/configuration/runtime tests passed: 36 tests and 18
 subtests. S01 production validation with --allow-placeholders, including the
 --activate-production overlay, and shell syntax checks passed. Frozen Python
 3.14.2 pywrangler deploy --dry-run with the production config completed and
-produced a package without remote publication. These checks preserve the database
-placeholder, blank provider IDs and disabled optional features; they do not prove
-Cloudflare write permissions or live provider readiness.
+produced a package without remote publication. Those checks preserved the database
+placeholder, the then-blank GitHub identity, unconfigured optional providers and
+disabled optional features. The subsequent App public metadata verification does
+not establish Cloudflare write permissions, saved callbacks, secret readiness or
+live login acceptance.

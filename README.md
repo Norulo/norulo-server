@@ -14,6 +14,10 @@ The user has subsequently authorized a production-only release. Current resource
 credential and feature readiness is recorded in
 [production readiness](docs/validation/production-readiness-2026-10-10.md);
 publication is pending verified new resources and the necessary token permissions.
+The user has registered [Norulo's GitHub App](https://github.com/apps/norulo);
+its public identity and Metadata-only permission were verified on 2026-10-10.
+The current step is App configuration only. Saved callbacks, secrets and real
+login remain unverified; see the [registration checklist](docs/design/github-project-ledger/github-app-permissions.md).
 The current release targets norulo.com and api.norulo.com in production only.
 Preview configuration remains an offline reference and is not a release target.
 The original Norulo logo is installed in norulo-web/public/norulo-logo.png;
@@ -50,8 +54,10 @@ email, payments, AI providers or remote Cloudflare behavior.
 ## Configuration
 
 The [Worker guide](cloudflare/server/README.md) explains local and remote setup.
-Preview and production configs are paused, use unconfigured D1/provider
-placeholders and have no schedules or mail bindings. The execution guard rejects
+Preview and production configs are paused, use unconfigured D1 and optional
+provider placeholders and have no schedules or mail bindings. Production's public
+GitHub Client ID and slug identify the verified Norulo App; its secret and
+callback readiness are separate checks. The execution guard rejects
 placeholders and the source service's resource IDs. Configure independent Norulo
 resources and callbacks before a separately authorized release.
 

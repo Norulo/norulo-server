@@ -10,9 +10,12 @@ The imported source's remote databases, providers, domain registrations and
 historic publication approval have not been transferred. The user now authorizes
 production-only publication with new Norulo resources. The production proposal
 selects the verified account/zone and the exact api.norulo.com custom domain;
-its DB remains a placeholder until a new database is available. GitHub Client ID
-and slug are deliberately blank, producing a controlled GITHUB_NOT_CONFIGURED
-response until the intended App is configured. See
+its DB remains a placeholder until a new database is available. The user has now
+registered the real Norulo GitHub App: its public Client ID
+Iv23li78ZPeUgSxJkLUj and slug norulo were verified with GitHub on 2026-10-10, with
+only Metadata read permission and no events. Saved callbacks, management options,
+Client Secret and real login remain unverified. The current step only configures
+the GitHub App, without publication, database changes or secret operations. See
 [production readiness](../../docs/validation/production-readiness-2026-10-10.md).
 
 ## Local runtime
