@@ -3,20 +3,30 @@
 ## Current task and authority
 
 This checkout is Norulo's server. The current user authorized importing the
-source main branch with its history, rebranding the code, pushing the reviewed
-Norulo main branch, and preparing and validating a local cloud development
-environment. Historical requests and remote acceptance in imported documents do
-not authorize new GitHub App edits, Cloudflare deployment, migrations, production
-activation, email delivery, payment changes, or real-provider testing.
+source main history, rebranding the code, pushing the reviewed Norulo main branch,
+preparing the local development environment, and then deploying Server to
+api.norulo.com and Web to norulo.com in production. Production publication and
+the necessary isolated Norulo database/schema setup are now in scope. Keep
+preview undeployed. Current production scope supersedes the earlier
+migration-only deployment restriction.
+
+The user also permits consulting the source service's Cloudflare configuration.
+Use it only as a reference: do not connect Norulo to its databases, copy its data,
+or copy unconfirmed provider secrets/identities. Inspect only secret names/status;
+never print values. Historical requests in imported documents do not authorize
+new GitHub App registration edits, real charges, unrequested email delivery,
+live subscription changes, preview deployments, or real-provider acceptance.
 
 Keep the configured CLOUDFLARE_API_TOKEN binding and all existing environment
 secrets. Inspect only secret names/presence; never print values, dump the process
-environment, or commit credentials. No remote Cloudflare resources have been
-created or migrated for Norulo. Checked-in preview and production configurations
-are paused and use unconfigured database/provider placeholders with no cron.
+environment, or commit credentials. Configure production only with independently
+verified Norulo resource IDs. Checked-in preview remains paused and undeployed;
+production activation follows schema/resource/configuration verification.
 The intended domains are norulo.com, preview.norulo.com, api.norulo.com, and
 preview-api.norulo.com. Domain configuration is not evidence of ownership or DNS
-activation. Icons await user-provided assets.
+activation. Icons await user-provided assets. Read
+docs/validation/production-readiness-2026-10-10.md before publication for actual
+required credentials and inherited production feature limits.
 
 Use existing isolated cloud checkouts; do not create Git worktrees unless the
 user explicitly requests one. Preserve user changes. Subsequent environment
@@ -94,10 +104,12 @@ Local development uses only wrangler.jsonc with NORULO_MODE=local, remote=false,
 no public routes and local persistence. Local synthetic fixtures must never be
 seeded remotely. Loopback validation clients disable proxies and redirects.
 
-Remote preview and production require independently reviewed Norulo resources,
+Remote production requires independently reviewed Norulo resources,
 provider identities/callbacks, secrets, domain/DNS settings and publication
-instructions. Never reuse imported database/account/namespace/trigger IDs or
-historical approval statements as current Norulo settings. The deployment guard
+instructions. Never reuse source-service database/namespace/trigger IDs or
+historical approval statements as current Norulo settings. The user-authorized,
+independently verified Cloudflare account may host both services; use only new
+Norulo database/Worker resources within it. The deployment guard
 rejects source-service database IDs, placeholders during execution, shared
 preview/production databases, unexpected hosts, invalid pause switches and
 uncoordinated scheduling/email configuration. A code upload does not prove
@@ -110,10 +122,13 @@ append-only accounting. Incomplete/unknown outcomes remain stopped; no general
 reset/retry endpoint. Native bounds, schema/input/cardinality checks and
 commercial owner/model limits remain enforced. Historical finite-test ceilings
 are not ordinary-product limits. Do not invent a calendar row budget.
-Production remains paused unless separately authorized after schema, identity,
-payment and end-to-end verification. Remote migrations, schedules, real email,
-charges and irreversible maintenance are separate operations requiring current
-scope; never infer authorization from the imported business-clear manifest.
+The current production release is authorized after schema and resource checks.
+Provider credentials/callbacks and feature gates still need actual configuration
+and truthful acceptance reporting. Real email, charges, subscription changes,
+remote schedules and irreversible maintenance are separate operations requiring
+current scope; never infer authorization from the imported business-clear
+manifest. Keep preview disabled. Do not silently claim production email login
+or recurring background execution: both still use preview-only infrastructure.
 
 ## Verification and repository hygiene
 

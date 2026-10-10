@@ -7,7 +7,13 @@ proposals. Both keep D1 access, schema upgrades, mail, scheduled recurrence and
 AI provider dispatch disabled. Their database UUIDs and GitHub/provider settings
 must be configured for independent Norulo resources before remote execution.
 The imported source's remote databases, providers, domain registrations and
-historic publication approval have not been transferred.
+historic publication approval have not been transferred. The user now authorizes
+production-only publication with new Norulo resources. The production proposal
+selects the verified account/zone and the exact api.norulo.com custom domain;
+its DB remains a placeholder until a new database is available. GitHub Client ID
+and slug are deliberately blank, producing a controlled GITHUB_NOT_CONFIGURED
+response until the intended App is configured. See
+[production readiness](../../docs/validation/production-readiness-2026-10-10.md).
 
 ## Local runtime
 

@@ -10,8 +10,9 @@
   "preview_urls": false,
   "routes": [
     {
-      "pattern": "api.norulo.com/*",
-      "zone_name": "norulo.com"
+      "pattern": "api.norulo.com",
+      "custom_domain": true,
+      "zone_id": "deef49a196452b7efa6f9b7128e4d37b"
     }
   ],
   "vars": {
@@ -23,15 +24,16 @@
     "NORULO_EMAIL_AUTH_ENABLED": "0",
     "NORULO_APP_URL": "https://norulo.com",
     "NORULO_GITHUB_CALLBACK_URL": "https://norulo.com/api/auth/github/callback",
-    "NORULO_GITHUB_CLIENT_ID": "replace-me",
-    "NORULO_GITHUB_APP_SLUG": "replace-me",
+    "NORULO_GITHUB_CLIENT_ID": "",
+    "NORULO_GITHUB_APP_SLUG": "",
     "NORULO_CREEM_API_BASE_URL": "https://api.creem.io",
     "NORULO_CREEM_PRODUCT_IDS_JSON": "{}",
     "NORULO_ALLOWED_ORIGINS": "https://norulo.com",
     "NORULO_COOKIE_SAME_SITE": "None",
     "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":100,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\"},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\"},\"max\":{\"projects\":100,\"records\":100000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"5.00\"}}",
     "NORULO_JEV_SUGGESTIONS_ENABLED": "0",
-    "NORULO_JEV_SUGGESTIONS_EVALUATED": "0"
+    "NORULO_JEV_SUGGESTIONS_EVALUATED": "0",
+    "NORULO_RECURRING_EXPENSES_ENABLED": "0"
   },
   "d1_databases": [
     {
@@ -40,5 +42,6 @@
       "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "migrations"
     }
-  ]
+  ],
+  "account_id": "84e421f26c708c0cf437e287eed11fa1"
 }

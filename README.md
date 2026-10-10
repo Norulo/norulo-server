@@ -10,6 +10,10 @@ This repository contains the complete imported source main history and a Norulo
 rebrand. The current schema is version 12. Imported provider deployments and
 validation records are historical; no remote Norulo service, database or provider
 configuration has been migrated. See [migration status](docs/validation/migration-2026-10-10.md).
+The user has subsequently authorized a production-only release. Current resource,
+credential and feature readiness is recorded in
+[production readiness](docs/validation/production-readiness-2026-10-10.md);
+publication is pending verified new resources and the necessary token permissions.
 The intended domains are norulo.com, preview.norulo.com, api.norulo.com and
 preview-api.norulo.com. Icons await user-provided assets.
 
