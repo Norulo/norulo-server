@@ -13,19 +13,21 @@ configuration has been migrated. See [migration status](docs/validation/migratio
 The user has subsequently authorized a production-only release. Current resource,
 credential and feature readiness is recorded in
 [production readiness](docs/validation/production-readiness-2026-10-10.md);
-full application publication is pending verified new database resources and
-configuration. A temporary paused norulo-server-production Worker now exists
-only for secure GitHub Secret setup; it has no D1 binding or public route and
-returns SERVICE_SETUP_PENDING. The earlier Worker permission rejection was
-resolved after the user updated the token. A new D1 create attempt still returned
-HTTP 401 Authentication error; database creation needs effective Account D1 Edit
-permission for the verified account.
+the Web Worker has been published, and api.norulo.com is bound to the temporary
+paused norulo-server-production bootstrap. Its handler returns
+SERVICE_SETUP_PENDING, with no D1 or Durable Object binding. The full Python
+ledger application is not deployed, so login and ledger operations are not active.
+The user explicitly deferred D1 setup while proceeding with the frontend and
+production domains; no further database or permission action is requested now.
+Finite checks with an ordinary browser User-Agent confirmed homepage HTTP 200
+and the API/Web proxy's expected paused 503 response. Login and ledger behavior
+remain unavailable in this stage.
 The user has registered [Norulo's GitHub App](https://github.com/apps/norulo);
 its public identity and Metadata-only permission were verified on 2026-10-10.
-The current step configures the App and its Secrets without activating the
-business service. The user has securely saved NORULO_GITHUB_CLIENT_SECRET, and
+The user has securely saved NORULO_GITHUB_CLIENT_SECRET, and
 the fresh token-encryption key is also present. Cloudflare confirmed both Secret
-names without exposing values; this proves presence, not credential validity.
+names without exposing values; all 18 public production variables also matched
+the configuration. This proves presence and settings consistency, not credential validity.
 Saved GitHub callbacks and real login remain unverified; see the
 [registration checklist](docs/design/github-project-ledger/github-app-permissions.md).
 The current release targets norulo.com and api.norulo.com in production only.

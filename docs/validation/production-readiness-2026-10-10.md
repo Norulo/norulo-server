@@ -8,10 +8,11 @@ environment CLOUDFLARE_API_TOKEN and every other configured secret intact.
 
 This document describes readiness and required configuration. The new Norulo
 GitHub App's public identity and minimal permissions have now been verified;
-this does not establish saved callbacks or real OAuth. A temporary paused Worker
-now exists solely for secure Secret setup; the full Python application, database
-and production domain have not been deployed. The current step configures the
-GitHub App and its Secrets, without business activation or database changes.
+this does not establish saved callbacks or real OAuth. The Web Worker has now
+been published, and api.norulo.com is attached to the temporary paused bootstrap.
+The full Python application and database remain undeployed. The user explicitly
+deferred D1 setup while proceeding with the frontend and production domains;
+there is no immediate request for D1 permission changes or database operations.
 The normal application and all 2,553 reference tests already passed local
 verification; the local native acceptance record remains separate from production.
 
@@ -33,17 +34,18 @@ verification; the local native acceptance record remains separate from productio
 | Web NORULO_SERVER binding | norulo-server-production HTTP service binding | Web API transport cannot reach the intended Server |
 
 The current proposal selects the independently verified Cloudflare account and
-active norulo.com zone. Because there is no API DNS record, its exact
-api.norulo.com custom-domain route lets Cloudflare manage the API hostname instead
-of depending on an unconfigured zone-route origin. The D1 UUID remains a
+active norulo.com zone. Its exact api.norulo.com Custom Domain is now attached to
+the paused Worker, allowing Cloudflare to manage the API hostname. The checked-in
+D1 UUID remains a
 placeholder. An earlier database create request was rejected with Authentication
 error and created nothing. The user subsequently updated the token permissions;
 D1 creation was retried with the updated token and still returned HTTP 401,
 code 10000, Authentication error. Workers write access now works, but independent
-database creation remains blocked pending effective Account D1 Edit permission
-and resource scope covering the verified account. No database was created.
-Publication still needs the new database and schema validation. Preserve the
-existing token binding.
+database creation was not possible in that attempt. No database was created.
+The user has since deferred D1, so do not retry creation or request immediate
+permission changes as part of the current frontend/domain stage. A later full
+application release will require independent Norulo D1 resources, effective
+permission and schema validation. Preserve the existing token binding.
 
 The user subsequently requested creation of a paused norulo-server-production
 Worker so its GitHub Client Secret could be entered securely. Its initial upload
@@ -51,8 +53,9 @@ was rejected with HTTP 403, "No access to the specified resource." After the
 user updated the token permissions, creation succeeded at 2026-10-10 13:05:07 UTC.
 This temporary JavaScript bootstrap only returns 503 SERVICE_SETUP_PENDING with
 Cache-Control: no-store; it has no database or provider access. workers_dev and
-preview_urls were explicitly disabled and read back as false. No D1 binding or
-route was added, and the full Python ledger application is not published.
+preview_urls were explicitly disabled and read back as false. At that initial
+Secret-setup stage no D1 binding or route was added. The full Python ledger
+application remains unpublished.
 Twelve public configuration variables were set, including the verified App
 Client ID, slug and intended OAuth callback. One fresh NORULO_GITHUB_TOKEN_KEY Secret
 was generated and uploaded securely; only its name was read back. The user then
@@ -62,6 +65,38 @@ OAuth callback, origins and production mode also matched the intended settings;
 workers_dev and preview_urls remained false. These checks establish Secret
 presence and public configuration consistency, not Client Secret validity or
 successful live OAuth. No secret value belongs in release evidence.
+
+## Current frontend and paused API stage
+
+- The Web Worker norulo-web was published as version
+  fb3dbf7c-8530-405a-bf01-a9d208136a83, for the production host norulo.com.
+- Cloudflare accepted the api.norulo.com Custom Domain on
+  norulo-server-production; readback confirms enabled=true and
+  previews_enabled=false. workers_dev and preview_urls remain false.
+- The bootstrap's settings now contain all 18 public variables matching the
+  production config and exactly the two required secret_text bindings. There are
+  no D1 or Durable Object bindings. The settings PATCH used the multipart part
+  named settings, with name-only inherit bindings for both Secrets; Cloudflare
+  returned success and the subsequent readback confirmed they were retained.
+- The JavaScript bootstrap still has only the fixed 503 SERVICE_SETUP_PENDING
+  handler. No Python ledger upload, database/schema operation, live OAuth,
+  provider acceptance or business activation occurred in this stage.
+- Initial requests with Python's default User-Agent returned 403. Finite requests
+  using an ordinary browser User-Agent, without Authorization and with default
+  TLS verification, then confirmed the homepage returns HTTP 200. Both
+  api.norulo.com/health and norulo.com/api/health return the expected paused
+  503 SERVICE_SETUP_PENDING with Cache-Control: no-store and no Set-Cookie.
+  Six published branding assets matched their local hashes. No Cloudflare
+  security setting was changed. This verifies frontend assets, the API domain
+  and the Web-to-paused-API transport, not OAuth or ledger functionality.
+
+The user deliberately postponed D1. Keep the checked-in D1 pause and optional
+feature switches disabled; do not deploy the full production config with its
+placeholder database binding. Preview remains undeployed. The safe local stage
+record is /workspace/.norulo-environment/cloudflare-production-stage.json; it
+contains public configuration, status booleans and Secret names, never values.
+
+## Required platform behavior for the full application
 
 The Server production hostname is api.norulo.com; the Web host removes the first
 /api path prefix before forwarding. The Server receives /api/v1/* for browser
@@ -178,6 +213,9 @@ production triggers; communicate this release limit without claiming full
 background recurrence acceptance.
 
 ## Publication sequence and validation
+
+The frontend/paused-bootstrap stage above is complete at the control plane.
+Resume the full application sequence only when the deferred D1 step is requested.
 
 1. Verify the account and Norulo zone, select independent resources and record
    database/account IDs without modifying or querying source-service databases.

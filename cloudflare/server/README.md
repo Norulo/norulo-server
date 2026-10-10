@@ -16,14 +16,21 @@ Iv23li78ZPeUgSxJkLUj and slug norulo were verified with GitHub on 2026-10-10, wi
 only Metadata read permission and no events. Saved callbacks, management options,
 Client Secret validity and real login remain unverified. A temporary paused
 norulo-server-production Worker was created after the user updated the token
-permissions. It only returns 503 SERVICE_SETUP_PENDING; workers.dev and preview
-URLs are disabled, with no D1 binding or route. A fresh token-encryption key was
+permissions. Its handler returns 503 SERVICE_SETUP_PENDING; workers.dev and
+preview URLs remain disabled. The api.norulo.com Custom Domain is now bound,
+enabled with previews disabled, while no D1 or Durable Object binding exists.
+A fresh token-encryption key was
 securely uploaded, and the user has now saved NORULO_GITHUB_CLIENT_SECRET in the
 Cloudflare Dashboard. Both Secret names were read back without inspecting values.
-This is Secret setup, without full application publication, business activation
-or database changes. A fresh D1 create attempt with the updated token still
-returned HTTP 401 Authentication error; effective Account D1 Edit permission
-remains a prerequisite. See
+All 18 public production variables were subsequently applied, preserving both
+Secrets through inherit bindings and verified without reading their values.
+The Web Worker has been published, but the full Python application and business
+service remain inactive. The user explicitly deferred D1 setup; do not request
+immediate permission changes or retry database creation during this stage.
+Finite ordinary browser User-Agent checks confirmed homepage HTTP 200 and both
+api.norulo.com/health and the Web /api/health proxy returning the expected paused
+503 response with no-store and no Set-Cookie. This verifies the current frontend
+and paused transport, not login or ledger functions. See
 [production readiness](../../docs/validation/production-readiness-2026-10-10.md).
 
 ## Local runtime

@@ -88,14 +88,23 @@ GitHub's public API verified Client ID Iv23li78ZPeUgSxJkLUj, slug norulo, owner
 Norulo and only Metadata read permission with no events. Saved callbacks,
 management options, Client Secret validity and real login remain unverified; see the
 [current App checklist](../design/github-project-ledger/github-app-permissions.md).
-The current step configures that App and its Secrets. A temporary paused Worker
-now exists only for secure Secret entry, with no D1 binding or public route.
+The App and its Secrets are configured on a temporary paused Worker, with no D1
+or Durable Object binding. Its api.norulo.com Custom Domain is enabled with
+previews disabled, and all 18 public production variables were applied while
+retaining the two Secrets by name-only inheritance.
 A fresh token-encryption key was securely uploaded, and the user subsequently
 saved NORULO_GITHUB_CLIENT_SECRET. Both Secret names were confirmed without
 reading values; live OAuth remains unverified. The full ledger application has
-not been published, and no remote database changes have been made. A new D1
-create attempt after the token update still returned HTTP 401 Authentication
-error. See the current
+not been published, and no remote database changes have been made. The Web Worker
+was published as version fb3dbf7c-8530-405a-bf01-a9d208136a83. A new D1 create
+attempt after the token update returned HTTP 401 Authentication error; the user
+subsequently deferred D1 while proceeding with the frontend and production
+domains. Do not request immediate D1 permission changes or retry database
+creation during that stage. Initial default Python User-Agent checks returned
+403; finite ordinary browser User-Agent checks subsequently confirmed homepage
+200 and the expected API/Web proxy 503 SERVICE_SETUP_PENDING, with no-store and
+no Set-Cookie. Published branding assets matched local hashes. This establishes
+the frontend and paused transport, not real OAuth or ledger acceptance. See the current
 [production readiness record](production-readiness-2026-10-10.md).
 
 Before a separately authorized deployment, configure independent Norulo D1 and
