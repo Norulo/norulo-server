@@ -39,6 +39,14 @@ placeholder: the current token can list databases, but its create request was
 rejected with Authentication error. Publication needs an authorized new database
 and effective D1 write permission; nothing was created by that failed request.
 
+The user subsequently requested creation of a paused norulo-server-production
+Worker so its GitHub Client Secret could be entered securely. The initial upload
+was rejected with HTTP 403, "No access to the specified resource." No Norulo
+Worker was created and no application secret was uploaded. Effective Account
+Workers Scripts Edit permission and resource scope covering the verified account
+are required for this operation; the existing CLOUDFLARE_API_TOKEN binding must
+be preserved. This is a Cloudflare access rejection, not a published application.
+
 The Server production hostname is api.norulo.com; the Web host removes the first
 /api path prefix before forwarding. The Server receives /api/v1/* for browser
 requests to /api/api/v1/*. OAuth callbacks run through the same Web proxy.
