@@ -2,8 +2,8 @@
 
 2026-10-10。本文记录新注册的真实 Norulo App 和当前代码要求，替代迁移时
 机械替换名称的源服务 App 设置说明。源服务历史 App ID、Client ID 和验收
-记录不是该 Norulo App 的身份或验收证据。当前步骤仅配置 GitHub App，
-不部署、不创建数据库，也不生成或上传应用密钥。
+记录不是该 Norulo App 的身份或验收证据。当前步骤配置 GitHub App 和必要
+Secrets，暂不发布完整业务程序或创建数据库。
 
 当前 Organization 关联、多仓库项目和账本邀请不需要新增
 Organization 或 Account 权限。以下是代码实际调用所需的最小配置。
@@ -86,7 +86,9 @@ events 为空也不能单独证明 Webhook Active 已关闭。管理者需在网
 并核对；本次公开元数据检查没有编辑这些设置，也没有完成真实登录或安装
 验收。之后将同一 App 的 Client Secret 安全配置到
 `NORULO_GITHUB_CLIENT_SECRET`，不得写入文档、Git 或聊天。此次步骤不进行
-该 Secret 操作，生产 D1 仍暂停。
+完整业务发布。临时暂停 Worker 已为安全录入 Secret 创建，新的
+`NORULO_GITHUB_TOKEN_KEY` 已安全生成并上传；用户当前只需在 Cloudflare
+控制台填写 `NORULO_GITHUB_CLIENT_SECRET`。生产 D1 仍暂停，真实登录未验收。
 
 官方依据：
 

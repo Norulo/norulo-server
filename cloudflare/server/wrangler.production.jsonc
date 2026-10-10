@@ -8,6 +8,12 @@
   ],
   "workers_dev": false,
   "preview_urls": false,
+  "secrets": {
+    "required": [
+      "NORULO_GITHUB_CLIENT_SECRET",
+      "NORULO_GITHUB_TOKEN_KEY"
+    ]
+  },
   "routes": [
     {
       "pattern": "api.norulo.com",

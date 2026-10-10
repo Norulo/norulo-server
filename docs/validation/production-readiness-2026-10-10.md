@@ -8,9 +8,10 @@ environment CLOUDFLARE_API_TOKEN and every other configured secret intact.
 
 This document describes readiness and required configuration. The new Norulo
 GitHub App's public identity and minimal permissions have now been verified;
-this does not establish saved callbacks, secrets, real OAuth or a deployed Worker,
-database or domain. The current step is GitHub App configuration only, with no
-publication, database changes or application-secret operations.
+this does not establish saved callbacks or real OAuth. A temporary paused Worker
+now exists solely for secure Secret setup; the full Python application, database
+and production domain have not been deployed. The current step configures the
+GitHub App and its Secrets, without business activation or database changes.
 The normal application and all 2,553 reference tests already passed local
 verification; the local native acceptance record remains separate from production.
 
@@ -35,17 +36,25 @@ The current proposal selects the independently verified Cloudflare account and
 active norulo.com zone. Because there is no API DNS record, its exact
 api.norulo.com custom-domain route lets Cloudflare manage the API hostname instead
 of depending on an unconfigured zone-route origin. The D1 UUID remains a
-placeholder: the current token can list databases, but its create request was
-rejected with Authentication error. Publication needs an authorized new database
-and effective D1 write permission; nothing was created by that failed request.
+placeholder. An earlier database create request was rejected with Authentication
+error and created nothing. The user subsequently updated the token permissions;
+D1 creation has not been retried, so its effective write permission remains
+unverified. Publication still needs an authorized independent new database and
+schema validation. Preserve the existing token binding.
 
 The user subsequently requested creation of a paused norulo-server-production
-Worker so its GitHub Client Secret could be entered securely. The initial upload
-was rejected with HTTP 403, "No access to the specified resource." No Norulo
-Worker was created and no application secret was uploaded. Effective Account
-Workers Scripts Edit permission and resource scope covering the verified account
-are required for this operation; the existing CLOUDFLARE_API_TOKEN binding must
-be preserved. This is a Cloudflare access rejection, not a published application.
+Worker so its GitHub Client Secret could be entered securely. Its initial upload
+was rejected with HTTP 403, "No access to the specified resource." After the
+user updated the token permissions, creation succeeded at 2026-10-10 13:05:07 UTC.
+This temporary JavaScript bootstrap only returns 503 SERVICE_SETUP_PENDING with
+Cache-Control: no-store; it has no database or provider access. workers_dev and
+preview_urls were explicitly disabled and read back as false. No D1 binding or
+route was added, and the full Python ledger application is not published.
+Twelve public configuration variables were set, including the verified App
+Client ID, slug and intended OAuth callback. One fresh NORULO_GITHUB_TOKEN_KEY Secret
+was generated and uploaded securely; only its name was read back. At this stage
+it is the sole Secret, and NORULO_GITHUB_CLIENT_SECRET awaits the user's secure
+Cloudflare Dashboard entry. No secret value belongs in release evidence.
 
 The Server production hostname is api.norulo.com; the Web host removes the first
 /api path prefix before forwarding. The Server receives /api/v1/* for browser
@@ -66,8 +75,8 @@ OAuth success; the operator must verify those separately.
 
 | Secret name | Requirement |
 | --- | --- |
-| NORULO_GITHUB_CLIENT_SECRET | Secret belonging to the same intended GitHub App as Client ID and slug |
-| NORULO_GITHUB_TOKEN_KEY | Exactly 32 cryptographically random bytes encoded as unpadded base64url, normally 43 characters; imported into WebCrypto AES-GCM |
+| NORULO_GITHUB_CLIENT_SECRET | Secret belonging to the same intended GitHub App as Client ID and slug; awaiting the user's secure Dashboard entry |
+| NORULO_GITHUB_TOKEN_KEY | Exactly 32 cryptographically random bytes encoded as unpadded base64url, normally 43 characters; securely generated/uploaded for Norulo and its Secret name verified |
 
 These are the minimum application secrets for a working GitHub login on a fresh
 production ledger. The platform CLOUDFLARE_API_TOKEN authorizes setup/deployment;
@@ -82,12 +91,26 @@ verified from the public App response, and real login/installation remains
 unverified. Health and unauthenticated session acceptance do not establish a
 working login.
 
-Generate a new encryption key securely for the new empty Norulo database. Once
-credentials are stored, retain that same key: changing it prevents decryption of
+The fresh Norulo encryption key is already stored securely; the user only needs
+to enter NORULO_GITHUB_CLIENT_SECRET for this step. Retain the existing key;
+do not regenerate it during ordinary setup or deployment. Once credentials are
+stored, changing the key prevents decryption of
 existing access/refresh tokens. Do not reuse an old service's database or presume
 an old identity/key was authorized for Norulo. Check only presence, decoded key
 length and readiness, and report booleans/errors without printing secret values.
 Secrets embedded in a Worker cannot be recovered by listing their names.
+
+The production config declares exactly these two secrets in secrets.required.
+Pinned Wrangler 4.136.3 generates inherit bindings for them during deployment,
+so the full Python upload retains the values already configured on this Worker.
+If a required binding is absent, strict inheritance rejects publication instead
+of silently removing or substituting it. This declaration contains names only.
+It does not use keep_vars or inherit unrelated Dashboard configuration, and it
+does not establish secret validity or a successful OAuth exchange. A packaging
+dry-run does not contact Cloudflare to check secret presence; verify names before
+the separately requested full release.
+Declare any subsequently enabled provider Secrets explicitly before publishing
+their feature; the current precise inheritance covers the two GitHub bindings.
 
 The App management page must be checked for:
 
@@ -176,3 +199,12 @@ placeholder, the then-blank GitHub identity, unconfigured optional providers and
 disabled optional features. The subsequent App public metadata verification does
 not establish Cloudflare write permissions, saved callbacks, secret readiness or
 live login acceptance.
+
+After adding the exact two GitHub names to secrets.required, the pinned Wrangler
+schema accepted the production config and the frozen Python packaging dry-run
+passed again without contacting Cloudflare. The 36 existing deployment/config/
+production-runtime tests and 18 subtests, and both paused/activation-overlay S01
+checks, passed. An independent offline check exercised the actual pinned
+inheritance helper and reviewed strict missing-binding error handling. These
+checks preserve the D1 placeholder and disabled optional features; they do not
+verify the user's pending Client Secret or effective D1 write permission.

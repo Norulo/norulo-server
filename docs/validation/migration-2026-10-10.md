@@ -86,10 +86,14 @@ startup scripts own the long-running development process after validation.
 The user subsequently registered the real Norulo GitHub App. On 2026-10-10,
 GitHub's public API verified Client ID Iv23li78ZPeUgSxJkLUj, slug norulo, owner
 Norulo and only Metadata read permission with no events. Saved callbacks,
-management options, secrets and real login remain unverified; see the
+management options, Client Secret and real login remain unverified; see the
 [current App checklist](../design/github-project-ledger/github-app-permissions.md).
-The current step configures that App only, without deployment, database changes
-or secret operations.
+The current step configures that App and its Secrets. A temporary paused Worker
+now exists only for secure Secret entry, with no D1 binding or public route.
+A fresh token-encryption key was securely uploaded; the user only needs to enter
+NORULO_GITHUB_CLIENT_SECRET. The full ledger application has not been published,
+and no remote database changes have been made. See the current
+[production readiness record](production-readiness-2026-10-10.md).
 
 Before a separately authorized deployment, configure independent Norulo D1 and
 Worker/DO resources, the App's callbacks and credentials, verified domains/DNS,

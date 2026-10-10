@@ -14,8 +14,14 @@ its DB remains a placeholder until a new database is available. The user has now
 registered the real Norulo GitHub App: its public Client ID
 Iv23li78ZPeUgSxJkLUj and slug norulo were verified with GitHub on 2026-10-10, with
 only Metadata read permission and no events. Saved callbacks, management options,
-Client Secret and real login remain unverified. The current step only configures
-the GitHub App, without publication, database changes or secret operations. See
+Client Secret and real login remain unverified. A temporary paused
+norulo-server-production Worker was created after the user updated the token
+permissions. It only returns 503 SERVICE_SETUP_PENDING; workers.dev and preview
+URLs are disabled, with no D1 binding or route. A fresh token-encryption key was
+securely uploaded; the user only needs to enter NORULO_GITHUB_CLIENT_SECRET in
+the Cloudflare Dashboard. This is Secret setup, without full application
+publication, business activation or database changes. D1 write permissions have
+not been retried with the updated token. See
 [production readiness](../../docs/validation/production-readiness-2026-10-10.md).
 
 ## Local runtime
@@ -49,7 +55,10 @@ NORULO_SERVER HTTP service binding to the appropriate Server Worker.
 NORULO_GITHUB_CLIENT_SECRET, NORULO_GITHUB_TOKEN_KEY, NORULO_CREEM_API_KEY,
 NORULO_CREEM_WEBHOOK_SECRET and optional email/model credentials belong in Secrets.
 NORULO_GITHUB_TOKEN_KEY is 32 cryptographically random bytes encoded as unpadded
-base64url; an existing data migration must preserve its encryption key. Do not
+base64url; the fresh Norulo key is already stored securely and must be retained.
+Production secrets.required lists exactly the two GitHub Secret names, causing
+pinned Wrangler to inherit their existing bindings and reject a missing required
+Secret during real publication. A dry-run does not verify remote presence. Do not
 paste credentials into chat or saved instructions. Keep the existing environment
 CLOUDFLARE_API_TOKEN binding intact.
 

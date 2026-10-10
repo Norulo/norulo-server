@@ -13,11 +13,18 @@ configuration has been migrated. See [migration status](docs/validation/migratio
 The user has subsequently authorized a production-only release. Current resource,
 credential and feature readiness is recorded in
 [production readiness](docs/validation/production-readiness-2026-10-10.md);
-publication is pending verified new resources and the necessary token permissions.
+full application publication is pending verified new database resources and
+configuration. A temporary paused norulo-server-production Worker now exists
+only for secure GitHub Secret setup; it has no D1 binding or public route and
+returns SERVICE_SETUP_PENDING. The earlier Worker permission rejection was
+resolved after the user updated the token; D1 write permission has not been
+retested.
 The user has registered [Norulo's GitHub App](https://github.com/apps/norulo);
 its public identity and Metadata-only permission were verified on 2026-10-10.
-The current step is App configuration only. Saved callbacks, secrets and real
-login remain unverified; see the [registration checklist](docs/design/github-project-ledger/github-app-permissions.md).
+The current step configures the App and its Secrets without activating the
+business service. A fresh token-encryption key is stored securely; the user only
+needs to enter NORULO_GITHUB_CLIENT_SECRET in Cloudflare. Saved callbacks and
+real login remain unverified; see the [registration checklist](docs/design/github-project-ledger/github-app-permissions.md).
 The current release targets norulo.com and api.norulo.com in production only.
 Preview configuration remains an offline reference and is not a release target.
 The original Norulo logo is installed in norulo-web/public/norulo-logo.png;
@@ -56,7 +63,8 @@ email, payments, AI providers or remote Cloudflare behavior.
 The [Worker guide](cloudflare/server/README.md) explains local and remote setup.
 Preview and production configs are paused, use unconfigured D1 and optional
 provider placeholders and have no schedules or mail bindings. Production's public
-GitHub Client ID and slug identify the verified Norulo App; its secret and
+GitHub Client ID and slug identify the verified Norulo App. Its two required
+Secrets are declared by name for inheritance during the full upload; secret and
 callback readiness are separate checks. The execution guard rejects
 placeholders and the source service's resource IDs. Configure independent Norulo
 resources and callbacks before a separately authorized release.
