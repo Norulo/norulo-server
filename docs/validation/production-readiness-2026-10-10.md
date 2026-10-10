@@ -7,13 +7,15 @@ publication permissions are not production Norulo bindings. Keep the existing
 environment CLOUDFLARE_API_TOKEN and every other configured secret intact.
 
 This document describes readiness and required configuration as of the
-2026-10-10 sending-domain and binding stage. The new Norulo
-GitHub App's public identity and minimal permissions have now been verified;
-this does not establish saved callbacks or real OAuth. The Web Worker has now
-been published, and api.norulo.com is attached to the temporary paused bootstrap.
-The full Python application and database remain undeployed. The user explicitly
-deferred D1 setup while proceeding with the frontend and production domains;
-there is no immediate request for D1 permission changes or database operations.
+2026-10-10 complete Python production deployment. The new Norulo
+GitHub App's public identity and minimal permissions have been verified, and the
+user has now confirmed successful real GitHub sign-in. Installation, credential
+refresh and the complete ledger journey remain unverified. The Web Worker has now
+been published, and api.norulo.com was first attached to the temporary paused
+bootstrap. The user later resumed D1 setup and full production deployment.
+The independent Norulo database is initialized and verified against schema v12;
+the full Python application is published and its read-only health/transport checks passed.
+The earlier D1 deferral is historical and no longer blocks this authorized work.
 The normal application and all 2,553 reference tests already passed local
 verification; the local native acceptance record remains separate from production.
 
@@ -22,7 +24,7 @@ verification; the local native acceptance record remains separate from productio
 | Binding or setting | Required value and purpose | Effect when missing |
 | --- | --- | --- |
 | Cloudflare account ID | The actual account containing the Norulo zone and new Norulo resources | Deployment cannot select the intended account reliably |
-| DB | Independent norulo-ledger-production D1 database with the twelve canonical migrations, schema version 12 | Ledger/authentication routes cannot read or write their tables |
+| DB | Initialized norulo-ledger-production, c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5; twelve canonical migrations and schema v12 verified | Ledger/authentication routes cannot read or write their tables without the correct binding |
 | NORULO_MODE | production | Invalid modes fail closed |
 | NORULO_D1_ACCESS_ENABLED | 1 only after schema/resource validation; absent/0 remains paused | Every application request receives D1_ACCESS_PAUSED |
 | NORULO_APP_URL | https://norulo.com | Trusted return destinations and app links are unavailable or invalid |
@@ -36,17 +38,18 @@ verification; the local native acceptance record remains separate from productio
 
 The current proposal selects the independently verified Cloudflare account and
 active norulo.com zone. Its exact api.norulo.com Custom Domain is now attached to
-the paused Worker, allowing Cloudflare to manage the API hostname. The checked-in
-D1 UUID remains a
-placeholder. An earlier database create request was rejected with Authentication
+the paused Worker, allowing Cloudflare to manage the API hostname. The production
+config now selects the independently created and initialized Norulo database.
+Earlier on 2026-10-10, a database create request was rejected with Authentication
 error and created nothing. The user subsequently updated the token permissions;
 D1 creation was retried with the updated token and still returned HTTP 401,
 code 10000, Authentication error. Workers write access now works, but independent
-database creation was not possible in that attempt. No database was created.
-The user has since deferred D1, so do not retry creation or request immediate
-permission changes as part of the current frontend/domain stage. A later full
-application release will require independent Norulo D1 resources, effective
-permission and schema validation. Preserve the existing token binding.
+database creation was not possible in that attempt. No database was created then.
+The user initially deferred D1 while proceeding with the frontend/domain stage,
+then explicitly resumed database setup and full production deployment. With the
+updated D1 permission, the new database was created and initialized as recorded
+below. Preserve the existing token binding; the earlier pause instruction is no
+longer a restriction on the authorized production release.
 
 The user subsequently requested creation of a paused norulo-server-production
 Worker so its GitHub Client Secret could be entered securely. Its initial upload
@@ -56,7 +59,7 @@ This temporary JavaScript bootstrap only returns 503 SERVICE_SETUP_PENDING with
 Cache-Control: no-store; it has no database or provider access. workers_dev and
 preview_urls were explicitly disabled and read back as false. At that initial
 Secret-setup stage no D1 binding or route was added. The full Python ledger
-application remains unpublished.
+application was not published at that initial stage.
 At that earlier stage on 2026-10-10, twelve public configuration variables were
 set, including the verified App
 Client ID, slug and intended OAuth callback. One fresh NORULO_GITHUB_TOKEN_KEY Secret
@@ -68,7 +71,7 @@ workers_dev and preview_urls remained false. These checks establish Secret
 presence and public configuration consistency, not Client Secret validity or
 successful live OAuth. No secret value belongs in release evidence.
 
-## Current frontend and paused API stage
+## Earlier frontend and paused API stages
 
 - The Web Worker norulo-web was published as version
   fb3dbf7c-8530-405a-bf01-a9d208136a83, for the production host norulo.com.
@@ -81,15 +84,15 @@ successful live OAuth. No secret value belongs in release evidence.
   Cloudflare returned success and readback confirmed they were retained.
 - The subsequent sender-preparation stage added
   NORULO_EMAIL_FROM=login@auth.norulo.com and a securely generated/uploaded
-  NORULO_EMAIL_CODE_SECRET. The current bootstrap has 19 public variables and
+  NORULO_EMAIL_CODE_SECRET. The bootstrap then had 19 public variables and
   three Secrets, preserving both GitHub Secrets without reading their values.
   There was no EMAIL send binding at that stage. After the token permission
   update, the auth.norulo.com sending domain and restricted EMAIL binding were
-  configured and verified. It still has no D1 or Durable Object binding;
-  NORULO_D1_ACCESS_ENABLED and NORULO_EMAIL_AUTH_ENABLED remain 0.
-- The JavaScript bootstrap still has only the fixed 503 SERVICE_SETUP_PENDING
-  handler. No Python ledger upload, database/schema operation, live OAuth,
-  provider acceptance or business activation occurred in this stage.
+  configured and verified. At that point it had no D1 or Durable Object binding;
+  NORULO_D1_ACCESS_ENABLED and NORULO_EMAIL_AUTH_ENABLED were both 0.
+- During these earlier stages, the JavaScript bootstrap had only the fixed
+  503 SERVICE_SETUP_PENDING handler. No Python ledger upload, database/schema
+  operation, live OAuth, provider acceptance or business activation occurred then.
 - Initial requests with Python's default User-Agent returned 403. Finite requests
   using an ordinary browser User-Agent, without Authorization and with default
   TLS verification, then confirmed the homepage returns HTTP 200. Both
@@ -99,13 +102,78 @@ successful live OAuth. No secret value belongs in release evidence.
   security setting was changed. This verifies frontend assets, the API domain
   and the Web-to-paused-API transport, not OAuth or ledger functionality.
 
-The user deliberately postponed D1. Keep the checked-in D1 pause and optional
-feature switches disabled; do not deploy the full production config with its
-placeholder database binding. Preview remains undeployed. The safe local stage
+The user deliberately postponed D1 during these earlier stages, then explicitly
+resumed setup. The placeholder has now been replaced by the verified Norulo UUID.
+The checked-in D1 default remains paused; explicit production activation follows
+schema verification. Optional feature switches remain disabled and preview stays
+undeployed. The safe local stage
 record is /workspace/.norulo-environment/cloudflare-production-stage.json; it
 contains public configuration, status booleans and Secret names, never values.
 The subsequent local system-sender-plan.json records the sender setup. These
 control-plane records do not establish actual delivery or email-login acceptance.
+
+## D1 initialized; complete Python Worker published
+
+The user resumed this step with an explicit requirement to minimize D1 Rows
+Written. The independent norulo-ledger-production database,
+c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5, was created empty. Each of the twelve
+unapplied canonical migration files was executed once, with its pinned Wrangler
+migration-journal INSERT in the same request. No source database was accessed,
+and no source data, remote test fixture or business acceptance write was inserted.
+
+The 96 canonical statements, one journal CREATE and twelve journal INSERTs form
+109 explicit initialization statements. Native metadata reports **367 rows
+written for necessary initialization**. Successful API queries reported a total
+of **4,097 rows read and 367 rows written**, including finite read-only checks.
+These are reported successful-operation totals, not a claim of a complete bill
+including rejected queries or later Worker/user traffic. DDL, indexes and
+bookkeeping were not treated as free.
+
+Two read-only checks using a 23-table compound UNION were rejected with HTTP 400,
+code 7500, due to the compound-SELECT limit. No native row metrics were returned
+for those checks. Verification was changed to bounded queries covering at most
+five tables each; all passed and reported zero rows written. No migration was
+replayed. Final schema verification matched all 77 canonical objects and
+fingerprint d5f53c6229d5b5c318060c26e5e984052aa65cfcf7bc5564f9a52699ca41a77b.
+app_state contains only its four empty containers; the other 22 application
+tables each have zero rows. The twelve journal entries establish migration
+progress; they are metadata, not product fixtures.
+
+The safe summary is [D1 production initialization](d1-production-init-2026-10-10.json).
+Detailed local evidence is /workspace/.norulo-environment/d1-production-setup.json.
+The subsequent full Python Worker deployment succeeded, replacing the temporary
+bootstrap. Published version: 3ad0cffc-ecc3-47a4-ab5d-a53999528b8c. Cloudflare
+settings readback confirmed Python compatibility, the DB binding to the intended
+Norulo UUID and the restricted EMAIL binding. All three Secrets were retained;
+the 19 public variables matched production configuration except the explicit
+activation overlay set NORULO_D1_ACCESS_ENABLED=1. The checked-in default remains
+0. workers_dev and preview_urls remain false; email auth, recurring execution and
+AI remain disabled.
+
+Finite read-only public checks, all without Set-Cookie, confirmed:
+
+- https://api.norulo.com/health and https://norulo.com/api/health: HTTP 200,
+  with ok=true, service=norulo-server and database={type:d1, configured:true}.
+- https://api.norulo.com/api/v1/me and
+  https://norulo.com/api/api/v1/me: HTTP 401, UNAUTHENTICATED.
+- https://norulo.com: HTTP 200.
+
+These checks establish actual publication, DB health, Web-to-Server transport and
+unauthenticated access enforcement. The checks did not perform OAuth, send mail or
+make business acceptance writes. The user subsequently reported successful real
+GitHub sign-in, establishing user-confirmed login acceptance. This does not prove
+repository installation, credential refresh, every cookie/session behavior or the
+complete ledger journey. The user's temporarily unavailable email sign-in matches
+the disabled flag and pending production admission; actual mail remains untested.
+The full schema was verified independently before publication.
+
+Development, regression, browser fixtures and load tests must use local D1 or
+SQLite. Remote setup is limited to necessary unapplied canonical migrations on
+the intended independent database, in bounded once-only batches. Production smoke
+checks use read-only endpoints/SELECTs. Record native row metrics and progress;
+stop on missing metadata, unexpected results or unknown write outcomes, inspect
+schema/journal read-only, and never retry blindly. Do not seed or rebuild a remote
+database for testing or invent an unspecified numeric/calendar writing budget.
 
 ## System sending domain and binding ready; email login remains disabled
 
@@ -130,18 +198,22 @@ the subsequent onboarding succeeded. Cloudflare now reports:
   Four public Cloudflare DNS-over-HTTPS queries for MX, SPF, DKIM and DMARC
   returned DNS status 0 and matched the generated records, including all three MX
   records. This verifies public DNS, not message delivery.
-- The paused Worker now has a send_email binding named EMAIL, with
+- The EMAIL send binding was prepared on the paused Worker, with
   allowed_sender_addresses=["login@auth.norulo.com"] and no recipient restriction.
   The settings PATCH succeeded, and readback confirmed that the 19 public
   variables and three Secrets were retained without reading Secret values.
-  workers_dev and preview_urls remain false; D1 access and email auth remain 0.
+  workers_dev and preview_urls remained false; D1 access and email auth were both
+  0 during that setup. The published Python Worker retains this binding, with only
+  D1 subsequently activated; email auth remains disabled.
 
 The native Cloudflare binding needs no additional mail-provider Secret or SMTP
 credential. Email Sending entitlement was also reported enabled. This establishes
 domain/DNS and binding readiness only: no acceptance email was sent, and actual
 delivery to user recipients, code verification and login have not been tested.
-The JavaScript bootstrap still returns its fixed 503 response without using the
-EMAIL binding. No complete Python application or database was activated.
+At the sender setup stage, the JavaScript bootstrap returned its fixed 503 response
+without using the EMAIL binding. The database was initialized subsequently;
+the complete Python application was then published. Neither stage
+establishes email login.
 
 The remaining email work does not require repeating the completed onboarding:
 
@@ -150,11 +222,12 @@ The remaining email work does not require repeating the completed onboarding:
 2. Implement an independent production durable IP/email admission path and its
    deployment guard/tests. Never attach production to the preview budget,
    namespace or validation journal merely to make the current adapter callable.
-3. After the deferred database and complete Python application are ready, verify
+3. After the initialized database is bound to the complete Python application, verify
    actual delivery, code expiry/single use, resend and abuse limits, trusted
    Origin, and the browser challenge/session cookies through the Web proxy.
    Enable NORULO_EMAIL_AUTH_ENABLED only with the reviewed production path and
-   these acceptance checks. Keep it and NORULO_D1_ACCESS_ENABLED at 0 now.
+   these acceptance checks. Keep email auth at 0 during the core release; D1 access
+   uses the separately reviewed production activation overlay.
 
 The inherited implementation is blocked independently of sender configuration:
 [WorkerEmailGateway](../../norulo_server/cloudflare_email_gateway.py) needs an
@@ -188,7 +261,7 @@ OAuth success; the operator must verify those separately.
 
 | Secret name | Requirement |
 | --- | --- |
-| NORULO_GITHUB_CLIENT_SECRET | The user securely saved this Secret; its name is present, while same-App validity requires a later real OAuth exchange |
+| NORULO_GITHUB_CLIENT_SECRET | Securely saved and its name verified without reading the value; the user subsequently confirmed successful real GitHub sign-in |
 | NORULO_GITHUB_TOKEN_KEY | Exactly 32 cryptographically random bytes encoded as unpadded base64url, normally 43 characters; securely generated/uploaded for Norulo and its Secret name verified |
 
 These are the minimum application secrets for a working GitHub login on a fresh
@@ -201,8 +274,9 @@ values replace the earlier blank App configuration. A prior local check proved
 that a blank Client ID fails closed with GITHUB_NOT_CONFIGURED; that check did
 not validate this App. Its saved callbacks, options and Client Secret cannot be
 verified from the public App response, and real login/installation remains
-unverified. Health and unauthenticated session acceptance do not establish a
-working login.
+unverified at that earlier public-metadata stage. The user has now reported a
+working GitHub sign-in; public metadata and health alone did not establish it.
+Installation/management options and credential refresh remain unverified.
 
 The fresh Norulo encryption key and the user's Client Secret are now stored
 securely, with both Secret names confirmed. Retain the existing key;
@@ -295,20 +369,20 @@ background recurrence acceptance.
 
 ## Remaining release checklist
 
-The database remains deferred by user choice. The following distinguishes work
-needed for the core release from feature-specific work; it is not a request to
-resume database operations now.
+Database initialization and complete Python publication are complete. The following
+distinguishes remaining real-user acceptance from feature-specific work; none requires remote
+synthetic business writes.
 
 | Scope | Remaining work besides D1 | Acceptance required |
 | --- | --- | --- |
-| Core GitHub/free ledger — required | Verify the App's saved callback/Setup URL/options; retain the prepared Secrets; replace the JavaScript bootstrap with the reviewed complete Python Worker once schema/resources permit activation | Real GitHub authorization/callback, secure challenge/session cookies, sign-out and credential refresh behavior; authenticated Web-to-Server projects/expense/report journey, origin checks and owner isolation |
+| Core GitHub/free ledger — remaining acceptance | GitHub sign-in is user-confirmed; preserve the deployment/DB/Secrets and verify remaining App/session behaviors | Repository installation, credential refresh, sign-out/session details and the complete ledger journey remain unverified; business regression/isolation tests stay local |
 | Requested email login — required for that feature | Retain the authenticated domain, restricted EMAIL binding and prepared Secret; implement independent production admission and guard/tests; keep flag 0 until ready | Actual mail delivery and six-digit code verification, expiry/single use, bounded resend/abuse handling and browser session through the Web proxy |
 | GitHub repository associations — optional | A user's App installation and chosen repository grants; no numeric App ID/private key required | Actual installation Setup callback with server-issued state and authorized repository discovery/synchronization; standalone projects do not need installation |
 | Paid plans — optional | Independent live Creem products for the available plan/cadence pairs, API/webhook Secrets and explicit inheritance, signed webhook registration | Accurate public prices and idempotent entitlement changes from verified webhooks; no charge or subscription mutation is part of core acceptance |
 | Jev AI assistance — optional | TYPESAFE_API_KEY, reviewed model transport/quality and both feature gates | Owner's paid entitlement/monthly allowance, actual bounded suggestions and safe manual fallback |
 | Future recurring posting — optional | Distinct production scheduler/coordinator implementation and tests; then reviewed triggers/flag | Finite scheduled execution with idempotency, permissions/quota fences, failures/inbox behavior and truthful delivery reporting |
 
-Production domains, frontend assets, the paused proxy transport, system sending
+Production domains, frontend assets, the published API/Web transport, system sending
 domain/binding and the three prepared Secret names are already recorded above.
 They do not need new secret
 values from the user and do not establish live application behavior. No additional
@@ -316,13 +390,16 @@ receiving mailbox is required by the Server for its system sender.
 
 ## Publication sequence and validation
 
-The frontend/paused-bootstrap stage above is complete at the control plane.
-Resume the full application sequence only when the deferred D1 step is requested.
+Frontend/domain, sending-domain/binding and D1 initialization are complete at the
+control plane. Full Python publication and finite read-only health/transport
+checks are also complete. The user resumed the full application sequence;
+do not repeat completed migrations or redeploy merely to repeat acceptance.
 
 1. Verify the account and Norulo zone, select independent resources and record
    database/account IDs without modifying or querying source-service databases.
-2. Apply the twelve canonical migrations to the new Norulo production database
-   only; verify schema version/objects. Preserve dependency and TLS verification.
+2. For a genuinely new database only, apply necessary unapplied canonical migrations
+   once and verify schema/objects. This production database is already initialized;
+   preserve its journal and measured costs. Preserve dependency and TLS verification.
 3. Configure the actual Norulo public App settings and required secrets securely,
    or explicitly report that real GitHub sign-in remains blocked.
 4. Run static production checks and the pinned packaging dry-run. Publish the
@@ -354,7 +431,7 @@ passed again without contacting Cloudflare. The 36 existing deployment/config/
 production-runtime tests and 18 subtests, and both paused/activation-overlay S01
 checks, passed. An independent offline check exercised the actual pinned
 inheritance helper and reviewed strict missing-binding error handling. These
-checks preserve the D1 placeholder and disabled optional features; they do not
+Those earlier checks preserved the D1 placeholder and disabled optional features; they did not
 verify Client Secret validity or D1 access. The subsequent name-only query
 confirmed both required Secrets are present; the fresh D1 create attempt still
 failed with Authentication error.

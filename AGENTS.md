@@ -23,6 +23,9 @@ environment, or commit credentials. Configure production only with independently
 verified Norulo resource IDs. Checked-in preview remains paused and undeployed;
 production activation follows schema/resource/configuration verification.
 The current release targets norulo.com and api.norulo.com in production only.
+The user resumed the independent D1 setup and full production deployment on
+2026-10-10; the earlier request to defer D1 no longer blocks this work. Verify
+effective permissions and the intended database before each setup operation.
 Preview configuration is retained for offline reference; do not deploy it.
 Domain configuration is not evidence of DNS activation. The original Norulo
 logo is installed in norulo-web/public/norulo-logo.png, with derived assets
@@ -105,6 +108,21 @@ and the OpenAPI contract.
 Local development uses only wrangler.jsonc with NORULO_MODE=local, remote=false,
 no public routes and local persistence. Local synthetic fixtures must never be
 seeded remotely. Loopback validation clients disable proxies and redirects.
+
+The user explicitly requires minimizing D1 Rows Written because of its cost.
+Development, regression, browser fixtures and load tests must use local D1 or
+SQLite. Never write remote test fixtures, seed remote databases, clear/rebuild
+production data for testing, or repeatedly run remote write-based acceptance.
+Remote setup is limited to the necessary unapplied canonical migrations on the
+independent Norulo production database; inspect the exact database, existing
+schema/journal and SQL scope first, then execute bounded batches once. Do not
+copy source data. Production smoke checks use read-only endpoints/SELECTs;
+ordinary real user operations retain their existing authorization and quota
+rules. Record native rows_read/rows_written and migration progress where the
+platform reports them. DDL, indexes and migration bookkeeping must not be
+assumed free. If a write outcome is unknown, inspect status/schema/journal
+without writes before deciding how to recover; never retry blindly. Do not
+invent a numeric/calendar writing budget that the user has not specified.
 
 Remote production requires independently reviewed Norulo resources,
 provider identities/callbacks, secrets, domain/DNS settings and publication

@@ -85,22 +85,24 @@ startup scripts own the long-running development process after validation.
 
 The user subsequently registered the real Norulo GitHub App. On 2026-10-10,
 GitHub's public API verified Client ID Iv23li78ZPeUgSxJkLUj, slug norulo, owner
-Norulo and only Metadata read permission with no events. Saved callbacks,
-management options, Client Secret validity and real login remain unverified; see the
+Norulo and only Metadata read permission with no events. At that public-metadata
+stage, saved callbacks, management options, Client Secret validity and real login
+had not been verified; the user-confirmed login is recorded below. See the
 [current App checklist](../design/github-project-ledger/github-app-permissions.md).
-The App and its Secrets are configured on a temporary paused Worker, with no D1
+Earlier on 2026-10-10, the App and its Secrets were configured on a temporary paused Worker, with no D1
 or Durable Object binding. Its api.norulo.com Custom Domain is enabled with
 previews disabled. Earlier on 2026-10-10, all 18 public production variables were
 applied while retaining the two GitHub Secrets by name-only inheritance.
 A fresh token-encryption key was securely uploaded, and the user subsequently
 saved NORULO_GITHUB_CLIENT_SECRET. Both Secret names were confirmed without
-reading values; live OAuth remains unverified. The full ledger application has
-not been published, and no remote database changes have been made. The Web Worker
+reading values; live OAuth remained unverified then. At that stage, the full ledger
+application had not been published and no remote database changes had been made. The Web Worker
 was published as version fb3dbf7c-8530-405a-bf01-a9d208136a83. A new D1 create
 attempt after the token update returned HTTP 401 Authentication error; the user
 subsequently deferred D1 while proceeding with the frontend and production
-domains. Do not request immediate D1 permission changes or retry database
-creation during that stage. Initial default Python User-Agent checks returned
+domains. That deferral applied to the earlier frontend stage and was later
+superseded by explicit authorization to resume D1/full production setup.
+Initial default Python User-Agent checks returned
 403; finite ordinary browser User-Agent checks subsequently confirmed homepage
 200 and the expected API/Web proxy 503 SERVICE_SETUP_PENDING, with no-store and
 no Set-Cookie. Published branding assets matched local hashes. This establishes
@@ -108,7 +110,7 @@ the frontend and paused transport, not real OAuth or ledger acceptance. See the 
 [production readiness record](production-readiness-2026-10-10.md).
 
 The subsequent sender-preparation stage set NORULO_EMAIL_FROM=login@auth.norulo.com
-and securely uploaded NORULO_EMAIL_CODE_SECRET. The bootstrap now has 19 public
+and securely uploaded NORULO_EMAIL_CODE_SECRET. The bootstrap then had 19 public
 variables and three Secrets, preserving both GitHub Secrets. At that earlier
 stage, the sending-domain API returned 403 and no EMAIL binding existed.
 After the token permission update, auth.norulo.com was enabled with DNS status
@@ -116,13 +118,39 @@ ready, no errors and preview_enabled=false. The Worker now has the EMAIL send
 binding restricted to login@auth.norulo.com, without recipient restrictions.
 Six added DNS records are confined to the auth subdomain; the existing eight DNS
 records and two contact routing rules were preserved. The 19 public variables and
-three Secrets were retained, and D1/email-auth flags remain 0. No actual email
+three Secrets were retained, and D1/email-auth flags were both 0 at that stage. No actual email
 was sent for acceptance. Production email login still needs an independent
 admission implementation and real delivery/code/session acceptance. This does
-not change the published frontend or paused full-server status.
+did not activate the full Server.
 
-Before full production activation, configure independent Norulo D1 resources,
-the full Worker application, and the App's callbacks/credentials. The requested
+The user subsequently resumed D1 setup with strict Rows Written cost discipline.
+The independent norulo-ledger-production database,
+c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5, now has all twelve canonical migrations,
+each applied once with its journal INSERT in the same request. Native metadata
+reports 367 initialization rows written; successful API queries total 4,097 rows
+read and 367 rows written. Two rejected read-only compound-SELECT checks returned
+no native metrics, so those totals do not claim complete billing for rejected
+requests. Bounded five-table checks subsequently passed with zero rows written;
+no migration was replayed. All 77 schema objects/fingerprint match canonical v12,
+app_state has only four empty containers and the other 22 application tables are
+empty. No source database access, remote fixture or business acceptance write
+occurred. See the [safe initialization summary](d1-production-init-2026-10-10.json).
+The complete Python Worker was subsequently published as version
+3ad0cffc-ecc3-47a4-ab5d-a53999528b8c, with the intended DB binding and runtime
+D1 access activated to 1 through the explicit overlay; the source default stays
+0. All 19 variables and three Secrets, Python compatibility and the restricted
+EMAIL binding were read back; workers.dev and preview URLs remain disabled.
+Read-only public checks returned homepage 200, API/Web proxy health 200 and
+unauthenticated profile 401, all without Set-Cookie. The checks did not perform
+OAuth, send actual mail or make business acceptance writes. The user subsequently
+reported successful real GitHub sign-in. Installation, credential refresh and
+the complete ledger journey remain unverified; email sign-in is temporarily
+unavailable while its flag is 0 and production admission remains pending.
+The earlier bootstrap and D1 deferral are historical.
+
+The remaining core acceptance includes the other App/session behaviors and actual
+authenticated ledger use; GitHub sign-in is user-confirmed and full Worker/DB
+publication is complete. The requested
 email login additionally needs independent production admission and real
 delivery/code/session acceptance; its sending domain and EMAIL binding are now
 prepared. Creem products/secrets, AI transport/quality
@@ -130,3 +158,6 @@ gates and background recurrence are optional feature work. Existing source
 provider IDs and historical approvals are not Norulo requirements or permissions.
 Database/provider acceptance, email delivery and real payment flows have not been
 claimed as local setup results. Keep secret values in secure settings.
+All development/regression/browser fixture tests stay on local D1 or SQLite;
+remote smoke checks are read-only. Never seed or rebuild production for testing,
+repeat remote write-based acceptance or blindly retry unknown migration outcomes.

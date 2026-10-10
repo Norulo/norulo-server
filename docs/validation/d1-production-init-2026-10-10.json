@@ -1,0 +1,359 @@
+{
+  "record_version": 1,
+  "date": "2026-10-10",
+  "scope": "Independent production database initialization and read-only production publication smoke checks; no remote test fixtures or synthetic business acceptance writes.",
+  "database": {
+    "name": "norulo-ledger-production",
+    "id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+    "initialized_at": "2026-10-10T17:02:48.976460+00:00"
+  },
+  "cost_policy": {
+    "development_and_regression": "Local D1 or SQLite only.",
+    "remote_setup": "Necessary unapplied canonical migrations in bounded once-only batches, with native row metrics and journal progress recorded.",
+    "production_smoke": "Read-only endpoints and SELECTs; no remote test seed or rebuild.",
+    "unknown_write_outcome": "Stop; inspect schema and journal without writes; do not retry blindly.",
+    "unspecified_numeric_or_calendar_budget_invented": false
+  },
+  "canonical_schema": {
+    "version": 12,
+    "fingerprint_sha256": "d5f53c6229d5b5c318060c26e5e984052aa65cfcf7bc5564f9a52699ca41a77b",
+    "verified": true,
+    "objects": 77,
+    "tables": 23,
+    "indexes": 52,
+    "triggers": 2
+  },
+  "migration_tracking": {
+    "recipe": "Pinned Wrangler 4.136.3 d1_migrations; append each file marker in the same atomic request.",
+    "applied_files": [
+      "0001_ledger.sql",
+      "0002_identity_billing_keys.sql",
+      "0003_ledger_suggestions.sql",
+      "0004_ledger_plan_usage.sql",
+      "0005_workspaces_repositories.sql",
+      "0006_blank_projects.sql",
+      "0007_recurring_expenses_project_links.sql",
+      "0008_workspace_join_approval.sql",
+      "0009_activity_log.sql",
+      "0010_project_removal.sql",
+      "0011_business_erasure.sql",
+      "0012_recurring_pending.sql"
+    ],
+    "records": 12,
+    "replays": 0,
+    "canonical_sql_statements": 96,
+    "journal_create_statements": 1,
+    "journal_insert_statements": 12,
+    "explicit_initialization_sql_statements": 109
+  },
+  "migrations": [
+    {
+      "name": "0001_ledger.sql",
+      "source_sha256": "9c55859edadcb1837ce226a3df07b48c4522223ba30915d5d20c514eb75e9538",
+      "canonical_sql_statements": 10,
+      "query_sha256": "778e5e0a3e139cebdbb7c099207fa8da88d7049fbbd5564666620488aa5a5166",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 16,
+      "native_rows_written": 27
+    },
+    {
+      "name": "0002_identity_billing_keys.sql",
+      "source_sha256": "1dabed034c4e8f9ea62e3ab71308dddbab5ad47907d367375a771cfcb2293a31",
+      "canonical_sql_statements": 8,
+      "query_sha256": "0af7acca308d9113689e73a186a63fd05c40c05375d48a3037fc14ebe6c67fad",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 9,
+      "native_rows_written": 29
+    },
+    {
+      "name": "0003_ledger_suggestions.sql",
+      "source_sha256": "8b258f5a64f2f5cc559aa0c7aad3a9f187a975880ff3799ccdbf740d0903e412",
+      "canonical_sql_statements": 3,
+      "query_sha256": "c1582c4378b4406fb97bbbc14c54692e16a3c7b7c2124c6cbfd03f897f97e27c",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 5,
+      "native_rows_written": 10
+    },
+    {
+      "name": "0004_ledger_plan_usage.sql",
+      "source_sha256": "febe80c0f21a9a3697a1a9a6b8b7f35ed1dc28fc831b65ce948e87e9df41d514",
+      "canonical_sql_statements": 1,
+      "query_sha256": "4b2705fc684d3bead478d8f6f9f5b1977849a1c08c7e7c0e5540689829f9d54e",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 2,
+      "native_rows_written": 6
+    },
+    {
+      "name": "0005_workspaces_repositories.sql",
+      "source_sha256": "dccc2c7d4e8bd695158b1748c10c8b527be6d84c4dc2be073e63e4ade6650bc9",
+      "canonical_sql_statements": 10,
+      "query_sha256": "0bd8d0ea157c2e6aac96587137696d2f28d666c33343c15457e50724e39a86b3",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 122,
+      "native_rows_written": 22
+    },
+    {
+      "name": "0006_blank_projects.sql",
+      "source_sha256": "544bf65c506f0bc2becc6f38678d26ecd6a42aa378a60e1de8da2b1c47b6cfa2",
+      "canonical_sql_statements": 9,
+      "query_sha256": "f82f21b84da50ad0b95144307d75e9db15ce1de1e337fdfcc9205e57e8a2aa16",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 560,
+      "native_rows_written": 40
+    },
+    {
+      "name": "0007_recurring_expenses_project_links.sql",
+      "source_sha256": "5993f4ec02bd02d18ef067ae1fc9d0fcef1472da89d3e3a20733af2ac8baa339",
+      "canonical_sql_statements": 13,
+      "query_sha256": "feb24b15d3255005f65bcd84bb09dcddc90153f58366e378a2cc1fe45cecda3d",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 563,
+      "native_rows_written": 47
+    },
+    {
+      "name": "0008_workspace_join_approval.sql",
+      "source_sha256": "882a79e4d6135aa3af4d24b794c0d7417a64e1791fc2d26a236ee0ce3bcfd430",
+      "canonical_sql_statements": 17,
+      "query_sha256": "4b7cbb3b737d93b2086502ddfc197ef2a5b4b130f3bc3744d6381859aeecc2a5",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 1099,
+      "native_rows_written": 78
+    },
+    {
+      "name": "0009_activity_log.sql",
+      "source_sha256": "c6aeb2ce902aab69b63c8004a0fba421aa20c6d377dab816e2afecc497a8cd1e",
+      "canonical_sql_statements": 3,
+      "query_sha256": "bdc3b4538cb59aee544000024b92182482ee209bf4d037c1c65696488c1bb7df",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 6,
+      "native_rows_written": 8
+    },
+    {
+      "name": "0010_project_removal.sql",
+      "source_sha256": "e4b4fda5f3be4ee0ef174e11b5a9ec7231ea5cb32955b75748ccef917edf1fd1",
+      "canonical_sql_statements": 9,
+      "query_sha256": "2274f3501115868e81f759c5cc6c2f67e399c686b7454b55b014a8b7716fa540",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 748,
+      "native_rows_written": 44
+    },
+    {
+      "name": "0011_business_erasure.sql",
+      "source_sha256": "eb24baa4a56a526e787985b9236891a4aa764eae2c41bb5758637b5d15af6ba9",
+      "canonical_sql_statements": 7,
+      "query_sha256": "35d93403b2d4eb8a52fb7da96519581f1546c455f04265e630c87e95ece323b1",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 762,
+      "native_rows_written": 40
+    },
+    {
+      "name": "0012_recurring_pending.sql",
+      "source_sha256": "f32ec014a37f6e1dea81a0a61d66057776e057c0a1446b00102c71330ab97c8d",
+      "canonical_sql_statements": 6,
+      "query_sha256": "e04fadc988fd3b8f0f034027a789bdcb533610484fa36792eccf197db60f9df8",
+      "applied_once": true,
+      "journal_insert_in_same_request": true,
+      "native_rows_read": 4,
+      "native_rows_written": 11
+    }
+  ],
+  "native_reported_costs": {
+    "necessary_initialization_rows_written": 367,
+    "successful_operations": 22,
+    "successful_query_rows_read": 4097,
+    "successful_query_rows_written": 367,
+    "successful_operations_metrics_complete": true,
+    "journal_initialization": {
+      "rows_read": 2,
+      "rows_written": 5
+    },
+    "migration_queries": {
+      "rows_read": 3896,
+      "rows_written": 362
+    },
+    "successful_read_only_queries": {
+      "rows_read": 199,
+      "rows_written": 0
+    },
+    "rejected_read_only_checks": {
+      "attempts": 2,
+      "http_status": 400,
+      "error_code": 7500,
+      "reason": "Compound SELECT limit in 23-table UNION.",
+      "mutating_sql": false,
+      "native_metrics_available": false,
+      "rows_read": null,
+      "rows_written": null,
+      "followup": "Bounded checks covering at most five tables succeeded without replaying migrations."
+    },
+    "billing_scope_note": "Reported totals cover successful SQL setup/verification operations only. Rejected read-only checks returned no native metrics; later public Worker smoke checks and ordinary user activity are not included. These totals are not a complete bill for all requests.",
+    "setup_period": {
+      "started_at": "2026-10-10T16:56:30.634510+00:00",
+      "completed_at": "2026-10-10T17:02:48.976460+00:00"
+    }
+  },
+  "application_table_counts": [
+    {
+      "table_name": "account_entitlement_authority",
+      "row_count": 0
+    },
+    {
+      "table_name": "api_keys",
+      "row_count": 0
+    },
+    {
+      "table_name": "app_state",
+      "row_count": 4
+    },
+    {
+      "table_name": "billing_public_catalog",
+      "row_count": 0
+    },
+    {
+      "table_name": "billing_webhook_receipts",
+      "row_count": 0
+    },
+    {
+      "table_name": "d1_command_guard",
+      "row_count": 0
+    },
+    {
+      "table_name": "expense_categories",
+      "row_count": 0
+    },
+    {
+      "table_name": "expense_create_idempotency",
+      "row_count": 0
+    },
+    {
+      "table_name": "expense_events",
+      "row_count": 0
+    },
+    {
+      "table_name": "expense_recurring_occurrences",
+      "row_count": 0
+    },
+    {
+      "table_name": "expense_recurring_pending",
+      "row_count": 0
+    },
+    {
+      "table_name": "expense_recurring_rules",
+      "row_count": 0
+    },
+    {
+      "table_name": "expense_suggestion_budget",
+      "row_count": 0
+    },
+    {
+      "table_name": "expense_suggestion_events",
+      "row_count": 0
+    },
+    {
+      "table_name": "expenses",
+      "row_count": 0
+    },
+    {
+      "table_name": "ledger_activity_events",
+      "row_count": 0
+    },
+    {
+      "table_name": "ledger_plan_usage",
+      "row_count": 0
+    },
+    {
+      "table_name": "ledger_project_repositories",
+      "row_count": 0
+    },
+    {
+      "table_name": "ledger_projects",
+      "row_count": 0
+    },
+    {
+      "table_name": "workspace_events",
+      "row_count": 0
+    },
+    {
+      "table_name": "workspace_invites",
+      "row_count": 0
+    },
+    {
+      "table_name": "workspace_join_requests",
+      "row_count": 0
+    },
+    {
+      "table_name": "workspace_members",
+      "row_count": 0
+    }
+  ],
+  "seed_note": "The only canonical application seed is four empty app_state containers; table-count readback directly verifies four rows, with all other 22 application tables empty.",
+  "synthetic_business_rows_inserted": 0,
+  "source_database_accessed": false,
+  "production_publication": {
+    "worker": "norulo-server-production",
+    "version": "3ad0cffc-ecc3-47a4-ab5d-a53999528b8c",
+    "python_compatibility_verified": true,
+    "database_binding_verified": true,
+    "email_binding_verified": true,
+    "public_vars_retained": 19,
+    "application_secrets_retained": 3,
+    "runtime_d1_access_enabled": true,
+    "checked_in_d1_access_default": "0",
+    "email_auth_enabled": false,
+    "recurring_execution_enabled": false,
+    "ai_enabled": false,
+    "workers_dev_enabled": false,
+    "preview_urls_enabled": false,
+    "read_only_public_smoke": [
+      {
+        "url": "https://api.norulo.com/health",
+        "http_status": 200,
+        "database_configured": true,
+        "set_cookie": false
+      },
+      {
+        "url": "https://norulo.com/api/health",
+        "http_status": 200,
+        "database_configured": true,
+        "set_cookie": false
+      },
+      {
+        "url": "https://api.norulo.com/api/v1/me",
+        "http_status": 401,
+        "error_code": "UNAUTHENTICATED",
+        "set_cookie": false
+      },
+      {
+        "url": "https://norulo.com/api/api/v1/me",
+        "http_status": 401,
+        "error_code": "UNAUTHENTICATED",
+        "set_cookie": false
+      },
+      {
+        "url": "https://norulo.com",
+        "http_status": 200,
+        "set_cookie": false
+      }
+    ],
+    "actual_email_delivery_verified": false,
+    "remote_business_acceptance_write_performed": false,
+    "real_github_signin_user_confirmed_success": true,
+    "independent_oauth_flow_exercised": false,
+    "repository_installation_verified": false,
+    "credential_refresh_verified": false,
+    "complete_ledger_journey_verified": false,
+    "email_signin_temporarily_unavailable": true,
+    "user_acceptance_note": "The user reported successful real GitHub sign-in after publication. Repository installation, credential refresh and the complete ledger journey were not verified."
+  }
+}

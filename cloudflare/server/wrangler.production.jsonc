@@ -55,7 +55,7 @@
     {
       "binding": "DB",
       "database_name": "norulo-ledger-production",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
       "migrations_dir": "migrations"
     }
   ],
