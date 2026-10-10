@@ -17,14 +17,17 @@ full application publication is pending verified new database resources and
 configuration. A temporary paused norulo-server-production Worker now exists
 only for secure GitHub Secret setup; it has no D1 binding or public route and
 returns SERVICE_SETUP_PENDING. The earlier Worker permission rejection was
-resolved after the user updated the token; D1 write permission has not been
-retested.
+resolved after the user updated the token. A new D1 create attempt still returned
+HTTP 401 Authentication error; database creation needs effective Account D1 Edit
+permission for the verified account.
 The user has registered [Norulo's GitHub App](https://github.com/apps/norulo);
 its public identity and Metadata-only permission were verified on 2026-10-10.
 The current step configures the App and its Secrets without activating the
-business service. A fresh token-encryption key is stored securely; the user only
-needs to enter NORULO_GITHUB_CLIENT_SECRET in Cloudflare. Saved callbacks and
-real login remain unverified; see the [registration checklist](docs/design/github-project-ledger/github-app-permissions.md).
+business service. The user has securely saved NORULO_GITHUB_CLIENT_SECRET, and
+the fresh token-encryption key is also present. Cloudflare confirmed both Secret
+names without exposing values; this proves presence, not credential validity.
+Saved GitHub callbacks and real login remain unverified; see the
+[registration checklist](docs/design/github-project-ledger/github-app-permissions.md).
 The current release targets norulo.com and api.norulo.com in production only.
 Preview configuration remains an offline reference and is not a release target.
 The original Norulo logo is installed in norulo-web/public/norulo-logo.png;

@@ -84,11 +84,13 @@ secret，历史 App ID 不应填入当前配置。
 公开 App API 未核实上述 callbacks、后台选项、安装范围或 Client Secret。
 events 为空也不能单独证明 Webhook Active 已关闭。管理者需在网页逐项保存
 并核对；本次公开元数据检查没有编辑这些设置，也没有完成真实登录或安装
-验收。之后将同一 App 的 Client Secret 安全配置到
-`NORULO_GITHUB_CLIENT_SECRET`，不得写入文档、Git 或聊天。此次步骤不进行
+验收。用户已将 Client Secret 安全配置到 `NORULO_GITHUB_CLIENT_SECRET`。
+密钥值不得写入文档、Git 或聊天。此次步骤不进行
 完整业务发布。临时暂停 Worker 已为安全录入 Secret 创建，新的
-`NORULO_GITHUB_TOKEN_KEY` 已安全生成并上传；用户当前只需在 Cloudflare
-控制台填写 `NORULO_GITHUB_CLIENT_SECRET`。生产 D1 仍暂停，真实登录未验收。
+`NORULO_GITHUB_TOKEN_KEY` 已安全生成并上传。Cloudflare 只读接口确认两项
+Secret 名称均存在；未读取密钥值，也未验证 Client Secret 有效性。生产 D1
+仍暂停；更新 token 后的新建数据库请求仍返回 HTTP 401 / code 10000
+Authentication error，真实登录未验收。
 
 官方依据：
 

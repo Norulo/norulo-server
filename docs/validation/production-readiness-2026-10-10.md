@@ -38,9 +38,12 @@ api.norulo.com custom-domain route lets Cloudflare manage the API hostname inste
 of depending on an unconfigured zone-route origin. The D1 UUID remains a
 placeholder. An earlier database create request was rejected with Authentication
 error and created nothing. The user subsequently updated the token permissions;
-D1 creation has not been retried, so its effective write permission remains
-unverified. Publication still needs an authorized independent new database and
-schema validation. Preserve the existing token binding.
+D1 creation was retried with the updated token and still returned HTTP 401,
+code 10000, Authentication error. Workers write access now works, but independent
+database creation remains blocked pending effective Account D1 Edit permission
+and resource scope covering the verified account. No database was created.
+Publication still needs the new database and schema validation. Preserve the
+existing token binding.
 
 The user subsequently requested creation of a paused norulo-server-production
 Worker so its GitHub Client Secret could be entered securely. Its initial upload
@@ -52,9 +55,13 @@ preview_urls were explicitly disabled and read back as false. No D1 binding or
 route was added, and the full Python ledger application is not published.
 Twelve public configuration variables were set, including the verified App
 Client ID, slug and intended OAuth callback. One fresh NORULO_GITHUB_TOKEN_KEY Secret
-was generated and uploaded securely; only its name was read back. At this stage
-it is the sole Secret, and NORULO_GITHUB_CLIENT_SECRET awaits the user's secure
-Cloudflare Dashboard entry. No secret value belongs in release evidence.
+was generated and uploaded securely; only its name was read back. The user then
+saved NORULO_GITHUB_CLIENT_SECRET securely in the Cloudflare Dashboard. A fresh
+Secret-name query confirmed both required names. The public Client ID, slug,
+OAuth callback, origins and production mode also matched the intended settings;
+workers_dev and preview_urls remained false. These checks establish Secret
+presence and public configuration consistency, not Client Secret validity or
+successful live OAuth. No secret value belongs in release evidence.
 
 The Server production hostname is api.norulo.com; the Web host removes the first
 /api path prefix before forwarding. The Server receives /api/v1/* for browser
@@ -75,7 +82,7 @@ OAuth success; the operator must verify those separately.
 
 | Secret name | Requirement |
 | --- | --- |
-| NORULO_GITHUB_CLIENT_SECRET | Secret belonging to the same intended GitHub App as Client ID and slug; awaiting the user's secure Dashboard entry |
+| NORULO_GITHUB_CLIENT_SECRET | The user securely saved this Secret; its name is present, while same-App validity requires a later real OAuth exchange |
 | NORULO_GITHUB_TOKEN_KEY | Exactly 32 cryptographically random bytes encoded as unpadded base64url, normally 43 characters; securely generated/uploaded for Norulo and its Secret name verified |
 
 These are the minimum application secrets for a working GitHub login on a fresh
@@ -91,8 +98,8 @@ verified from the public App response, and real login/installation remains
 unverified. Health and unauthenticated session acceptance do not establish a
 working login.
 
-The fresh Norulo encryption key is already stored securely; the user only needs
-to enter NORULO_GITHUB_CLIENT_SECRET for this step. Retain the existing key;
+The fresh Norulo encryption key and the user's Client Secret are now stored
+securely, with both Secret names confirmed. Retain the existing key;
 do not regenerate it during ordinary setup or deployment. Once credentials are
 stored, changing the key prevents decryption of
 existing access/refresh tokens. Do not reuse an old service's database or presume
@@ -207,4 +214,6 @@ production-runtime tests and 18 subtests, and both paused/activation-overlay S01
 checks, passed. An independent offline check exercised the actual pinned
 inheritance helper and reviewed strict missing-binding error handling. These
 checks preserve the D1 placeholder and disabled optional features; they do not
-verify the user's pending Client Secret or effective D1 write permission.
+verify Client Secret validity or D1 access. The subsequent name-only query
+confirmed both required Secrets are present; the fresh D1 create attempt still
+failed with Authentication error.

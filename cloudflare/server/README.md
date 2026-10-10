@@ -14,14 +14,16 @@ its DB remains a placeholder until a new database is available. The user has now
 registered the real Norulo GitHub App: its public Client ID
 Iv23li78ZPeUgSxJkLUj and slug norulo were verified with GitHub on 2026-10-10, with
 only Metadata read permission and no events. Saved callbacks, management options,
-Client Secret and real login remain unverified. A temporary paused
+Client Secret validity and real login remain unverified. A temporary paused
 norulo-server-production Worker was created after the user updated the token
 permissions. It only returns 503 SERVICE_SETUP_PENDING; workers.dev and preview
 URLs are disabled, with no D1 binding or route. A fresh token-encryption key was
-securely uploaded; the user only needs to enter NORULO_GITHUB_CLIENT_SECRET in
-the Cloudflare Dashboard. This is Secret setup, without full application
-publication, business activation or database changes. D1 write permissions have
-not been retried with the updated token. See
+securely uploaded, and the user has now saved NORULO_GITHUB_CLIENT_SECRET in the
+Cloudflare Dashboard. Both Secret names were read back without inspecting values.
+This is Secret setup, without full application publication, business activation
+or database changes. A fresh D1 create attempt with the updated token still
+returned HTTP 401 Authentication error; effective Account D1 Edit permission
+remains a prerequisite. See
 [production readiness](../../docs/validation/production-readiness-2026-10-10.md).
 
 ## Local runtime
