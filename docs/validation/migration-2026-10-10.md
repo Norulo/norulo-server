@@ -12,7 +12,11 @@ invitations nri_, and cookies nr_session/nr_email_challenge. Web shares the exac
 OpenAPI file. Branding within imported validation records is a mechanical copy,
 not proof that those resources or results belong to Norulo. Historical JSON
 records carry _migration_provenance; unmodified originals remain in Git history.
-Icons await the user's assets.
+The original Norulo logo was subsequently downloaded from the shared source and
+installed in norulo-web/public/norulo-logo.png. Its SHA256 is
+`a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f`.
+Derived icons and branding assets have been replaced and audited; no further
+user asset upload is required.
 
 Both remote configurations are paused with placeholder databases/providers and
 no scheduled jobs or email dispatch. The deployment checker rejects the source

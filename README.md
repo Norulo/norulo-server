@@ -14,8 +14,10 @@ The user has subsequently authorized a production-only release. Current resource
 credential and feature readiness is recorded in
 [production readiness](docs/validation/production-readiness-2026-10-10.md);
 publication is pending verified new resources and the necessary token permissions.
-The intended domains are norulo.com, preview.norulo.com, api.norulo.com and
-preview-api.norulo.com. Icons await user-provided assets.
+The current release targets norulo.com and api.norulo.com in production only.
+Preview configuration remains an offline reference and is not a release target.
+The original Norulo logo is installed in norulo-web/public/norulo-logo.png;
+its derived icons and branding assets have been replaced and audited.
 
 The Worker entry is cloudflare/server/src/entry.py. norulo_server/ owns its
 modules; sync_server_modules.py generates the ignored Worker mirror. The

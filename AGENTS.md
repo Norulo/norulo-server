@@ -22,9 +22,11 @@ secrets. Inspect only secret names/presence; never print values, dump the proces
 environment, or commit credentials. Configure production only with independently
 verified Norulo resource IDs. Checked-in preview remains paused and undeployed;
 production activation follows schema/resource/configuration verification.
-The intended domains are norulo.com, preview.norulo.com, api.norulo.com, and
-preview-api.norulo.com. Domain configuration is not evidence of ownership or DNS
-activation. Icons await user-provided assets. Read
+The current release targets norulo.com and api.norulo.com in production only.
+Preview configuration is retained for offline reference; do not deploy it.
+Domain configuration is not evidence of DNS activation. The original Norulo
+logo is installed in norulo-web/public/norulo-logo.png, with derived assets
+replaced and audited; no further user asset upload is required. Read
 docs/validation/production-readiness-2026-10-10.md before publication for actual
 required credentials and inherited production feature limits.
 
