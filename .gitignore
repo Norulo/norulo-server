@@ -1,0 +1,59 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+.venv/
+.venv*/
+.wrangler/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.claude/settings.local.json
+*.egg-info/
+build/
+dist/
+.norulo/
+.omx/
+.worktrees/
+*.private-key.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage data
+.coverage.*
+
+# SQLite (catch all tmp/test patterns)
+*.sqlite3
+*.db
+
+# Local verification artifacts
+.playwright-cli/
+output/
+work/
+
+# CodeGraph follows Git visibility: exclude non-product/generated code.
+.agents/
+.codex/
+.kimi-code/
+.cleanup-backups/
+.test-tmp/
+node_modules/
+vendor/
+python_modules/
+cloudflare/server/src/norulo_server/
+.cache/
+.vite/
+*.tsbuildinfo

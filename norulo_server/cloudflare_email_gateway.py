@@ -1,0 +1,126 @@
+"""Bounded transactional verification email through Cloudflare's EMAIL binding."""
+from __future__ import annotations
+
+import asyncio
+import re
+from datetime import date
+
+
+class EmailDeliveryError(Exception):
+    code = "EMAIL_DELIVERY_UNAVAILABLE"
+
+    def __init__(self):
+        super().__init__(self.code)
+
+
+class WorkerEmailGateway:
+    """Never log recipients, verification codes or provider error bodies."""
+
+    def __init__(self, env):
+        self.binding = getattr(env, "EMAIL", None)
+        self.sender = str(getattr(env, "NORULO_EMAIL_FROM", ""))
+        enabled = str(getattr(env, "NORULO_EMAIL_AUTH_ENABLED", "0")) == "1"
+        self.configured = bool(enabled and self.binding is not None
+            and len(self.sender) <= 254 and re.fullmatch(
+                r"[A-Za-z0-9._+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+", self.sender))
+
+    async def send_code(self, email, code, *, expires_in=600):
+        if (not self.configured or not isinstance(email, str) or len(email) > 254
+                or not email.isascii() or any(char in email for char in "\r\n\x00")
+                or not isinstance(code, str) or not re.fullmatch(r"[0-9]{6}", code)
+                or expires_in != 600):
+            raise EmailDeliveryError()
+        text = (
+            f"Your Norulo verification code is {code}.\n\n"
+            "This code expires in 10 minutes. Enter it only in Norulo. "
+            "If you did not request it, you can ignore this email."
+        )
+        html = (
+            '<!doctype html><html lang="en"><body style="margin:0;padding:32px 16px;'
+            'background:#f7f7f7;font-family:Arial,sans-serif;color:#171717">'
+            '<div style="max-width:480px;margin:auto;padding:32px;'
+            'background:#fff;border:1px solid #dedede">'
+            '<strong style="font-size:20px">Norulo</strong>'
+            '<p>Your verification code</p>'
+            f'<p style="font-family:monospace;font-size:32px;font-weight:bold;'
+            f'letter-spacing:6px;color:#5741d9">{code}</p>'
+            '<p>This code expires in 10 minutes. Enter it only in Norulo.</p>'
+            '<p style="font-size:13px;color:#626262">If you did not request '
+            'this code, ignore this email.</p>'
+            '</div></body></html>'
+        )
+        payload = {"to": email, "from": {"email": self.sender, "name": "Norulo"},
+                   "subject": "Your Norulo verification code",
+                   "text": text, "html": html}
+        await self._send(payload, timeout=8)
+
+    async def send_recurring_failure(self, email, *, scheduled_on, amount, currency):
+        """One bounded delivery attempt, with entirely English product copy.
+
+        User-entered purposes and ledger names are deliberately absent from this
+        template: they may contain another language or sensitive expense details.
+        """
+        if (not self.configured or not isinstance(email, str) or len(email) > 254
+                or not email.isascii() or not re.fullmatch(
+                    r"[A-Za-z0-9._+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+", email)
+                or not isinstance(scheduled_on, str) or not re.fullmatch(
+                    r"[0-9]{4}-[0-9]{2}-[0-9]{2}", scheduled_on)
+                or not isinstance(amount, str) or not re.fullmatch(
+                    r"[0-9]{1,16}(?:\.[0-9]{1,4})?", amount)
+                or not isinstance(currency, str) or not re.fullmatch(r"[A-Z]{3}", currency)):
+            raise EmailDeliveryError()
+        try:
+            date.fromisoformat(scheduled_on)
+        except ValueError:
+            raise EmailDeliveryError() from None
+        text = (
+            "A scheduled Norulo expense could not be added because your ledger "
+            "has reached its expense limit.\n\n"
+            f"Scheduled date: {scheduled_on}\nAmount: {currency} {amount}\n\n"
+            "This expense has not been recorded. It is saved in the recurring "
+            "plan's pending expenses. Open Norulo, free an expense slot or "
+            "enable automatic removal, then use Add expense to try again.\n\n"
+            "Each recurring plan keeps up to 10 pending expenses. While all 10 "
+            "remain unresolved, additional expenses that fail at the limit are "
+            "not saved."
+        )
+        html = (
+            '<!doctype html><html lang="en"><body style="margin:0;padding:32px 16px;'
+            'background:#f7f7f7;font-family:Arial,sans-serif;color:#171717">'
+            '<div style="max-width:480px;margin:auto;padding:32px;'
+            'background:#fff;border:1px solid #dedede">'
+            '<strong style="font-size:20px">Norulo</strong>'
+            '<h1 style="font-size:20px">A recurring expense needs your attention</h1>'
+            '<p>Your ledger has reached its expense limit, so this expense '
+            'could not be added.</p>'
+            f'<p><strong>Scheduled date:</strong> {scheduled_on}<br>'
+            f'<strong>Amount:</strong> {currency} {amount}</p>'
+            '<p>This expense has not been recorded. It is saved in the recurring '
+            "plan's pending expenses. Open Norulo, free an expense slot or "
+            'enable automatic removal, then use <strong>Add expense</strong> '
+            'to try again.</p>'
+            '<p style="font-size:13px;color:#626262">Each recurring plan keeps '
+            'up to 10 pending expenses. While all 10 remain unresolved, additional '
+            'expenses that fail at the limit are not saved.</p>'
+            '</div></body></html>'
+        )
+        await self._send({"to": email,
+            "from": {"email": self.sender, "name": "Norulo"},
+            "subject": "A Norulo recurring expense needs your attention",
+            "text": text, "html": html}, timeout=2)
+
+    async def _send(self, payload, *, timeout):
+        try:
+            import js
+            from pyodide.ffi import to_js
+        except ModuleNotFoundError:
+            # Local reference tests use an in-memory binding, never a provider.
+            builder = payload
+        else:
+            builder = to_js(payload, dict_converter=js.Object.fromEntries)
+        try:
+            # Unknown delivery is not retried: a timed-out provider may already
+            # have accepted the message. A later request is an explicit resend.
+            await asyncio.wait_for(self.binding.send(builder), timeout=timeout)
+        except Exception:
+            raise EmailDeliveryError() from None

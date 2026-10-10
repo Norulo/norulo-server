@@ -1,0 +1,147 @@
+"""Small async HTTP boundary for the candidate Cloudflare Server entry."""
+from __future__ import annotations
+
+import json
+from urllib.parse import urlsplit
+from typing import Any, Awaitable, Callable, Mapping
+
+from .cloudflare_creem_handler import (
+    MAX_CREEM_WEBHOOK_BYTES,
+    accept_signed_creem_webhook,
+)
+from .creem_signature import verify_creem_signature
+from .cloudflare_principal import _cookie_sessions
+from .cloudflare_api_key_read import list_api_keys
+from .cloudflare_api_key_write import revoke_api_key, create_api_key
+from .cloudflare_billing_read import read_billing
+from .cloudflare_billing_catalog import read_public_plan
+from .json_input import validate_json_unicode
+
+
+def _header(headers: Mapping[str, object], name: str) -> str:
+    expected = name.casefold()
+    for key, value in headers.items():
+        if str(key).casefold() == expected:
+            return str(value).strip()
+    return ""
+
+
+async def handle_http_request(*, method: str, path: str,
+                              headers: Mapping[str, object],
+                              read_body: Callable[[], Awaitable[bytes]],
+                              binding: Any, creem_secret: str,
+                              configured_products: dict, now: int,
+                              params: Mapping[str, object] | None = None,
+                              cookie_same_site: str = "Lax",
+                              trusted_origins: set[str] | None = None) -> tuple[int, dict]:
+    if method == "GET" and path == "/health":
+        try:
+            ledger = await binding.prepare("""SELECT COUNT(*) AS table_count FROM sqlite_master
+                WHERE type='table' AND name IN ('ledger_projects','expense_categories',
+                    'expenses','expense_events','expense_create_idempotency',
+                    'expense_suggestion_budget','expense_suggestion_events','app_state',
+                    'd1_command_guard','api_keys','account_entitlement_authority',
+                    'billing_webhook_receipts','billing_public_catalog','ledger_plan_usage',
+                    'workspace_members','workspace_invites','workspace_events',
+                    'ledger_project_repositories')""").first()
+            if ledger and ledger.get("table_count") == 18:
+                return 200, {"ok": True, "service": "norulo-server",
+                             "database": {"type": "d1", "configured": True}}
+        except Exception:
+            pass
+        return 503, {"ok": False, "service": "norulo-server"}
+    if method == "GET" and path == "/api-keys":
+        try:
+            workspace_values = (params or {}).get("workspaceId")
+            if isinstance(workspace_values, list):
+                if len(workspace_values) != 1:
+                    return 422, {"error": {"code": "INVALID_INPUT"}}
+                workspace_values = workspace_values[0]
+            if workspace_values is not None and (not isinstance(workspace_values, str) or not workspace_values):
+                return 422, {"error": {"code": "INVALID_INPUT"}}
+            return await list_api_keys(binding=binding, headers=headers, now=now, workspace_id=workspace_values)
+        except Exception:
+            return 503, {"error": {"code": "SERVER_UNAVAILABLE"}}
+    if method == "GET" and path == "/billing":
+        try:
+            return await read_billing(binding=binding, headers=headers, now=now)
+        except Exception:
+            return 503, {"error": {"code": "SERVER_UNAVAILABLE"}}
+    if method == "GET" and path == "/billing/plan":
+        try:
+            return await read_public_plan(binding=binding, headers=headers, now=now)
+        except Exception:
+            return 503, {"error": {"code": "BILLING_CATALOG_UNAVAILABLE"}}
+    if method == "POST" and path == "/api-keys":
+        if _cookie_sessions(headers):
+            claimed_origin = _header(headers, "Origin") or _header(headers, "Referer")
+            parsed = urlsplit(claimed_origin)
+            origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else ""
+            if origin not in (trusted_origins or set()):
+                return 403, {"error": {"code": "UNTRUSTED_ORIGIN"}}
+        length_text = _header(headers, "Content-Length")
+        if not length_text.isdigit() or int(length_text) > 8192:
+            return 400, {"error": {"code": "INVALID_REQUEST"}}
+        try:
+            raw = await read_body()
+            if not isinstance(raw, bytes) or len(raw) != int(length_text):
+                raise ValueError("invalid body length")
+            body = json.loads(raw)
+            validate_json_unicode(body)
+        except Exception:
+            return 400, {"error": {"code": "INVALID_REQUEST"}}
+        try:
+            return await create_api_key(binding=binding, headers=headers,
+                body=body, now=now)
+        except Exception:
+            return 503, {"error": {"code": "SERVER_UNAVAILABLE"}}
+    if method == "DELETE" and path.startswith("/api-keys/"):
+        key_id = path[len("/api-keys/"):]
+        if not key_id or "/" in key_id:
+            return 404, {"error": {"code": "NOT_FOUND"}}
+        if _cookie_sessions(headers):
+            claimed_origin = _header(headers, "Origin") or _header(headers, "Referer")
+            parsed = urlsplit(claimed_origin)
+            origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.scheme and parsed.netloc else ""
+            if origin not in (trusted_origins or set()):
+                return 403, {"error": {"code": "UNTRUSTED_ORIGIN"}}
+        try:
+            return await revoke_api_key(binding=binding, key_id=key_id,
+                headers=headers, now=now)
+        except Exception:
+            return 503, {"error": {"code": "SERVER_UNAVAILABLE"}}
+    if method != "POST" or path != "/webhooks/creem":
+        return 404, {"error": {"code": "NOT_FOUND"}}
+    if not isinstance(creem_secret, str) or not creem_secret or not isinstance(configured_products, dict):
+        return 503, {"error": {"code": "BILLING_UNAVAILABLE"}}
+    length_text = _header(headers, "Content-Length")
+    if not length_text.isdigit():
+        return 400, {"error": {"code": "INVALID_REQUEST"}}
+    length = int(length_text)
+    if length > MAX_CREEM_WEBHOOK_BYTES:
+        return 413, {"error": {"code": "REQUEST_TOO_LARGE"}}
+    try:
+        raw = await read_body()
+    except Exception:
+        return 400, {"error": {"code": "INVALID_REQUEST"}}
+    if not isinstance(raw, bytes) or len(raw) != length:
+        return 400, {"error": {"code": "INVALID_REQUEST"}}
+    if len(raw) > MAX_CREEM_WEBHOOK_BYTES:
+        return 413, {"error": {"code": "REQUEST_TOO_LARGE"}}
+    if not verify_creem_signature(raw, _header(headers, "creem-signature"), creem_secret):
+        return 400, {"error": {"code": "INVALID_SIGNATURE"}}
+    try:
+        event = json.loads(raw)
+    except (UnicodeError, ValueError):
+        return 400, {"error": {"code": "INVALID_REQUEST"}}
+    if not isinstance(event, dict):
+        return 400, {"error": {"code": "INVALID_REQUEST"}}
+    try:
+        await accept_signed_creem_webhook(binding=binding, raw_body=raw,
+            signature=_header(headers, "creem-signature"),
+            secret=creem_secret, configured_products=configured_products,
+            now=now)
+    except Exception:
+        # A verified receipt may already be durable; ask the provider to retry.
+        return 503, {"error": {"code": "BILLING_RETRY"}}
+    return 200, {"received": True}

@@ -1,0 +1,12 @@
+.wrangler/
+.dev.vars
+node_modules/
+python_modules/
+src/norulo_server/
+__pycache__/
+*.pyc
+
+# Local Worker credentials
+.dev.vars
+.dev.vars.*
+!.dev.vars.example

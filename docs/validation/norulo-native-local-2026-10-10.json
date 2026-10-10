@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-10",
+  "passed": true,
+  "localOnly": true,
+  "expectedSchemaVersion": 12,
+  "localHttpRequestsCompleted": 49,
+  "nativeStatements": 1671,
+  "meteredNativeRowsRead": 3921,
+  "meteredNativeRowsWritten": 689,
+  "integrityProbeNativeRowsRead": 2695,
+  "runtimeStopped": true,
+  "remoteD1Operations": 0,
+  "realProviderRequests": 0,
+  "clientRetries": 0,
+  "canonicalApplicationEntrySha256": "48ef9f684e8d85d67b2489112c195c254f25314b7d62443dc24db0d46c394671",
+  "canonicalSourceTreeSha256": "360ba47d18529d2df98269b32f9660c2941b990e968c848eb757d5806dae1a93",
+  "runtimeProvenance": {
+    "workerdSha256": "eb449c84ddd55ea357dc73e6c1b50bd255ccdc5d1875544c162435b7bd6168b6",
+    "runtimeBundleSha256": "3c3fd5a4179230e21e018e28b0e735e7c4abd8fe8e4ff39d2fd6bb2ea3a2e260",
+    "miniflareD1SourceSha256": "eb213ff08bfc9f2992253e8ff01fe31229a069728431df54a3f44c9c4c191ee7"
+  },
+  "nativeAttemptsObserved": [
+    null
+  ],
+  "nativeAttemptMetadataMissing": true,
+  "missingAttemptsRetainReadReservations": true,
+  "bearerRecurringGrantNativeAcceptance": true,
+  "bearerMemberManagementNativeAcceptance": true,
+  "bearerExpenseCrudAndReplayNativeAcceptance": true,
+  "ownerProjectRemoveNativeAcceptance": true,
+  "activityScopeNativeAdmission": true,
+  "freeGuidePayloadNativeAcceptance": true,
+  "publicDtosDoNotLeakKeyHash": true,
+  "sourceMainCommit": "4bfbea95e5f57a7ac24c1cf264880de50037fd67",
+  "noruloAcceptance": true,
+  "scope": "Current Norulo local native acceptance only; remote provider/deployment acceptance remains pending"
+}

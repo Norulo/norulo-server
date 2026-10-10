@@ -1,0 +1,151 @@
+> Imported source-service history, mechanically rebranded. This record does
+> not establish Norulo remote deployment, provider acceptance, resource ownership
+> or continuing user authorization. See [migration status](migration-2026-10-10.md).
+
+# Cloudflare 成本方案 — 2026-10-06
+
+目标是让 Norulo 在正常使用量下把 Cloudflare 月费用控制在 **200 美元以内**，
+通过短窗口防滥用、减少无效扫描和会计写入实现；不在月底按累计金额关闭产品。
+下列三个明确假设的月场景估计为 **$5.84、$53.43、$124.10**。
+它们是容量规划，不是现有账单：账户订阅/账单读取曾返回权限错误，未重复调用；
+其他 Cloudflare 产品、其他项目与实际套餐的费用和配额占用尚未取得。
+
+## 官方单价
+
+2026-10-06 从 Cloudflare 官方文档核对，按 Workers Standard/Paid 计算，美元未含税。
+
+| 项目 | 每月包含量 | 超出单价 |
+| --- | --- | --- |
+| Workers 基础费 | 账户最低 $5/月 | 只计一次，不按 Server/Web/DO 各收 $5 |
+| Workers 请求 | 1,000 万 | $0.30/百万 |
+| Workers CPU | 3,000 万毫秒 | $0.02/百万毫秒 |
+| D1 读取 | 250 亿行 | $0.001/百万行 |
+| D1 写入 | 5,000 万行 | $1/百万行 |
+| D1 存储 | 5 GB-month | $0.75/GB-month |
+| DO 请求 | 100 万 | $0.15/百万；超额按计费单位向上取整 |
+| DO 运行时长 | 400,000 GB-s | $12.50/百万 GB-s；超额按计费单位向上取整 |
+| DO SQLite 读取/写入 | 250 亿/5,000 万行 | $0.001/$1 每百万行 |
+| DO SQLite 存储 | 5 GB-month | $0.20/GB-month |
+
+D1 与 DO SQLite 各自计算包含量，不能合并抵扣。DO 的 INSERT、UPDATE、DELETE、
+索引维护和触发器产生的写入有成本，SQLite DO 已从 2026 年 1 月开始计费。
+Web → Server 的 Service Binding 在 Standard 模式不额外计一次请求，两个 Worker
+的 CPU 合计；直接静态资源请求免费，HTML 经 Worker 处理仍计请求。
+这里没有启用会让静态资源/绑定调用也计请求的 Workers Cache 新功能。
+
+来源：[Workers](https://developers.cloudflare.com/workers/platform/pricing/)、
+[Service Binding](https://developers.cloudflare.com/workers/platform/pricing/#service-bindings)、
+[D1](https://developers.cloudflare.com/d1/platform/pricing/)、
+[Durable Objects](https://developers.cloudflare.com/durable-objects/platform/pricing/)、
+[DO SQL 索引计费](https://developers.cloudflare.com/durable-objects/api/sqlite-storage-api/)。
+
+## 计算依据与已减少的无效操作
+
+[原生功能验收](projects-subscriptions-native-2026-10-06.json)累计记录 85 个 HTTP 响应、
+782 条应用 SQL、1,078 行读取、345 行写入：平均每个响应约 9.20 条 SQL、
+12.68 行读、4.06 行写。它包含大量 Projects、成员权限和 20 次支付测试请求，
+是偏重变更的测试组合；正常 GET 不写 D1。该记录不包含 preview 包装器的
+会计/基数扫描、fixture 建立与迁移，也没有测量真实月流量或 CPU。
+**预留的最坏情况预算不是已消耗行数，不能作为账单。**
+
+最终代码的减少项：
+
+- `ProductMeteredD1.ensure_cardinality()` 复用已经完整验证且持久保存的基数。
+  已验证的 GET 不再扫描所有表。只有未验证/升级路径需要入口验证；每个变更批次
+  完成后仍刷新一次。单例 DO 串行协调与变更后的刷新保证记录不会失去依据。
+- 正常 GET 不初始化或更新商业 usage 表，也不写 API Key 的最后访问时间。
+  expense、usage、幂等结果与审计仍放在同一个原子批次，按真实索引效应计写入。
+- 新会计证据逐行追加，避免每次重写不断增长的 JSON 证据数组；取证最多返回
+  最近 128 条，保留历史记录。这里减少的是序列化和扫描，并没有把 DO 写入当免费。
+- Billing、Projects 与成员页面没有定时 API 轮询；付款变化由用户手动刷新。
+  GitHub popup 的短定时器只查看窗口是否关闭，关闭后才做一次 session/sync 请求。
+  Status 页的原每 30 秒 `/health` 请求由 Web 本轮改为首次加载和手动刷新。
+
+## 三个月场景
+
+统一假设：API 请求外再留 20% 动态 HTML/账户流量；Workers 平均 CPU 留
+100 ms/动态请求（规划余量，尚未实测）；每 API 请求 D1 应用读写沿用上述偏重变更
+样本。另按 10% 请求产生变更、每个写请求平均 3 个变更批次，增加
+`0.3 × API请求数` 次写后基数刷新。独立记录修复后，刷新只返回各表物理行数和
+app_state 记录种类计数，普通变更不传输/解析全站账户 JSON。规划按
+“两倍全部物理行数 + 6”留扫描余量，覆盖单独的 app_state 聚合；这不是实际
+native rows_read，也不是最坏情况预留数。普通读取仍复用已验证基数。
+首次/升级一次性扫描不影响表中的美元取整；迁移仍需单独有限验收。
+
+DO 另留 **80 行写/API请求、300 行读/API请求**。随后用原生 Python Worker 和
+SQLite DO 做了 **3 次本地 HTTP 请求、4 个代表性事务**，直接累加原生 SQL cursor 的
+`rowsRead`/`rowsWritten`，计入实际触发器和索引影响；没有 D1、支付或线上调用。
+事务调用实际 ingress、actor、begin、reserve、证据、settlement、状态保存、finish，
+每组输入使用明确标记的 synthetic D1 metadata，只测 DO 存储会计成本。
+
+| 原生本地 DO 事务 | 操作组 / 状态发布 | DO 行读 | DO 行写 |
+| --- | ---: | ---: | ---: |
+| 首次限流 subject，3 组读取 | 3 / 0 | 44 | 27 |
+| 已有 subject，3 组读取 | 3 / 0 | 44 | 20 |
+| 12 组操作，首次 actor 写 bucket | 12 / 3 | 139 | 70 |
+| 同一存储重建构造器，12 组操作 | 12 / 3 | 140 | 68 |
+
+新 DO 构造器另测到 23 行写，已有存储重建构造器为 0 行写；这不是每请求成本。
+暖态模型实际为 `5 × 操作组数 + 状态发布次数 + 5` 行写。
+因此 **80 是有代表性原生测量支持的规划值，仍不是所有 API 的上限或线上均值**。
+额外操作组、过期 subject 删除与不同请求组合仍可能超过它；300 行读同样是规划余量，
+未计入此微基准的完整 wrapper check/snapshot 读取。120 行写的敏感性场景继续保留。
+限流成功/拒绝都可能消耗 Worker/DO 读取；限流计数使用 DO，不增加 D1 写入。
+方法、逐阶段原生指标和边界见[独立实测报告](preview-do-cost-native-2026-10-06.md)
+与[脱敏原始记录](preview-do-cost-native-2026-10-06.json)。
+
+当前固定的单例 DO 即使 30 天一直活跃，最多约
+`30 × 24 × 3600 × 0.128 = 331,776 GB-s`，在 400,000 GB-s 包含量内。
+时长跨同时处理的请求共享，不能把每个请求的等待时长重复相加。
+增加多个常驻对象时必须重算；两个全天活跃对象约产生 $12.50 的超额时长费。
+
+| 月输入/组件 | 试运行 | 稳定使用 | 增长余量 |
+| --- | ---: | ---: | ---: |
+| API 请求 | 600,000 | 1,200,000 | 2,000,000 |
+| 每次基数刷新涉及物理行 | 500 | 5,000 | 10,000 |
+| 写后刷新次数 | 180,000 | 360,000 | 600,000 |
+| D1 行读取，含刷新 | 188.69 M | 3.62 B | 12.03 B |
+| D1 行写入 | 2.44 M | 4.87 M | 8.12 M |
+| DO SQLite 行写入 | 48 M | 96 M | 160 M |
+| D1 / DO 存储余量，GB-month | 0.5 / 1 | 2 / 5 | 10 / 10 |
+| Workers 基础费 | $5.00 | $5.00 | $5.00 |
+| Workers 请求 + CPU | $0.84 | $2.28 | $4.20 |
+| D1 读取 + 写入 | $0 | $0 | $0 |
+| D1 存储 | $0 | $0 | $3.75 |
+| DO 请求 | $0 | $0.15 | $0.15 |
+| DO 运行时长 | $0 | $0 | $0 |
+| DO SQLite 读取 + 写入 | $0 | $46.00 | $110.00 |
+| DO SQLite 存储 | $0 | $0 | $1.00 |
+| **预估 Norulo Cloudflare 总额** | **$5.84** | **$53.43** | **$124.10** |
+| **到 $200 的余量** | **$194.16** | **$146.57** | **$75.90** |
+
+存储列是独立的保守容量余量，包含保留的历史证据，并不由当前物理行数反推。
+若账户其他项目已经使用包含量，表中的抵扣需要按整个账户重算。
+增长场景若 DO 会计实际增到 120 行写/API 请求，总额将变为 **$204.10**。
+因此真正需要继续降低和核对的成本是 DO 会计放大，而不是关闭正常用户功能。
+
+## 运行策略
+
+保留每分钟 IP 600 次、认证用户读取 120 次、写入 60 次、OAuth IP 10 次的
+短窗口规则，另有凭据入口 bucket；429 只影响当前请求并带 `Retry-After`。
+它们限制异常突发，不是保证账户月费的数学上限，也不在月末禁止正常访问。
+业务容量、Jev 预算和请求大小仍按各自产品规则执行，不以 CF 月费替代订阅权益。
+
+在本轮有限验收后，用已有 D1 native meta 与 DO SQL cursor/控制台行指标核对
+实际“行/API请求”和 Worker CPU；只在用户要求的有限检查中读取，不建立轮询
+或高频压测。日常目标为单次普通读 P95 ≤ 500 ms、普通写 ≤ 1 s，作为待测目标，
+不把本地功能正确性声称为线上延迟验收。当观察值使总预测接近 $150 时，优先合并
+会计状态写、避免重复读取/导出和减少不必要的刷新，并为账户其他服务留下余量；
+不添加硬月度停机开关或外部通知。
+
+DO 单对象 SQLite 的官方 10 GB 上限还需要长期容量规划。每组操作新增整数证据，
+明确 single-attempt 才增加结算记录；80 个计费行写不代表 80 条新历史。按每月
+200 万次 API、平均 12 组的假设，离线 SQLite 样本约增长 0.46–0.90 GB/月，
+更保守字节留量为 1.54–3.07 GB/月。当前对象实际字节和 Cloudflare 页开销未测，
+这些不是容量上界；持续高流量前应评审容量，后续分段/归档仍须保持原计数、
+旧证据、不明结果与财务历史。本轮没有清理 journal 或更换 namespace。
+详见[独立离线容量评审](preview-do-growth-offline-2026-10-06.md)。
+
+可复算：[离线估算脚本](../../scripts/estimate-cloudflare-cost.py)，
+运行 `.venv/bin/python scripts/estimate-cloudflare-cost.py`；脚本不访问网络/D1、
+不发送请求，也不实施任何限额。

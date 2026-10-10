@@ -1,0 +1,13 @@
+# Local Worker example only; use reviewed environment configs and Cloudflare Secrets.
+# Use local-only simulated email bindings; never enable remote mail in local tests.
+NORULO_EMAIL_AUTH_ENABLED=0
+NORULO_EMAIL_FROM=login@auth.norulo.com
+NORULO_EMAIL_CODE_SECRET=replace-with-random-secret-at-least-32-characters
+NORULO_GITHUB_CLIENT_ID=replace-me
+NORULO_GITHUB_CLIENT_SECRET=replace-me
+NORULO_GITHUB_TOKEN_KEY=replace-with-reviewed-token-encryption-key
+NORULO_CREEM_API_KEY=replace-me
+NORULO_CREEM_WEBHOOK_SECRET=replace-me
+TYPESAFE_API_KEY=replace-me
+NORULO_JEV_SUGGESTIONS_ENABLED=0
+NORULO_JEV_SUGGESTIONS_EVALUATED=0

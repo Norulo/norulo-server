@@ -1,0 +1,70 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "norulo-server-preview",
+  "main": "src/entry.py",
+  "compatibility_date": "2026-09-23",
+  "compatibility_flags": [
+    "python_workers"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "preview-api.norulo.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "NORULO_D1_ACCESS_ENABLED": "0",
+    "NORULO_PREVIEW_PRODUCT_ENABLED": "0",
+    "NORULO_PREVIEW_SCHEMA_UPGRADE_ENABLED": "0",
+    "NORULO_PREVIEW_SCHEMA_V6_UPGRADE_ENABLED": "0",
+    "NORULO_PREVIEW_SCHEMA_V7_UPGRADE_ENABLED": "0",
+    "NORULO_PREVIEW_SCHEMA_V8_UPGRADE_ENABLED": "0",
+    "NORULO_PREVIEW_SCHEMA_V9_UPGRADE_ENABLED": "0",
+    "NORULO_PREVIEW_SCHEMA_V10_UPGRADE_ENABLED": "0",
+    "NORULO_PREVIEW_SCHEMA_V11_UPGRADE_ENABLED": "0",
+    "NORULO_PREVIEW_SCHEMA_V12_UPGRADE_ENABLED": "0",
+    "NORULO_PREVIEW_BUSINESS_CLEAR_ID": "",
+    "NORULO_PREVIEW_BUSINESS_CLEAR_MANIFEST": "",
+    "NORULO_RECURRING_EXPENSES_ENABLED": "0",
+    "NORULO_MODE": "preview",
+    "NORULO_EMAIL_AUTH_ENABLED": "0",
+    "NORULO_EMAIL_FROM": "login@auth.norulo.com",
+    "NORULO_APP_URL": "https://preview.norulo.com",
+    "NORULO_GITHUB_CALLBACK_URL": "https://preview.norulo.com/api/auth/github/callback",
+    "NORULO_GITHUB_CLIENT_ID": "replace-me",
+    "NORULO_GITHUB_APP_SLUG": "replace-me",
+    "NORULO_CREEM_API_BASE_URL": "https://test-api.creem.io",
+    "NORULO_CREEM_PRODUCT_IDS_JSON": "{}",
+    "NORULO_ALLOWED_ORIGINS": "https://preview.norulo.com",
+    "NORULO_COOKIE_SAME_SITE": "None",
+    "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":100,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\"},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\"},\"max\":{\"projects\":100,\"records\":100000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"5.00\"}}",
+    "NORULO_JEV_SUGGESTIONS_ENABLED": "0",
+    "NORULO_JEV_SUGGESTIONS_EVALUATED": "0"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "norulo-ledger-preview",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "VALIDATION_BUDGET",
+        "class_name": "ValidationBudget"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "validation-budget-v1",
+      "new_sqlite_classes": [
+        "ValidationBudget"
+      ]
+    }
+  ]
+}

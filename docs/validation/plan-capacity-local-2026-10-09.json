@@ -1,0 +1,177 @@
+{
+  "date": "2026-10-09",
+  "scope": "Local synthetic quota and capacity evidence; no remote D1 access or deployment",
+  "defaults": {
+    "free": {
+      "projects": 3,
+      "expenseRecords": 100
+    },
+    "pro": {
+      "projects": 20,
+      "expenseRecords": 20000
+    },
+    "max": {
+      "projects": 100,
+      "expenseRecords": 100000
+    }
+  },
+  "operatorCapacityOverrideMaximum": 1000000,
+  "capacitySemantics": {
+    "ownerScoped": true,
+    "includesArchivedAndRemovedProjects": true,
+    "includesSoftDeletedExpenses": false,
+    "includesSharedExpenses": true,
+    "includesArchivedProjectExpenses": true,
+    "includesRemovedProjectExpenses": false,
+    "manualExpenseAndProjectRemovalFreeExpenseSlots": true,
+    "activeCapacityIsPhysicalStorageCeiling": false,
+    "retentionPreference": {
+      "default": false,
+      "allPlans": true,
+      "personalAccount": true,
+      "getPatchRoute": "/api/v1/account/expense-retention",
+      "cookieOnly": true,
+      "fullEnabled": "Atomically soft-remove one global oldest by occurredOn,createdAt,id and insert one new expense",
+      "aboveLimitEnabled": "RETENTION_CLEANUP_REQUIRED; manual cleanup, no bulk deletion",
+      "unauthorizedOldest": "RETENTION_TARGET_FORBIDDEN; never pick a later permitted expense",
+      "replacementCommercialWrites": 1,
+      "replacementNetActiveGrowth": 0,
+      "overageCharges": false
+    },
+    "readsNeverInitializeUsage": true,
+    "aboveLimitHistoryIsRetained": true,
+    "lowerLimitsBlockNewCapacityButPreserveExistingEdits": true,
+    "getRoutes": [
+      "/billing",
+      "/billing/plan",
+      "/api/v1/me"
+    ],
+    "getProjection": "ledgerUsage: workspaceId, projects/expenseRecords {used, limit, remaining}; remaining is max(0, limit-used)",
+    "getScope": "Billing uses personal owner; /api/v1/me uses selected workspace owner",
+    "getAuthorization": "Capacity is read in the same credential/owner/membership snapshot batch. Public pricing and revoked authentication do not disclose personal usage.",
+    "getCounterSource": "Cumulative project usage row, owner-indexed COUNT fallback before initialization; expense records always exact active COUNT. GET never writes. Normal mutations atomically reconcile legacy cumulative expense counters using post-mutation active state."
+  },
+  "storageProbe": {
+    "method": "100 ordinary Shared pool creates per case, 200 total, current migrations, real handle_ledger_request and PlanLimitedD1, explicit category, Pro policy, disabled Jev. Compare SQLite dbstat allocated pages and payload for expense tables and all their indexes before and after. Close all connections.",
+    "pageBytes": 4096,
+    "cases": [
+      {
+        "noteUtf8Bytes": 0,
+        "purposeUtf8Bytes": 7,
+        "creates": 100,
+        "allocatedBytesPerCreate": {
+          "expense": 614.4,
+          "immutableAudit": 901.12,
+          "creationReplay": 696.32,
+          "persistentTotal": 2211.84,
+          "rolling24HourActivity": 778.24,
+          "includingCurrentActivity": 2990.08
+        },
+        "payloadBytesPerCreateIncludingActivity": 2488.92
+      },
+      {
+        "noteUtf8Bytes": 1024,
+        "purposeUtf8Bytes": 7,
+        "creates": 100,
+        "allocatedBytesPerCreate": {
+          "expense": 1802.24,
+          "immutableAudit": 2252.8,
+          "creationReplay": 2048,
+          "persistentTotal": 6103.04,
+          "rolling24HourActivity": 2293.76,
+          "includingCurrentActivity": 8396.8
+        },
+        "payloadBytesPerCreateIncludingActivity": 6579.92
+      }
+    ],
+    "usageCounter": "One row per owner was already initialized by category creation; 100 creates grew its payload by 2 bytes and added no pages.",
+    "modelFallback": "Disabled paid-plan Jev assistance fallback remains in durable audit/replay DTO and is included in these measurements.",
+    "persistentAllocatedBytesAtFinalCapacity": {
+      "free100": {
+        "noNote": 221184,
+        "oneKiBNote": 610304
+      },
+      "pro20000": {
+        "noNote": 44236800,
+        "oneKiBNote": 122060800
+      },
+      "max100000": {
+        "noNote": 221184000,
+        "oneKiBNote": 610304000
+      }
+    },
+    "limits": [
+      "SQLite page estimates from simple synthetic creates are not actual Cloudflare storage invoices or production-size benchmarks.",
+      "Exclude subsequent edit/delete immutable audits, recurring rules/occurrences, account baseline, DO journal, Cloudflare infrastructure overhead, backups and WAL.",
+      "Activity is retired after 24 hours; its measured peak must not be multiplied by all permanent historical records.",
+      "Actual field lengths, UUID insertion fragmentation and 4096-byte page quantization change results.",
+      "Probe used existing Pro write allowances; the provisional Max capacity at sampling does not affect the 100-row storage cases. Final default Max is 100000.",
+      "Storage probe preceded optional oldest replacement. Active-slot limits do not bound physical storage: removed financial rows/replays and every edit/removal audit remain retained. Replacement adds a removal audit and activity, which are not included in the ordinary-create sample."
+    ]
+  },
+  "ordinaryCreateSql": {
+    "businessMutationStatements": 9,
+    "rowsWrittenReservationIncludingIndexes": 23,
+    "breakdown": {
+      "threeCredentialCategoryTargetGuardInserts": 3,
+      "usageUpsert": 3,
+      "expense": 5,
+      "immutableAudit": 3,
+      "creationReplay": 2,
+      "activity": 4,
+      "guardCleanup": 3
+    },
+    "maximumAdditionalExpiredActivityRetirement": {
+      "rows": 16,
+      "rowsWrittenReservation": 64
+    },
+    "withMaximumRetirementRowsWrittenReservation": 87,
+    "providerCallsObserved": 0,
+    "nativeActualBilledRowsMeasured": false
+  },
+  "readAmplification": {
+    "source": "ProductMeteredD1.batch calls refresh after each successful write; _refresh_records performs all-product-table COUNT and global app_state kind counts.",
+    "refreshReservation": "3 * (sum(all product table rows) + 4 * app_state rows + 128)",
+    "firstFillExpenseOnlyLogicalCountTraversal": {
+      "pro20000": 200010000,
+      "max100000": 5000050000
+    },
+    "caveat": "Immutable audit and replay tables grow alongside expenses. Other owners' data also participates. These traversal estimates and reservation upper bounds are not native D1 rows_read measurements. Capacity storage cost alone does not establish request cost or latency. Active quota now adds owner-indexed COUNT reads for creates/transactions and capacity GET, scanning retained rows including tombstones; these additional scans are not included in the earlier first-fill refresh estimates."
+  },
+  "runtimeBounds": {
+    "httpJsonIngressBytes": 8192,
+    "nativeD1DispatchTimeoutSeconds": 10,
+    "requestTimeoutSeconds": 30,
+    "nativeWorkerCpuMeasured": false,
+    "timeoutIsCpuBudget": false,
+    "localPythonWallTimeIsWorkerCpuEvidence": false
+  },
+  "validation": {
+    "focusedTests": {
+      "python": "3.10.12",
+      "command": "python -m pytest tests/test_ledger_plan_limits.py tests/test_ledger_capacity_usage.py tests/test_cloudflare_billing_read.py tests/test_creem_catalog_projection.py tests/test_jev_plan_entitlements.py -q",
+      "passed": 73
+    },
+    "retentionFocusedTests": {
+      "python": "3.10.12",
+      "command": "python -m pytest tests/test_expense_retention.py tests/test_expense_retention_adversarial.py tests/test_ledger_plan_limits.py tests/test_ledger_capacity_usage.py tests/test_ledger_recurring.py tests/test_jev_preview_admission.py tests/test_recurring_meter_plan_limits.py tests/test_openapi_integration_contract.py -q",
+      "passed": 181,
+      "scope": "Real local REST and SQLite transactions: all-plan cookie-only preference CAS, successful global-oldest replacement/ties, one commercial write, manual/project removal active accounting, legacy counter read/mutation reconciliation, recurring deletion replay, current authorization/ordinal races and atomic quota failure rollback"
+    },
+    "retentionFullSuite": {
+      "python": "3.10.12",
+      "command": "python -m pytest",
+      "passed": 2069,
+      "wallTimeSeconds": 44.17
+    },
+    "retentionNativeEvidence": "expense-retention-native-local-2026-10-09.json",
+    "maxBoundaryMethod": "Synthetic cumulative project counter=99 plus 99999 physical shared expenses seeded by one finite local recursive CTE; real guarded PlanLimitedD1 mutations accept project100/expense100000, reject above-limit creates before native dispatch, and retain history and existing edits after downgrade. Active expense quota ignores legacy cumulative counters.",
+    "nativeLargeCapacityBenchmark": false,
+    "schemaMigrationNeeded": false
+  },
+  "_migration_provenance": {
+    "source_commit": "4bfbea95e5f57a7ac24c1cf264880de50037fd67",
+    "rebranded_copy": true,
+    "norulo_acceptance": false
+  }
+}

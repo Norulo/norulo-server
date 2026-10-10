@@ -1,0 +1,209 @@
+"""Public integration contract exposes the same authorized ledger resources."""
+from pathlib import Path
+
+import yaml
+
+from norulo_server.api_key_dto_rules import ALLOWED_SCOPES, DEFAULT_SCOPES
+from norulo_server.cloudflare_ledger_expenses import SUPPORTED
+from norulo_server.billing_projection import billing_account_dto, subscription_event_dto
+from norulo_server.billing_catalog_rules import catalog_payload
+from norulo_server.creem_public_catalog_rules import verified_public_catalog
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CONTRACT = yaml.safe_load((ROOT / "openapi/ledger-v1.yaml").read_text())
+SCHEMAS = CONTRACT["components"]["schemas"]
+SCHEMA_KEYS = {
+    "$ref", "$schema", "$id", "$defs", "type", "title", "description", "default",
+    "examples", "enum", "const", "required", "properties", "additionalProperties",
+    "unevaluatedProperties", "minProperties", "maxProperties", "items", "maxItems",
+    "minItems", "uniqueItems", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum",
+    "minLength", "maxLength", "pattern", "format", "allOf", "anyOf", "oneOf", "not",
+    "if", "then", "else", "deprecated", "readOnly", "writeOnly", "nullable",
+}
+
+
+def validate_schema(schema):
+    assert isinstance(schema, (dict, bool))
+    if isinstance(schema, bool):
+        return
+    assert set(schema) <= SCHEMA_KEYS, set(schema) - SCHEMA_KEYS
+    for field in ("properties", "$defs"):
+        for child in schema.get(field, {}).values():
+            validate_schema(child)
+    for field in ("items", "additionalProperties", "unevaluatedProperties", "not", "if", "then", "else"):
+        if field in schema:
+            validate_schema(schema[field])
+    for field in ("allOf", "anyOf", "oneOf"):
+        for child in schema.get(field, []):
+            validate_schema(child)
+
+
+def test_descriptions_cannot_parse_into_unintended_schema_fields_and_refs_resolve():
+    for schema in SCHEMAS.values():
+        validate_schema(schema)
+
+    def visit(value):
+        if isinstance(value, dict):
+            if "$ref" in value:
+                target = CONTRACT
+                for field in value["$ref"].removeprefix("#/").split("/"):
+                    target = target[field]
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+    visit(CONTRACT)
+
+
+def test_bearer_contract_covers_projects_recurring_and_member_governance():
+    for path, resource in CONTRACT["paths"].items():
+        governed = path in {"/api/v1/workspaces", "/api/v1/workspace-invitation-requests"} or path.startswith("/api/v1/workspaces/")
+        recurring = path.startswith("/api/v1/expense-recurring-rules")
+        for method, operation in resource.items():
+            if method not in {"get", "post", "patch", "delete"}:
+                continue
+            if governed or recurring or path == "/api/v1/projects/{id}" and method == "delete":
+                assert {"bearerKey": []} in operation.get("security", CONTRACT["security"])
+            if governed:
+                assert operation["x-norulo-scope"] == "members:" + ("read" if method == "get" else "write")
+            if recurring:
+                assert operation["x-norulo-scope"] == "expenses:" + ("read" if method == "get" else "write")
+    for action in ("preview", "accept"):
+        operation = CONTRACT["paths"]["/api/v1/workspace-invitations/" + action]["post"]
+        assert operation["security"] == [{"cookieSession": []}]
+        assert operation["x-norulo-scope"] == "profile:read"
+
+
+def test_account_credentials_use_cookie_bootstrap_and_error_bodies_are_described():
+    assert set(SCHEMAS["ApiKeyScope"]["enum"]) == ALLOWED_SCOPES
+    assert SCHEMAS["ApiKeyInput"]["properties"]["scopes"]["default"] == DEFAULT_SCOPES
+    for path in ("/api-keys", "/api-keys/{id}"):
+        for method, operation in CONTRACT["paths"][path].items():
+            if method in {"get", "post", "delete"}:
+                assert operation["security"] == [{"cookieSession": []}]
+    assert SCHEMAS["Error"]["required"] == ["error"]
+    assert SCHEMAS["Error"]["properties"]["error"]["required"] == ["code"]
+    assert "requestId" not in SCHEMAS["Error"]["properties"]
+    for resource in CONTRACT["paths"].values():
+        for method, operation in resource.items():
+            if method not in {"get", "post", "patch", "delete"}:
+                continue
+            for status, response in operation["responses"].items():
+                if not str(status).isdigit() or int(status) < 400:
+                    continue
+                if "$ref" in response:
+                    response = CONTRACT["components"]["responses"][response["$ref"].split("/")[-1]]
+                assert response["content"]["application/json"]["schema"] == {"$ref": "#/components/schemas/Error"}
+
+
+def test_money_full_expense_replacement_and_list_dtos_match_runtime():
+    assert set(SCHEMAS["CurrencyCode"]["enum"]) == SUPPORTED
+    assert set(SCHEMAS["ExpenseFields"]["required"]) == {"target", "occurredOn", "amount", "currency", "purpose"}
+    assert SCHEMAS["ExpensePatchInput"]["allOf"] == [{"$ref": "#/components/schemas/ExpenseInput"}]
+    assert CONTRACT["paths"]["/api/v1/categories"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]["type"] == "array"
+    for name in ("ProjectPage", "ExpensePage", "RecurringExpensePage"):
+        assert SCHEMAS[name]["required"] == ["items", "nextCursor"]
+    assert SCHEMAS["LedgerUsage"]["required"] == ["workspaceId", "projects", "expenseRecords", "jev"]
+
+
+def test_billing_reads_describe_actual_account_catalog_and_cookie_only_personalization():
+    import json
+
+    account = billing_account_dto({"id": "local-owner"}, "free", timestamp=100)
+    event = subscription_event_dto({})
+    assert set(SCHEMAS["BillingAccount"]["required"]) == set(account)
+    assert set(SCHEMAS["BillingAccount"]["properties"]) == set(account)
+    assert set(SCHEMAS["BillingSubscriptionEvent"]["required"]) == set(event)
+    assert set(SCHEMAS["BillingSubscriptionEvent"]["properties"]) == set(event)
+    saved = verified_public_catalog({"pro": {}, "max": {}}, {})
+    catalog = catalog_payload([{"payload_json": json.dumps(saved), "expires_at": 200}], 100)
+    assert set(SCHEMAS["BillingCatalog"]["required"]) <= set(catalog)
+    assert set(catalog) <= set(SCHEMAS["BillingCatalog"]["properties"])
+    for plan in catalog["plans"]:
+        assert set(SCHEMAS["BillingPlan"]["required"]) <= set(plan)
+        for price in plan["prices"].values():
+            assert set(SCHEMAS["BillingPrice"]["required"]) <= set(price)
+            assert set(price) <= set(SCHEMAS["BillingPrice"]["properties"])
+    assert CONTRACT["paths"]["/billing"]["get"]["security"] == [{"cookieSession": []}]
+    assert CONTRACT["paths"]["/billing/plan"]["get"]["security"] == []
+    assert "ledgerUsage" in SCHEMAS["BillingPage"]["required"]
+    assert not {"account", "ledgerUsage"}.intersection(SCHEMAS["BillingCatalog"]["required"])
+
+
+def test_owner_retention_policy_is_cookie_only_and_uses_its_independent_revision():
+    from norulo_server.cloudflare_expense_retention import expense_retention_preference
+
+    path = CONTRACT["paths"]["/api/v1/account/expense-retention"]
+    for method, operation_id in (("get", "getAccountExpenseRetentionPreference"),
+                                 ("patch", "updateAccountExpenseRetentionPreference")):
+        operation = path[method]
+        assert operation["operationId"] == operation_id
+        assert operation["security"] == [{"cookieSession": []}]
+        assert operation["x-norulo-scope"] == "account:auth"
+        assert operation["responses"]["200"]["content"]["application/json"]["schema"] == {
+            "$ref": "#/components/schemas/AccountExpenseRetentionPreference"}
+    assert {"$ref": "#/components/parameters/IfMatch"} in path["patch"]["parameters"]
+    body = path["patch"]["requestBody"]["content"]["application/json"]["schema"]
+    assert body == {"type": "object", "additionalProperties": False,
+        "required": ["autoRemoveOldestExpense"], "properties": {"autoRemoveOldestExpense": {"type": "boolean"}}}
+    payload = expense_retention_preference({})
+    schema = SCHEMAS["AccountExpenseRetentionPreference"]
+    assert set(schema["required"]) == set(schema["properties"]) == set(payload)
+    assert schema["properties"]["autoRemoveOldestExpense"]["default"] is payload["autoRemoveOldestExpense"] is False
+    assert schema["properties"]["revision"]["maximum"] == 9007199254740991
+    assert "soft-deleted" not in SCHEMAS["LedgerUsage"]["description"]
+    assert "getAccountJevPreference" == CONTRACT["paths"]["/api/v1/account/jev"]["get"]["operationId"]
+
+
+def test_recurring_contract_distinguishes_automatic_input_frozen_retries_and_future_dates():
+    import re
+
+    fields = SCHEMAS["RecurringExpenseFields"]
+    assert set(fields["required"]) == {"target", "amount", "currency", "purpose", "schedule"}
+    assert fields["properties"]["categoryId"]["type"] == ["string", "null"]
+    dto = SCHEMAS["RecurringExpenseRule"]["allOf"][1]
+    assert {"categoryId", "pendingOccurrences", "awaitingSync"} <= set(dto["required"])
+    assert dto["properties"]["categoryId"]["type"] == "string"
+    pending = dto["properties"]["pendingOccurrences"]
+    assert pending["maxItems"] == 10
+    assert pending["items"] == {"$ref": "#/components/schemas/RecurringExpensePendingOccurrence"}
+    frozen = SCHEMAS["RecurringExpensePendingOccurrence"]
+    assert set(frozen["required"]) == set(frozen["properties"]) == {
+        "periodKey", "scheduledOn", "amount", "currency", "purpose", "categoryId", "blockedCode", "createdAt"}
+    assert frozen["additionalProperties"] is False
+    assert set(frozen["properties"]["blockedCode"]["enum"]) == {
+        "RECORD_LIMIT", "RETENTION_CLEANUP_REQUIRED", "RETENTION_TARGET_FORBIDDEN"}
+    patch = CONTRACT["paths"]["/api/v1/expense-recurring-rules/{id}"]["patch"]
+    assert {"$ref": "#/components/parameters/IfMatch"} in patch["parameters"]
+    assert {"$ref": "#/components/schemas/RecurringExpenseRetryInput"} in patch["requestBody"]["content"]["application/json"]["schema"]["oneOf"]
+    retry = SCHEMAS["RecurringExpenseRetryInput"]
+    assert retry["required"] == ["retryPeriodKey"]
+    assert set(retry["properties"]) == {"retryPeriodKey"}
+    assert retry["additionalProperties"] is False
+    assert "strictly after today" in dto["properties"]["nextOccurrenceOn"]["description"]
+    assert "GET" in dto["properties"]["awaitingSync"]["description"]
+    for name in ("ExpenseFields", "RecurringExpenseFields", "RecurringExpensePendingOccurrence", "RecurringExpenseNotification"):
+        pattern = SCHEMAS[name]["properties"]["amount"]["pattern"]
+        assert re.fullmatch(pattern, "12.30")
+        assert not re.fullmatch(pattern, "12x30")
+
+
+def test_recurring_notification_inbox_is_cookie_only_bounded_and_read_only():
+    route = CONTRACT["paths"]["/api/v1/recurring-expense-notifications"]
+    assert set(route) == {"get"}
+    read = route["get"]
+    assert read["operationId"] == "listRecurringExpenseNotifications"
+    assert read["security"] == [{"cookieSession": []}]
+    assert read["x-norulo-scope"] == "account:auth"
+    assert "COOKIE_SESSION_REQUIRED" in read["responses"]["403"]["description"]
+    page = SCHEMAS["RecurringExpenseNotificationPage"]
+    assert page["required"] == ["items", "hasMore"]
+    assert page["properties"]["items"]["maxItems"] == 100
+    assert page["properties"]["items"]["items"] == {"$ref": "#/components/schemas/RecurringExpenseNotification"}
+    notice = SCHEMAS["RecurringExpenseNotification"]
+    assert set(notice["required"]) == set(notice["properties"]) == {
+        "id", "ruleId", "periodKey", "scheduledOn", "workspaceId", "workspaceName", "target",
+        "amount", "currency", "failedCode", "createdAt", "purpose"}
+    assert not {"email", "recipientUserId", "notificationState", "credentialHash"}.intersection(notice["properties"])

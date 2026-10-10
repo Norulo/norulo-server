@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-06",
+  "scope": "preview only; no real payment or production D1 access",
+  "source": {
+    "server": "80f398c3d1e332aa91eefe2d5ccf885c227b14cc",
+    "web": "4e72574c19daec85ba713dd2d14a40034f7c03e7",
+    "branches": "main"
+  },
+  "publication": {
+    "serverVersion": "7882f562-8c5e-4c5a-a898-d52943dc63e6",
+    "webVersion": "ea62c7a0-37e4-4693-b78a-bbb3c96c53b6",
+    "trafficPercent": 100,
+    "serverModules": 77,
+    "webManifestAssets": 42,
+    "webAssetBytes": 838484,
+    "previewDatabase": "e9dc3b89-f81f-4fce-87ef-d8797d879fb4",
+    "unchangedCoordinatorNamespace": "0e0ce4946c5e4d5f81c606273ba94b5d",
+    "secretBindingsRetained": true,
+    "serviceBinding": "norulo-server-preview",
+    "productionD1Enabled": false
+  },
+  "checks": {
+    "serverFullTests": 835,
+    "webFullTests": 434,
+    "webLintAndBuild": true,
+    "workerConfig": true,
+    "sourceMirror": true,
+    "staticAndShell": true,
+    "nativeFixtures": "projects-subscriptions-native-2026-10-06.json, bounded-csv-native-2026-10-06.json, preview-operation-journal-native-2026-10-06.json",
+    "publicSmoke": "preview-public-release-2026-10-06.json",
+    "publicSmokeFunctionalGates": true,
+    "publicSmokeAggregateZeroWriteGate": false,
+    "aggregateWriteDelta": 3,
+    "writeAttribution": "Concurrent OAuth occurred; read-only health/session source has no writes. A guarded OAuth app_state transaction matches actual +3/reserved +5, but aggregate counters do not establish attribution."
+  },
+  "cost": {
+    "targetMonthlyUsd": 200,
+    "hardCalendarCutoff": false,
+    "plan": "cloudflare-cost-plan-2026-10-06.md",
+    "nativeDoCost": "preview-do-cost-native-2026-10-06.json",
+    "ratesPerMinute": {
+      "ip": 600,
+      "credential": 240,
+      "oauthPerIp": 10,
+      "actorRead": 120,
+      "actorWrite": 60,
+      "actorSecurity": 120
+    },
+    "d1RateCounterWrites": 0,
+    "automaticHealthPolling": false,
+    "verifiedReadCardinalityRescan": false
+  },
+  "realAccountAcceptance": {
+    "status": "historical plan: pending at this earlier publication; subsequent results recorded separately below",
+    "accounts": [
+      "DFerryman",
+      "SanChai20"
+    ],
+    "businessHttpLimit": 150,
+    "mutationAttemptLimitIncludingCleanup": 20,
+    "minimumMutationIntervalSeconds": 10,
+    "clientRetries": 0,
+    "sessionPersistence": false,
+    "helperIdentityReadMaximum": 6,
+    "temporaryWindowMinutes": 30,
+    "modelCalls": 0,
+    "realPayments": 0
+  },
+  "subsequentAccountStoragePublication": {
+    "sourceServer": "58f78d11dbe60141175593e379cbb40c977d01e9",
+    "previewServerVersion": "ab500595-328d-4fc2-b897-7c6137659c92",
+    "evidence": "state-records-preview-release-2026-10-06.json",
+    "serverFullTests": 893
+  },
+  "subsequentRealAccountAcceptance": {
+    "status": "listed workflows complete across preserved baseline and separate passed focused run",
+    "baseline": "projects-two-real-users-baseline-2026-10-06.json",
+    "baselineOverallPassed": false,
+    "baselineChecksPassed": 10,
+    "focused": "projects-two-real-users-focused-2026-10-06.json",
+    "focusedOverallPassed": true,
+    "focusedChecksPassed": 6,
+    "qaCleanupComplete": true,
+    "temporaryHelperCleanup": "real-account-helper-cleanup-2026-10-06.json",
+    "realPayments": 0,
+    "credentialPersistence": false,
+    "limitations": "Admin project reads and stale-key/member-removal denial use actual REST rather than all-UI actions. Billing provider outcomes are local signed synthetic/native checks, not live charges."
+  },
+  "_migration_provenance": {
+    "source_commit": "4bfbea95e5f57a7ac24c1cf264880de50037fd67",
+    "rebranded_copy": true,
+    "norulo_acceptance": false
+  }
+}
