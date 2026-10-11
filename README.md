@@ -132,11 +132,16 @@ no AI allowance. Stored Owner entitlement/opt-in and monthly fences passed local
 checks; native Worker real-provider HTTPS remains untested. The AI helper/guard
 changes are local, and production AI remains 0/0 pending final publication.
 The independent production RecurringScheduler is implemented and locally
-reviewed: final full suite 2,923 passed, with native 16-request/three-incarnation
-acceptance. Local D1 metadata totals were 234 statements, 805 rows read and 57
+reviewed: native 16-request/three-incarnation acceptance and the post-packaging-fix
+full suite passed 2,942 tests in 106.73 seconds. Local D1 metadata totals were 234 statements, 805 rows read and 57
 written, including setup/application/probes and excluding the separate CLI
 migration setup. Its runtime flag remains 0 and no cron is active; final
-publication remains pending. Creem payments remain optional for the core release. See
+publication remains pending. The earlier 728-module release package omitted the
+scheduler helper and was rejected by Cloudflare validation 10021. Three read-only
+reconciliations confirmed that the live version and configuration stayed unchanged.
+The repaired actual artifact contains 729 modules, with all 64 canonical modules
+byte-equal to source; local fresh-start health/proxy checks passed. Creem payments
+remain optional for the core release. See
 [current AI quality evidence](docs/validation/ai-quality-2026-10-11-execution.json),
 the unchanged [earlier local snapshot](docs/validation/ai-local-readiness-2026-10-10.json)
 the [local recurring proof](docs/validation/production-recurring-native-local-2026-10-11.json)

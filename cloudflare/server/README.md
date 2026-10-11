@@ -218,8 +218,10 @@ run idle retention cleanup. The existing financial calendar, Owner/quota,
 permission and idempotency fences remain in the canonical application chain.
 This adds no D1 migration or remote synthetic fixture.
 
-Core checks passed 168 focused tests and 82 related tests; the final full suite
-passed 2,923 tests in 106.75 seconds. Native acceptance passed 16 requests over
+Core checks passed 168 focused tests and 82 related tests; the pre-packaging-fix
+full suite passed 2,923 tests in 106.75 seconds. The post-fix suite passed 2,942
+tests in 106.73 seconds, including 19 new package-import regression tests.
+Native acceptance passed 16 requests over
 three actual workerd incarnations: one local Free expense/audit/occurrence and
 record-quota increment; idle, same-hour, cold-restart, future-hour and durable
 unknown-marker stops. The marker was manually parked in local DO SQLite; this
@@ -231,10 +233,20 @@ pins 83 source/dependency/migration hashes and the raw evidence hash, with nativ
 attempt metadata left null rather than fabricated. Real provider requests,
 remote D1 and remote application operations were zero.
 
-Frozen packaging with all five activation flags and the exact hourly cron passed
-for 728 modules (338.02 KiB gzip), retaining four Secrets, DB/EMAIL and two DO
-bindings. Static, mirror and shell checks passed. Source flags remain 0 and source
-has no cron; the current live Worker still has recurrence 0 and no schedule.
+The earlier frozen dry-run produced 728 modules (338.02 KiB gzip) but missed
+norulo_server.cloudflare_recurring_scheduler. Cloudflare rejected the attempted
+upload with validation 10021; this incomplete package did not activate. Three
+read-only reconciliations confirmed the live version ec33db03-2fd4-49a4-8430-9e1cb13fc340,
+DB/EMAIL, EmailAdmission namespace and all four Secrets unchanged, with D1/email
+1, both AI flags 0, recurrence 0 and no cron.
+
+The repaired frozen actual artifact contains 729 modules (1649.12 KiB total,
+340.66 KiB gzip); all 64 canonical modules are byte-equal to source, including
+the scheduler helper. Entry closure checks cover 26 imports and the complete
+64-module package. Managed local stop/start with fresh Worker/Vite passed server
+health 200, proxy health 200 and protected profile 401; local CLI migration
+application found no unapplied migrations. These checks made no remote D1 or
+provider requests. Source flags remain 0 and source has no cron.
 The reviewed future release command creates a scoped temporary Worker-relative
 config with exactly one hourly UTC cron and removes it after execution:
 

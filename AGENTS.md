@@ -161,8 +161,8 @@ unverified. Future releases must retain both --activate-production and
 remain 0. Do not infer other email behavior from sender settings or local tests.
 Production recurrence now has an independent RECURRING_SCHEDULER /
 RecurringScheduler SQLite Durable Object implementation and passed core/native
-review and the final 2,923-test suite. Its runtime flag remains 0 and no cron is
-installed pending publication. The fixed scope is norulo-production-recurring-v1,
+review. The post-packaging-fix full suite passed 2,942 tests in 106.73 seconds.
+Its runtime flag remains 0 and no cron is installed pending publication. The fixed scope is norulo-production-recurring-v1,
 with one durable completed-hour/in-flight marker and no reset/retry HTTP endpoint.
 Unknown execution remains stopped across incarnations; no automatic retry or D1
 heartbeat/idle maintenance write. Local native proof covers a manually parked
@@ -200,8 +200,13 @@ Cloudflare FFI/provider/remote transactions. Close fixture connections.
 Required offline checks: python scripts/check-ledger-s01.py --allow-placeholders,
 python cloudflare/server/sync_server_modules.py followed by --check, and
 bash -n scripts/deploy-cloudflare.sh. Use the frozen uv/npm locks and pinned
-Wrangler. Keep TLS and artifact checksum verification enabled. Local native
-acceptance uses a fresh persistence directory and finite loopback requests.
+Wrangler. Verify relative and absolute import closure from the Worker entry and
+byte equality of every canonical module in the actual upload artifact; a
+successful dry-run alone does not prove package completeness. The earlier
+728-module recurring package omitted cloudflare_recurring_scheduler and was
+rejected with Cloudflare validation 10021; the repaired artifact has 729 modules
+and all 64 canonical modules. Keep TLS and artifact checksum verification enabled.
+Local native acceptance uses a fresh persistence directory and finite loopback requests.
 
 Keep source/tests/contracts and durable docs in Git. Ignore generated mirrors,
 node_modules, Python tooling, runtime databases, caches and local logs. Inspect

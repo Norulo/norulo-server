@@ -561,8 +561,10 @@ write budget; DO SQLite state is distinct from D1.
 Core review and 168 focused / 82 related tests passed. A whole-suite checkpoint
 had 2,918 passes and one failure because the existing D1 SQL-literal AST test
 classified the new DO's SQLite table as D1; its localized test repair preserved
-D1 checking and was followed by the successful final **2,923-test suite in
-106.75 seconds**. Final S01, Worker mirror, shell and diff checks passed.
+D1 checking and was followed by the successful pre-packaging-fix **2,923-test
+suite in 106.75 seconds**. After the package-closure repair below, the final
+**2,942-test suite passed in 106.73 seconds**, including 19 new package-import
+regression tests. Final S01, Worker mirror, shell and diff checks passed.
 Overlapping checks are not additive test totals.
 
 Actual native workerd acceptance passed 16 bounded requests across three
@@ -588,13 +590,27 @@ migration hashes, 41 raw metadata groups and all aggregate deltas. The
 [compact native proof](production-recurring-native-local-2026-10-11.json) pins
 source-chain/artifact hashes, limited acceptance and current preflight state.
 
-Frozen Python packaging with all five activation flags and the exact hourly UTC
-cron passed for 728 modules, 338.02 KiB gzip. It retained four Secrets, DB/EMAIL and
-two DO bindings; the scoped temporary configuration was removed. Source flags
-remain 0 and source has no cron. The latest preflight revision,
-ec33db03-2fd4-49a4-8430-9e1cb13fc340, retains D1/email 1, both AI flags 0, recurrence
-0, the intended DB/EMAIL namespace and all four Secrets, with no installed cron.
-The nineteen public variables match the source except the activation flags.
+The earlier all-overlay frozen dry-run produced 728 modules (338.02 KiB gzip),
+but its module list omitted norulo_server.cloudflare_recurring_scheduler and
+the validator did not cover the entry's absolute import. Cloudflare rejected
+the attempted upload with validation **10021** for that missing module. This
+package was incomplete and never activated; the old dry-run does not establish
+publication readiness. Three read-only GET reconciliations confirmed the live
+version ec33db03-2fd4-49a4-8430-9e1cb13fc340 and configuration unchanged: D1/email 1,
+both AI flags 0, recurrence 0, no cron, intended DB/EMAIL and EmailAdmission
+namespace, and all four Secrets retained.
+
+The repaired actual frozen artifact has **729 modules, 1649.12 KiB total and
+340.66 KiB gzip**. All **64 canonical modules** are byte-equal to source, including
+the missing helper; entry closure covers 26 imports plus the full module graph.
+Nineteen new regression tests and independent packaging review passed. Managed
+local helper stop/start with fresh Worker/Vite returned server health 200, proxy
+health 200 and protected profile 401. Local CLI migration application found no
+unapplied migrations. These checks made no remote D1 or provider requests.
+The [compact proof](production-recurring-native-local-2026-10-11.json) records
+this later packaging checkpoint separately from unchanged native acceptance.
+Source flags remain 0 and source has no cron; the nineteen live public variables
+still match the source except the activation flags.
 The final reviewed publication command is:
 
 ```bash

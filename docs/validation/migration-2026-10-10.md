@@ -225,8 +225,10 @@ no cron active then. That snapshot remains unchanged.
 Production recurrence is now implemented locally through the independent
 RECURRING_SCHEDULER / RecurringScheduler SQLite DO, fixed scope
 norulo-production-recurring-v1. Core review and 168 focused / 82 related tests
-passed; the final full suite passed 2,923 tests in 106.75 seconds after the
-localized D1 SQL-literal guard repair. Native acceptance passed 16 bounded local
+passed; the pre-packaging-fix suite passed 2,923 tests in 106.75 seconds after the
+localized D1 SQL-literal guard repair. The later packaging-fix suite passed 2,942
+tests in 106.73 seconds, including 19 new import-closure regressions.
+Native acceptance passed 16 bounded local
 requests over three workerd incarnations, with 234 D1 statements / 805 rows read /
 57 written for setup, application, scheduler and probes. Separate twelve-file
 local CLI migration setup is excluded from those native totals. Exactly one
@@ -237,12 +239,18 @@ was claimed. Independent review matched 83 source/dependency/migration hashes an
 41 raw metadata groups. See the
 [compact native proof](production-recurring-native-local-2026-10-11.json).
 
-All activation overlays and the exact hourly UTC cron passed frozen packaging
-(728 modules, 338.02 KiB gzip), with four Secrets, DB/EMAIL and two DO bindings
-preserved and temporary config removed. The current Cloudflare version after the
-user's Secret update is ec33db03-2fd4-49a4-8430-9e1cb13fc340. Its preflight flags are
-D1/email 1, both AI flags 0 and recurrence 0; there is no installed cron. Final
-AI/recurring publication and live scheduling acceptance remain pending. The new
+The earlier all-overlay frozen dry-run produced 728 modules (338.02 KiB gzip),
+but it omitted norulo_server.cloudflare_recurring_scheduler. Cloudflare rejected
+the attempted upload with validation 10021; the incomplete package never
+activated. Three read-only reconciliations confirmed the unchanged live version
+ec33db03-2fd4-49a4-8430-9e1cb13fc340, DB/EMAIL, EmailAdmission namespace and all four
+Secrets, with D1/email 1, both AI flags 0, recurrence 0 and no installed cron.
+The repaired actual artifact contains 729 modules (1649.12 KiB total, 340.66 KiB
+gzip), with all 64 canonical modules byte-equal to source. Absolute/relative
+entry imports and full module closure are now checked. Local fresh Worker/Vite
+health checks returned 200/200 and protected profile 401; local migration
+application found no unapplied files, without remote D1/provider requests.
+Final AI/recurring publication and live scheduling acceptance remain pending. The new
 DO migration is distinct from D1; no remote D1 migration/fixture/model request was
 added by this local scheduler validation. Existing source
 provider IDs and historical approvals are not Norulo requirements or permissions.

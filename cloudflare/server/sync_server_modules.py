@@ -44,6 +44,7 @@ MODULES = (
     "cloudflare_ledger_reports",
     "cloudflare_ledger_review",
     "cloudflare_ledger_recurring",
+    "cloudflare_recurring_scheduler",
     "cloudflare_recurring_assistance",
     "cloudflare_recurring_notifications",
     "ledger_recurrence_calendar",
@@ -73,18 +74,34 @@ MODULES = (
 )
 
 
-def check_package_imports(source: Path) -> None:
+def check_package_imports(source: Path, entry: Path) -> None:
+    """Validate entry and every packaged module against the actual flat package.
+
+    Importing a helper only from entry.py must not bypass closure checks. The
+    ignored package has a deliberately blank __init__, so root-package from
+    imports must name packaged modules, not source-only package exports.
+    """
     available = set(MODULES) | {"__init__"}
-    for module in MODULES:
-        tree = ast.parse((source / f"{module}.py").read_text())
+    paths = [("entry.py", entry), *[(module, source / f"{module}.py") for module in MODULES]]
+    for label, path in paths:
+        tree = ast.parse(path.read_text())
         for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom) or node.level != 1:
-                continue
-            imported = {node.module.split(".")[0]} if node.module else {
-                alias.name for alias in node.names}
+            imported = set()
+            if isinstance(node, ast.ImportFrom):
+                if node.level:
+                    if label == "entry.py" or node.level != 1:
+                        raise SystemExit(f"{label} has unsupported Worker package relative import")
+                    imported = {node.module} if node.module else {alias.name for alias in node.names}
+                elif node.module == "norulo_server":
+                    imported = {alias.name for alias in node.names}
+                elif node.module and node.module.startswith("norulo_server."):
+                    imported = {node.module.removeprefix("norulo_server.")}
+            elif isinstance(node, ast.Import):
+                imported = {alias.name.removeprefix("norulo_server.") for alias in node.names
+                    if alias.name.startswith("norulo_server.")}
             missing = imported - available
             if missing:
-                raise SystemExit(f"{module} imports unpackaged modules: {', '.join(sorted(missing))}")
+                raise SystemExit(f"{label} imports unpackaged modules: {', '.join(sorted(missing))}")
 
 
 def main() -> None:
@@ -93,7 +110,7 @@ def main() -> None:
     args = parser.parse_args()
     server_root = Path(__file__).resolve().parents[2]
     source = server_root / "norulo_server"
-    check_package_imports(source)
+    check_package_imports(source, Path(__file__).resolve().parent / "src" / "entry.py")
     target = Path(__file__).resolve().parent / "src" / "norulo_server"
     if not args.check:
         target.mkdir(parents=True, exist_ok=True)

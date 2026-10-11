@@ -19,10 +19,11 @@
     },
     "overlapping_runs_not_additive": true,
     "final_full_suite": {
-      "passed": 2923,
-      "seconds": 106.75,
+      "passed": 2942,
+      "seconds": 106.73,
       "exit_code": 0,
       "reported_by": "root agent",
+      "checkpoint": "After the module-list/import-closure repair; includes 19 new package-import regressions",
       "real_provider_requests": 0,
       "remote_d1_operations": 0
     },
@@ -42,13 +43,49 @@
       "durable_object_bindings": 2,
       "database_and_email_bindings_preserved": true,
       "temporary_config_removed": true,
-      "remote_publication": false
+      "remote_publication": false,
+      "import_closure_complete": false,
+      "historical_only": true,
+      "superseded_reason": "The dry-run omitted norulo_server.cloudflare_recurring_scheduler; Cloudflare validation 10021 rejected the attempted upload without activation."
     },
     "final_static_checks": {
       "s01_default": true,
       "worker_mirror_check": true,
       "shell_syntax": true,
       "diff_check": true
+    },
+    "pre_packaging_fix_full_suite": {
+      "passed": 2923,
+      "seconds": 106.75,
+      "exit_code": 0,
+      "reported_by": "root agent",
+      "real_provider_requests": 0,
+      "remote_d1_operations": 0
+    },
+    "packaging_fix": {
+      "passed": true,
+      "independent_review_passed": true,
+      "local_only": true,
+      "module_count": 729,
+      "total_kib": 1649.12,
+      "gzip_kib": 340.66,
+      "canonical_module_count": 64,
+      "all_canonical_module_bytes_equal_actual_artifact": true,
+      "entry_import_count": 26,
+      "absolute_and_relative_import_closure_checked": true,
+      "new_regression_tests_passed": 19,
+      "helper_source_sha256": "9c921d364a5225cb221ceda4431f6cf5f23fadcc419801adfde1f0f2a63c0d34",
+      "sanitized_packaging_evidence_sha256": "c05d5800c6446609a2f3d24eb4b006cbb92fb8a07f5439e6be6c9d8dd839ece8",
+      "canonical_manifest_source_hashes_rechecked": 64,
+      "managed_local_fresh_start": {
+        "server_health_http_status": 200,
+        "web_proxy_health_http_status": 200,
+        "protected_profile_http_status": 401,
+        "unapplied_local_cli_migrations": 0
+      },
+      "remote_d1_operations": 0,
+      "real_provider_requests": 0,
+      "actual_publication_confirmed": false
     }
   },
   "preflight": {
@@ -322,5 +359,21 @@
     "Native attempt metadata was absent and remains null; no attempt count was fabricated.",
     "Provider delivery, real TypeSafe Worker HTTPS, live hourly scheduling and production recurring financial acceptance were not exercised.",
     "The runtime recurrence flag remains zero and no cron is installed; local gates do not establish actual publication or live scheduled/provider acceptance."
-  ]
+  ],
+  "rejected_publication_checkpoint": {
+    "reported_by": "root agent",
+    "acceptance_scope": "Control-plane rejection/readback only; not native or live cron acceptance",
+    "cloudflare_validation_code": 10021,
+    "missing_module": "norulo_server.cloudflare_recurring_scheduler",
+    "attempted_package_modules": 728,
+    "attempted_upload_activated": false,
+    "read_only_get_reconciliations": 3,
+    "live_worker_version_unchanged": "ec33db03-2fd4-49a4-8430-9e1cb13fc340",
+    "existing_database_email_admission_and_four_secrets_preserved": true,
+    "runtime_d1_and_email_flags": 1,
+    "runtime_ai_flags": 0,
+    "runtime_recurring_flag": 0,
+    "cron_schedules": [],
+    "followup_complete_artifact_publication": "pending"
+  }
 }
