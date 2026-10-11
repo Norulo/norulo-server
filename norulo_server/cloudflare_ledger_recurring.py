@@ -3,7 +3,7 @@
 HTTP management shares ordinary expense session/API-key authorization. The
 internal runner rechecks each rule's real actor and, for API-created grants,
 the original key's current validity and restrictions, never a fabricated session.
-Its caller must serialize preview execution through the existing coordinator.
+Its caller must serialize execution through the mode's independent coordinator.
 """
 from __future__ import annotations
 
@@ -648,16 +648,19 @@ async def generate_occurrence(*, binding, maintenance_binding, gateway, row, now
 
 
 async def run_due_recurring(*, binding, gateway, now, rule_limit=MAX_TICK_RULES,
-                            occurrence_limit=MAX_TICK_OCCURRENCES, maintenance_binding=None):
+                            occurrence_limit=MAX_TICK_OCCURRENCES, maintenance_binding=None,
+                            run_retention=True):
     if (type(rule_limit) is not int or not 1 <= rule_limit <= MAX_TICK_RULES
-            or type(occurrence_limit) is not int or not 1 <= occurrence_limit <= MAX_TICK_OCCURRENCES):
+            or type(occurrence_limit) is not int or not 1 <= occurrence_limit <= MAX_TICK_OCCURRENCES
+            or type(run_retention) is not bool):
         raise ValueError("recurring tick bounds")
     maintenance_binding = maintenance_binding or getattr(binding, "binding", binding)
-    # Reuse the existing bounded hourly maintenance path, including idle ticks.
-    # Financial expense/workspace audit history is never part of this cleanup.
-    expired = await retention_commands(maintenance_binding, now)
-    if expired:
-        await maintenance_binding.batch(expired)
+    # Preview retains its reviewed hourly maintenance contract. Production
+    # scheduling does only due work: idle ticks never dispatch unrelated cleanup.
+    if run_retention:
+        expired = await retention_commands(maintenance_binding, now)
+        if expired:
+            await maintenance_binding.batch(expired)
     found = await binding.prepare("""SELECT * FROM expense_recurring_rules WHERE
         (status='active' OR (status='blocked' AND blocked_code IN
             ('RECORD_LIMIT','RETENTION_CLEANUP_REQUIRED','RETENTION_TARGET_FORBIDDEN','CATCHUP_REVIEW_REQUIRED')))

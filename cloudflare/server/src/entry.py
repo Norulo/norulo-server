@@ -1,4 +1,4 @@
-"""Server Worker with coordinated preview-only recurring expense scheduling."""
+"""Server Worker with isolated production and preview expense scheduling."""
 import asyncio
 import hashlib
 import io
@@ -30,6 +30,12 @@ from norulo_server.cloudflare_creem_gateway import WorkerCreemGateway, product_b
 from norulo_server.cloudflare_ledger_profile import read_ledger_me
 from norulo_server.cloudflare_ledger_api import handle_ledger_request
 from norulo_server.cloudflare_ledger_recurring import run_due_recurring
+from norulo_server.cloudflare_recurring_scheduler import (
+    RECURRING_SCHEDULER_SCOPE, RECURRING_TIMEOUT_SECONDS, RECURRING_QUEUE_LIMIT,
+    RECURRING_QUEUE_WAIT_SECONDS, RecurringFailure, RecurringJournal,
+    ObservedRecurringD1, production_recurring_enabled, require_recurring_success,
+    verify_recurring_schema,
+)
 from norulo_server.cloudflare_jev_gateway import WorkerJevGateway
 from norulo_server.cloudflare_ledger_reports import CsvExport
 from norulo_server.cloudflare_plan_limits import PlanLimitedD1, PlanLimitError
@@ -401,20 +407,20 @@ def _remote_email_admission(env, request):
 
 class Default(WorkerEntrypoint):
     async def scheduled(self, controller, env, ctx):
-        # Await the only background task. Keep all D1 work inside the existing
-        # singleton coordinator; controller time never becomes a client clock.
-        if not _recurring_enabled(self.env):
+        # Each mode owns one independent coordinator. Never use controller time
+        # as a business clock or fall back across namespaces/directly to D1.
+        production = production_recurring_enabled(self.env)
+        if not production and not _recurring_enabled(self.env):
             return
         scheduled = float(controller.scheduledTime)
         if (str(controller.cron) != "0 * * * *" or not 0 <= scheduled <= 9007199254740991):
             raise RuntimeError("RECURRING_TRIGGER_INVALID")
-        namespace = getattr(self.env, "VALIDATION_BUDGET", None)
+        namespace = getattr(self.env, "RECURRING_SCHEDULER" if production else "VALIDATION_BUDGET", None)
         if namespace is None:
-            raise RuntimeError("VALIDATION_CONTROL_REQUIRED")
-        stub = namespace.get(namespace.idFromName(BUDGET_SCOPE))
+            raise RuntimeError("RECURRING_SCHEDULER_REQUIRED" if production else "VALIDATION_CONTROL_REQUIRED")
+        stub = namespace.get(namespace.idFromName(RECURRING_SCHEDULER_SCOPE if production else BUDGET_SCOPE))
         result = await stub.runRecurring()
-        if not bool(_field(result, "ok", False)):
-            raise RuntimeError("RECURRING_EXECUTION_UNAVAILABLE")
+        require_recurring_success(result)
 
     async def fetch(self, request):
         if str(getattr(self.env, "NORULO_D1_ACCESS_ENABLED", "0")) != "1":
@@ -492,6 +498,97 @@ class EmailAdmission(DurableObject):
         except Exception:
             # Unknown storage outcomes stay reserved and do not authorize work.
             return {"ok": False, "error": "EMAIL_ADMISSION_UNAVAILABLE"}
+
+
+class RecurringScheduler(DurableObject):
+    """Binding-only production execution, isolated from preview accounting."""
+    def __init__(self, ctx, env):
+        self.ctx, self.env = ctx, env
+        self.journal = None
+        self._schema_verified = False
+        self._lock = asyncio.Lock()
+        self._waiting = 0
+
+    async def fetch(self, request):
+        # No HTTP tick, reset, migration, retry, reconciliation or debug endpoint.
+        return Response.json({"error": {"code": "METHOD_NOT_ALLOWED"}}, status=405,
+            headers={"Cache-Control": "no-store"})
+
+    async def runRecurring(self):
+        """No caller-supplied clock. An uncertain attempt never clears its marker."""
+        if not production_recurring_enabled(self.env):
+            return {"ok": False, "error": "RECURRING_DISABLED"}
+        if self._waiting >= RECURRING_QUEUE_LIMIT:
+            return {"ok": False, "error": "RECURRING_BUSY"}
+        self._waiting += 1
+        acquired = False
+        observed = None
+        active = False
+        try:
+            try:
+                await asyncio.wait_for(self._lock.acquire(), timeout=RECURRING_QUEUE_WAIT_SECONDS)
+                acquired = True
+            except asyncio.TimeoutError:
+                return {"ok": False, "error": "RECURRING_BUSY"}
+            # Validate configuration before reserving anything or touching D1.
+            policy = parse_policy(getattr(self.env, "NORULO_PLAN_LIMITS_JSON", ""))
+            stamp = time.time()
+            if (type(stamp) not in {int, float} or not 0 <= stamp <= 9007199254740991):
+                raise RecurringFailure("RECURRING_CLOCK_INVALID")
+            now, hour = int(stamp), int(stamp) // 3600
+            if self.journal is None:
+                self.journal = RecurringJournal(self.ctx.storage.sql)
+            if not self.journal.begin(hour):
+                return {"ok": True, "skipped": True, "scanned": 0, "created": 0,
+                    "blocked": 0, "replayed": 0,
+                    "metrics": {"operations": 0, "rowsRead": 0, "rowsWritten": 0, "complete": True}}
+            active = True  # Persisted before every D1/provider await below.
+            observed = ObservedRecurringD1(NativeD1(self.env.DB))
+
+            async def execute():
+                if not self._schema_verified:
+                    await verify_recurring_schema(observed)
+                    self._schema_verified = True
+                application = PlanLimitedD1(observed, now=now, policy=policy)
+                application.email_gateway = WorkerEmailGateway(self.env)
+                observed.email_gateway = application.email_gateway
+                result = await run_due_recurring(binding=application,
+                    maintenance_binding=observed, gateway=WorkerGitHubGateway(self.env),
+                    now=now, rule_limit=10, occurrence_limit=10, run_retention=False)
+                if (set(result) != {"scanned", "created", "blocked", "replayed"}
+                        or any(type(value) is not int or not 0 <= value <= 10 for value in result.values())
+                        or sum(result[key] for key in ("created", "blocked", "replayed")) > 10):
+                    raise RecurringFailure("RECURRING_OUTCOME_UNKNOWN")
+                self.journal.finish(hour)
+                return {"ok": True, **result, "metrics": observed.metrics()}
+
+            result = await asyncio.wait_for(execute(), timeout=RECURRING_TIMEOUT_SECONDS)
+            print(json.dumps({"recurringScheduler": result}))
+            return result
+        except BaseException as error:
+            code = ("RECURRING_TIMEOUT" if isinstance(error, asyncio.TimeoutError)
+                else error.code if isinstance(error, RecurringFailure)
+                else "PLAN_POLICY_INVALID" if not active and isinstance(error, ValueError)
+                else "RECURRING_OUTCOME_UNKNOWN")
+            if active:
+                try:
+                    self.journal.stop(code if code in {"RECURRING_TIMEOUT", "RECURRING_SCHEMA_REQUIRED"}
+                        else "RECURRING_OUTCOME_UNKNOWN")
+                except Exception:
+                    # A durable active marker already exists. Never retry or
+                    # let an uncertain storage response authorize another tick.
+                    pass
+            if isinstance(error, asyncio.CancelledError):
+                raise
+            result = {"ok": False, "error": code}
+            if observed is not None:
+                result["metrics"] = observed.metrics()
+            print(json.dumps({"recurringScheduler": result}))
+            return result
+        finally:
+            if acquired:
+                self._lock.release()
+            self._waiting -= 1
 
 
 class ValidationBudget(DurableObject):

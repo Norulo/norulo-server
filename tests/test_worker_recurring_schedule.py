@@ -35,7 +35,7 @@ def controller(**fields):
     return SimpleNamespace(cron=CRON, scheduledTime=NOW * 1000, **fields)
 
 
-@pytest.mark.parametrize("field,value", DISABLED)
+@pytest.mark.parametrize("field,value", [item for item in DISABLED if item != ("NORULO_MODE", "production")])
 def test_scheduled_disabled_environments_never_read_clock_namespace_or_database(field, value):
     entry = load_entry()
     settings = {**ENABLED, field: value}

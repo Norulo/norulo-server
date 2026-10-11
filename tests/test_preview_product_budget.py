@@ -159,6 +159,10 @@ def test_every_current_literal_update_has_a_unique_key_fence():
     unlinked, _ = compile_named(unlink_sql, {"owner": "o", "project": "p"})
     with pytest.raises(ValueError, match="unique key"):
         sql_write_bound(unlinked)
+    # This one fixed table belongs to the independent SQLite Durable Object,
+    # not D1. Its singleton-key fences are checked separately below. Keep any
+    # D1 update in the same helper subject to the ordinary scalar SQL guard.
+    scheduler_prefix = "UPDATE norulo_recurring_scheduler SET "
     count = 0
     for path in (Path(__file__).resolve().parents[1] / "norulo_server").glob("cloudflare_*.py"):
         if path.stem in {"cloudflare_validation_budget", "cloudflare_preview_budget",
@@ -176,9 +180,56 @@ def test_every_current_literal_update_has_a_unique_key_fence():
                         continue
                     if path.stem == "cloudflare_project_erasure" and sql == unlink_fragment:
                         continue
+                    if (path.stem == "cloudflare_recurring_scheduler"
+                            and " ".join(sql.split()).startswith(scheduler_prefix)):
+                        continue
                     assert 0 <= sql_write_bound(sql) <= 1 + 2 * max(INDEX_COUNTS.values())
                     count += 1
     assert count >= 15
+
+
+def test_production_scheduler_do_updates_are_singleton_fenced_and_not_admitted_to_d1():
+    import ast
+    from pathlib import Path
+    import re
+    from norulo_server.cloudflare_preview_budget import sql_write_bound
+
+    path = Path(__file__).resolve().parents[1] / "norulo_server/cloudflare_recurring_scheduler.py"
+    tree = ast.parse(path.read_text())
+    updates = []
+    update_nodes = set()
+    literal_nodes = {id(node) for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+        and " ".join(node.value.split()).startswith("UPDATE norulo_recurring_scheduler SET ")}
+    singleton_schema = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not node.args:
+            continue
+        first = node.args[0]
+        if not isinstance(first, ast.Constant) or not isinstance(first.value, str):
+            continue
+        sql = " ".join(first.value.split())
+        if sql.startswith("CREATE TABLE IF NOT EXISTS norulo_recurring_scheduler"):
+            singleton_schema.append(sql)
+        if sql.startswith("UPDATE norulo_recurring_scheduler SET "):
+            # These fixed statements can only execute through this DO's sql
+            # storage; moving one to a D1 prepare/batch must fail this check.
+            assert isinstance(node.func, ast.Attribute) and node.func.attr == "exec"
+            assert ast.unparse(node.func.value) == "self.sql"
+            updates.append(sql)
+            update_nodes.add(id(first))
+    assert len(singleton_schema) == 1
+    assert "id INTEGER PRIMARY KEY CHECK(id=1)" in singleton_schema[0]
+    assert len(updates) == 3  # begin, finish, durable stop; no broad/reset update
+    assert update_nodes == literal_nodes  # every skipped literal has a DO exec fence
+    for sql in updates:
+        _, where = sql.split(" WHERE ", 1)
+        assert re.match(r"id=1\s+AND\s+", where)
+        assert not re.search(r"\bOR\b", where) and ";" not in sql
+        assert "state='idle'" in where or "state='active'" in where
+        # Separation is explicit: no new D1 table allowlist or write bound.
+        with pytest.raises(ValueError):
+            sql_write_bound(sql)
 
 
 def test_compiled_preview_schema_matches_canonical_migrations():

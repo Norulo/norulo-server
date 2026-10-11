@@ -111,9 +111,18 @@ def enabled_production():
 def test_production_email_requires_its_independent_sqlite_admission(checker, monkeypatch, tmp_path):
     config = enabled_production()
     assert config["durable_objects"]["bindings"] == [
-        {"name": "EMAIL_ADMISSION", "class_name": "EmailAdmission"}]
+        {"name": "EMAIL_ADMISSION", "class_name": "EmailAdmission"},
+        {"name": "RECURRING_SCHEDULER", "class_name": "RecurringScheduler"}]
     assert config["migrations"] == [
-        {"tag": "norulo-email-admission-v1", "new_sqlite_classes": ["EmailAdmission"]}]
+        {"tag": "norulo-email-admission-v1", "new_sqlite_classes": ["EmailAdmission"]},
+        {"tag": "norulo-recurring-scheduler-v1", "new_sqlite_classes": ["RecurringScheduler"]}]
+    validate_fixture(checker, monkeypatch, tmp_path, config, "production")
+
+
+def test_legacy_email_only_production_namespace_remains_valid(checker, monkeypatch, tmp_path):
+    config = enabled_production()
+    config["durable_objects"]["bindings"] = config["durable_objects"]["bindings"][:1]
+    config["migrations"] = config["migrations"][:1]
     validate_fixture(checker, monkeypatch, tmp_path, config, "production")
 
 

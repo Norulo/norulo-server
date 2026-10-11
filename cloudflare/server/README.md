@@ -5,9 +5,9 @@ wrangler.jsonc is explicitly local: no routes, remote=false, NORULO_MODE=local.
 wrangler.preview.jsonc remains an undeployed offline reference.
 wrangler.production.jsonc selects the initialized independent D1 database, with
 its default access switch paused and account, domain, GitHub App and email settings described
-below. Both keep schema upgrades, email authentication, scheduled recurrence and
-AI provider dispatch disabled. Production D1 activation uses the explicit deploy
-overlay after schema verification; preview stays undeployed.
+below. Checked-in D1/email defaults stay 0; the published production runtime uses
+both explicit activation overlays to set them to 1. Schema upgrades, scheduled
+recurrence and AI provider dispatch stay disabled; preview remains undeployed.
 The imported source's remote databases, providers, domain registrations and
 historic publication approval have not been transferred. The user now authorizes
 production-only publication with new Norulo resources. The production proposal
@@ -37,26 +37,33 @@ preview_enabled=false. Six new DNS records belong only to the auth subdomain;
 the eight existing DNS records and two contact routing rules were preserved.
 The Worker now has the EMAIL send binding restricted to login@auth.norulo.com,
 with no recipient restriction; all 19 public variables and three Secrets were
-retained. No actual email delivery was tested; email authentication remains
-disabled. D1 was paused during that sender setup stage.
+retained. No actual email delivery was tested at the sender setup stage. Email
+authentication and D1 were paused then; both are now enabled in production, and
+the user has confirmed receipt of the verification code and successful email login.
 The Web Worker has been published. The earlier user request to defer D1 was
 superseded by explicit authorization to resume setup and full production deployment.
 All twelve canonical migrations were applied once to the new empty Norulo
 database, reporting 367 native rows written for initialization. Schema v12 and its
 77 canonical objects were verified; at initialization app_state held only four
 empty containers and the other 22 application tables were empty.
-The complete Python Worker is now published as version
-3ad0cffc-ecc3-47a4-ab5d-a53999528b8c. Readback confirms Python compatibility,
-the intended DB and restricted EMAIL bindings, all three Secrets, and all 19
-public variables with only the D1 flag activated to 1. The source default stays 0;
-email auth, recurring execution and AI remain disabled, as do public preview URLs.
+The complete Python Worker was first published as version
+3ad0cffc-ecc3-47a4-ab5d-a53999528b8c. The email-feature version was
+815a1216-4468-4591-be58-e339d4d2c154; the latest Cloudflare version after the user's
+Secret update is ec33db03-2fd4-49a4-8430-9e1cb13fc340. Preflight retains
+the intended DB, restricted EMAIL binding, independent EmailAdmission namespace
+and all four now-configured Secrets. Nineteen public variables match the source
+except the activation flags: D1/email 1, both AI flags 0 and recurrence 0. No cron
+is installed. The earlier email upload retained three Secrets; AI preparation
+added the fourth without changing that accepted application behavior. Both source defaults stay 0; recurring execution, AI
+and public preview URLs remain disabled.
 Finite read-only checks confirmed homepage HTTP 200, API and Web proxy health
 HTTP 200, and their unauthenticated profile endpoints HTTP 401. No public check
 set a cookie. This proves publication/transport and access enforcement. The user
 subsequently reported successful real GitHub sign-in; installation, refresh and
-the complete ledger journey remain unverified. Email sign-in is temporarily
-unavailable while its flag remains 0 and production admission is pending; no
-actual email delivery was tested. See
+the complete ledger journey remain unverified. The earlier unavailable email
+sign-in preceded this enabled production release. The user has now confirmed
+verification-code delivery and successful email login. Account linking, sign-out
+and session refresh remain separately unverified. See
 [production readiness](../../docs/validation/production-readiness-2026-10-10.md).
 
 ## Local runtime
@@ -95,12 +102,12 @@ NORULO_GITHUB_CLIENT_SECRET, NORULO_GITHUB_TOKEN_KEY, NORULO_CREEM_API_KEY,
 NORULO_CREEM_WEBHOOK_SECRET and optional email/model credentials belong in Secrets.
 NORULO_GITHUB_TOKEN_KEY is 32 cryptographically random bytes encoded as unpadded
 base64url; the fresh Norulo key is already stored securely and must be retained.
-Production secrets.required lists the two GitHub Secret names and
-NORULO_EMAIL_CODE_SECRET, causing pinned Wrangler to inherit all three existing
-bindings and reject a missing required Secret during real publication. The email
-Secret is prepared while its feature remains disabled; keep it through later
-uploads. A dry-run does not verify remote presence. Do not
-paste credentials into chat or saved instructions. Keep the existing environment
+Production secrets.required now lists the two GitHub Secret names,
+NORULO_EMAIL_CODE_SECRET and TYPESAFE_API_KEY. Pinned Wrangler inherits all four
+existing bindings and rejects a missing required Secret during real publication.
+The email release retained the original three; later AI preparation added the
+fourth Worker Secret without enabling AI. Keep all four through subsequent
+uploads. A dry-run does not verify remote presence. Do not paste credentials into chat or saved instructions. Keep the existing environment
 CLOUDFLARE_API_TOKEN binding intact.
 
 NORULO_EMAIL_CODE_SECRET must be a securely generated string of at least 32
@@ -110,22 +117,142 @@ recurring-failure notifications. Its auth.norulo.com sending domain is authentic
 and the send_email binding named EMAIL permits only this sender, without recipient
 restrictions. No additional mail-provider Secret or SMTP credential is needed
 for the native binding. Email Sending entitlement and domain status are enabled;
-actual delivery to user recipients has not been tested. These settings do not
-enable production email login:
-the current admission adapter depends on the preview-only VALIDATION_BUDGET
-coordinator, which production must never reuse. Implement and test an independent
-production admission path, then complete real delivery, code verification and
-session acceptance before setting NORULO_EMAIL_AUTH_ENABLED=1. Keep email auth
-disabled during the authorized core production release; database initialization
-does not remove the separate production admission dependency.
+the user has confirmed verification-code receipt and successful email login.
+Settings alone did not establish that acceptance. The independent production
+path is published as EMAIL_ADMISSION / EmailAdmission, with SQLite DO
+storage isolated from VALIDATION_BUDGET and D1. It stores hashed subjects, counters
+and timing metadata, not addresses, raw IPs or codes. Atomic admission must succeed
+before sending email or writing OTP state; ambiguous storage/RPC outcomes fail
+closed with no automatic retry or refund. Native local acceptance passed; production publication
+and its runtime flags/bindings are verified. User-confirmed delivery, code
+verification and browser login passed; account linking, sign-out and refresh
+remain separately unverified.
+The existing OTP flow keeps its 600-second expiry, five-wrong-code limit, browser
+challenge binding and single consumption. Its actual challenge/identity/session
+writes still use D1 during ordinary real user operations; the limiter itself does
+not write D1 or require a new D1 migration.
+
+The reviewed release uses both --activate-production and
+--activate-email-auth, overlaying runtime D1/email flags to 1 while their checked-in
+defaults remain 0. Native/packaging checks passed and the current runtime is 1/1.
+Use both overlays for subsequent releases; omitting them returns the defaults to
+0 and pauses the corresponding routes. The [readiness record](../../docs/validation/production-readiness-2026-10-10.md#production-email-admission)
+records actual publication and the subsequent user-confirmed delivery/login
+acceptance separately from local checks.
 
 The [remaining release checklist](../../docs/validation/production-readiness-2026-10-10.md#remaining-release-checklist)
 separates the core GitHub/ledger release, the requested email-login feature and
 optional payment, AI and background recurrence work.
 
+## AI configuration and local gates
+
+TYPESAFE_API_KEY is present as the fourth production Worker Secret. Earlier,
+revision 8 lacked its cloud network binding. Runtime specification 11 now has
+both network Secret bindings present, preserving the Cloudflare token. The fixed
+journal has completed 36 real CPython HTTPS calls once, with both quality gates
+passing and no retry or D1/application requests. This is fresh Norulo evidence,
+recorded for 2026-10-11 in Asia/Shanghai; imported source results are unchanged. The AI-stage full local reference suite passed
+2,777 tests after the email-preservation guard and native-fixture repairs. Five loopback fake-provider cases passed through the canonical native
+WorkerJevGateway and Python FFI, covering success, redirects, oversized header/
+stream and deadline rejection. The size cases use 65,537-byte valid JSON and
+explicitly fail with JEV_RESPONSE_TOO_LARGE, rather than a schema error. This is
+local transport evidence, not real
+provider HTTPS or model-quality acceptance; no gateway source repair was needed.
+
+The current Owner policy admits Pro and Max only, with $3 and $5 respectively per
+UTC calendar month under the configurable default policy, no rollover and atomic
+conservative reservation of 2,753 micro-USD before each dispatch. Free allowance is $0. Historical daily counters
+are preserved but no daily request cap is used. Explicit opt-in and manual
+category fallback remain required.
+
+The fixed 36-case run is complete in its only reviewed journal directory,
+/workspace/.norulo-environment/ai-quality-native-local-20261010. Its 73 events are
+one session, 36 reservations and 36 completions. The full 99,108 micro-USD
+($0.099108) reservation remains recorded; usage was 23,850 input and 4,144 output
+tokens, yielding a $0.0010017 estimate rather than an invoice. English and Chinese
+each had 18 cases; each task correctly suggested all 32 clear labels and withheld
+all four uncertain labels, with six consistent order pairs and no false hints.
+This small synthetic suite does not establish customer error rates or calibrated
+confidence. Direct CPython HTTPS is separate from untested native real-provider
+HTTPS. Do not repeat the completed run or start another directory to bypass it.
+Recompute current normalized results offline:
+
+```bash
+python scripts/evaluate-ledger-suggestions.py \
+  docs/validation/ai-quality-2026-10-11-results.jsonl
+```
+
+After this actual quality review, the final reviewed release uses
+--activate-ai-suggestions to add both NORULO_JEV_SUGGESTIONS_ENABLED=1 and NORULO_JEV_SUGGESTIONS_EVALUATED=1. The required
+future release preserves D1 and email activation together:
+
+```bash
+./scripts/deploy-cloudflare.sh --environment production \
+  --activate-production --activate-email-auth --activate-ai-suggestions \
+  --execute --local-checks-passed
+```
+
+The AI helper/guard changes are local and not yet published. The final guard
+repair requires the explicit email overlay as well, protecting accepted login.
+Post-repair targeted validation passed 177 tests and 28 subtests, alongside S01
+default/full-overlay and shell checks; these overlap the final full suite.
+The static guard checks exact matching flags, D1/isolation and the declared Secret; it cannot verify quality.
+Both source/runtime AI flags remain 0 pending final publication. Stored Owner
+Pro/Max entitlement/opt-in and UTC-month reservation/fallback fences passed local
+checks. The independent production scheduler has now passed local/native/final
+suite gates below; runtime recurrence remains 0 with no installed cron.
+The fresh [quality execution record](../../docs/validation/ai-quality-2026-10-11-execution.json)
+pins results, request/source hashes and journal counts. The unchanged
+[2026-10-10 local snapshot](../../docs/validation/ai-local-readiness-2026-10-10.json)
+records the earlier blocked stage, not the latest quality state.
+
+## Production recurring release
+
+The new RECURRING_SCHEDULER / RecurringScheduler SQLite DO uses fixed scope
+norulo-production-recurring-v1 and migration tag norulo-recurring-scheduler-v1,
+independent of preview ValidationBudget and its journal. It persists a completed
+UTC hour and an in-flight marker before D1/provider work. Unknown outcomes stop
+across cold starts, without automatic retry or a reset/reconciliation HTTP route.
+The adapter records native D1 row metadata and does not write D1 heartbeats or
+run idle retention cleanup. The existing financial calendar, Owner/quota,
+permission and idempotency fences remain in the canonical application chain.
+This adds no D1 migration or remote synthetic fixture.
+
+Core checks passed 168 focused tests and 82 related tests; the final full suite
+passed 2,923 tests in 106.75 seconds. Native acceptance passed 16 requests over
+three actual workerd incarnations: one local Free expense/audit/occurrence and
+record-quota increment; idle, same-hour, cold-restart, future-hour and durable
+unknown-marker stops. The marker was manually parked in local DO SQLite; this
+was not a native lost-D1-response injection. Reported local D1 totals were 234
+statements, 805 rows read and 57 written, including setup/application/probes and
+excluding separately applied local CLI migrations. The
+[compact proof](../../docs/validation/production-recurring-native-local-2026-10-11.json)
+pins 83 source/dependency/migration hashes and the raw evidence hash, with native
+attempt metadata left null rather than fabricated. Real provider requests,
+remote D1 and remote application operations were zero.
+
+Frozen packaging with all five activation flags and the exact hourly cron passed
+for 728 modules (338.02 KiB gzip), retaining four Secrets, DB/EMAIL and two DO
+bindings. Static, mirror and shell checks passed. Source flags remain 0 and source
+has no cron; the current live Worker still has recurrence 0 and no schedule.
+The reviewed future release command creates a scoped temporary Worker-relative
+config with exactly one hourly UTC cron and removes it after execution:
+
+```bash
+./scripts/deploy-cloudflare.sh --environment production \
+  --activate-production --activate-email-auth --activate-ai-suggestions \
+  --activate-recurring-expenses --execute --local-checks-passed
+```
+
+This is a prepared release path, not evidence of live cron execution. No D1
+migration is run by it. After actual publication, record the version, all runtime
+flags, independent scheduler namespace, preserved DB/EMAIL/Secrets and exact
+cron without remote fixtures or repeated financial acceptance writes.
+
 The deployment checker validates explicit pause switches, host/origin isolation,
 separate database identities, no source-service databases, provider separation,
-and coordinated preview email/scheduling. The shell release command never
+independent production email admission and coordinated preview email/scheduling.
+The shell release command never
 executes migrations. Dry-run allows placeholders for review; --execute rejects
 them. A future remote release needs current user scope and verified configuration,
 schema/accounting, callback, provider and end-to-end gates. Source historical

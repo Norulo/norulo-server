@@ -95,7 +95,9 @@ and the OpenAPI contract.
   records. Recurrence keeps calendar identity, actor/key/target/category/plan
   fences, bounded catch-up and at most ten unresolved failed occurrences.
 - Jev reserves only the current UTC-month USD allowance atomically before
-  dispatch; preserve historical daily rows without daily-cap reads/writes.
+  dispatch: Free $0, Pro $3 and Max $5 under the current policy, with no rollover.
+  The stored ledger Owner's entitlement and opt-in apply; preserve historical
+  daily rows without daily-cap reads/writes.
   Failed/unavailable model results permit ordinary explicit-category writes.
   Duplicate candidates require current target/date/currency/minor amount and
   are rechecked after inference; they remain advisory.
@@ -147,8 +149,46 @@ Provider credentials/callbacks and feature gates still need actual configuration
 and truthful acceptance reporting. Real email, charges, subscription changes,
 remote schedules and irreversible maintenance are separate operations requiring
 current scope; never infer authorization from the imported business-clear
-manifest. Keep preview disabled. Do not silently claim production email login
-or recurring background execution: both still use preview-only infrastructure.
+manifest. Keep preview disabled. Production email admission now has an independent
+EMAIL_ADMISSION / EmailAdmission SQLite Durable Object implementation, isolated
+from ValidationBudget and D1. Its hashed-subject counters fail closed on uncertain
+storage/RPC outcomes, with no automatic retry/refund. The implementation is
+published with email auth enabled through the reviewed dual activation overlay.
+The user confirmed receipt of the verification code and successful email login;
+account linking, sign-out and credential/session refresh remain separately
+unverified. Future releases must retain both --activate-production and
+--activate-email-auth to preserve runtime activation while checked-in defaults
+remain 0. Do not infer other email behavior from sender settings or local tests.
+Production recurrence now has an independent RECURRING_SCHEDULER /
+RecurringScheduler SQLite Durable Object implementation and passed core/native
+review and the final 2,923-test suite. Its runtime flag remains 0 and no cron is
+installed pending publication. The fixed scope is norulo-production-recurring-v1,
+with one durable completed-hour/in-flight marker and no reset/retry HTTP endpoint.
+Unknown execution remains stopped across incarnations; no automatic retry or D1
+heartbeat/idle maintenance write. Local native proof covers a manually parked
+unknown marker, not injected loss of a real native D1 response.
+TYPESAFE_API_KEY is present as the fourth Worker Secret, and runtime specification
+11 confirms both network Secret bindings present with the Cloudflare token
+retained. On 2026-10-11 (Asia/Shanghai recording date), the one fixed quality
+journal completed 36 real CPython HTTPS calls once, with both quality gates
+passing, no retry and no D1/application requests. The 99,108 micro-USD reservation
+remains retained; the $0.0010017 usage estimate is not an invoice. Current
+[quality evidence](docs/validation/ai-quality-2026-10-11-execution.json) is distinct
+from the unchanged 2026-10-10 blocked snapshot and imported source history.
+Do not repeat that completed journal or start another directory to bypass the
+36-attempt scope. Native Worker real-provider HTTPS remains untested, distinct
+from direct HTTPS quality capture and the five loopback native checks. Both
+production AI flags remain 0 pending the final reviewed release.
+--activate-ai-suggestions requires production and both D1/email activation
+overlays; the static guard cannot prove quality. Preserve all four Worker Secrets.
+The reviewed --activate-recurring-expenses release requires production plus all
+D1/email/AI activation overlays, creating one hourly UTC cron (0 * * * *) in a
+fresh temporary config while source defaults stay 0 and source has no cron.
+Core/native/final local gates are complete; do not claim live scheduling from
+those checks. The new DO migration does not run D1 migrations. See
+[local recurring proof](docs/validation/production-recurring-native-local-2026-10-11.json)
+for finite costs and limitations. Preserve the user-confirmed email behavior and
+all four Secrets through final AI/recurring publication.
 
 ## Verification and repository hygiene
 

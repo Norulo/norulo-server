@@ -12,7 +12,8 @@
     "required": [
       "NORULO_GITHUB_CLIENT_SECRET",
       "NORULO_GITHUB_TOKEN_KEY",
-      "NORULO_EMAIL_CODE_SECRET"
+      "NORULO_EMAIL_CODE_SECRET",
+      "TYPESAFE_API_KEY"
     ]
   },
   "routes": [
@@ -56,6 +57,10 @@
       {
         "name": "EMAIL_ADMISSION",
         "class_name": "EmailAdmission"
+      },
+      {
+        "name": "RECURRING_SCHEDULER",
+        "class_name": "RecurringScheduler"
       }
     ]
   },
@@ -64,6 +69,12 @@
       "tag": "norulo-email-admission-v1",
       "new_sqlite_classes": [
         "EmailAdmission"
+      ]
+    },
+    {
+      "tag": "norulo-recurring-scheduler-v1",
+      "new_sqlite_classes": [
+        "RecurringScheduler"
       ]
     }
   ],

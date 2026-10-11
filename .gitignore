@@ -54,6 +54,7 @@ node_modules/
 vendor/
 python_modules/
 cloudflare/server/src/norulo_server/
+/cloudflare/server/.norulo-recurring-deploy.*.jsonc
 .cache/
 .vite/
 *.tsbuildinfo

@@ -231,15 +231,19 @@ class LedgerDeployContractTests(unittest.TestCase):
             fake_uv = folder / "uv"
             fake_uv.write_text("#!/usr/bin/env bash\nprintf '%s\\n' \"$PWD\" \"$@\"\n")
             fake_uv.chmod(0o755)
-            for environment, activate, email in (("preview", False, False), ("production", False, False),
-                                                ("production", True, False), ("production", True, True)):
+            for environment, activate, email, ai in (
+                    ("preview", False, False, False), ("production", False, False, False),
+                    ("production", True, False, False), ("production", True, True, False),
+                    ("production", True, True, True)):
                 args = [BASH, "scripts/deploy-cloudflare.sh", "--environment", environment,
                         "--execute", "--local-checks-passed"]
                 if activate:
                     args.append("--activate-production")
                 if email:
                     args.append("--activate-email-auth")
-                with self.subTest(environment=environment, activate=activate, email=email):
+                if ai:
+                    args.append("--activate-ai-suggestions")
+                with self.subTest(environment=environment, activate=activate, email=email, ai=ai):
                     result = subprocess.run(args, cwd=repo,
                         text=True, capture_output=True, check=False,
                         env={**os.environ, "NORULO_PYTHON": Path(sys.executable).as_posix(),
@@ -249,11 +253,26 @@ class LedgerDeployContractTests(unittest.TestCase):
                     self.assertIn("run\n--frozen\n--python\n3.14.2\npywrangler\ndeploy\n--config\nwrangler."+environment+".jsonc", result.stdout)
                     self.assertEqual("--var\nNORULO_D1_ACCESS_ENABLED:1" in result.stdout, activate)
                     self.assertEqual("--var\nNORULO_EMAIL_AUTH_ENABLED:1" in result.stdout, email)
+                    self.assertEqual("--var\nNORULO_JEV_SUGGESTIONS_ENABLED:1" in result.stdout, ai)
+                    self.assertEqual("--var\nNORULO_JEV_SUGGESTIONS_EVALUATED:1" in result.stdout, ai)
                     self.assertEqual("Explicit production email authentication activation overlay" in result.stdout, email)
+                    self.assertEqual("Explicit production AI suggestions activation overlay" in result.stdout, ai)
                     self.assertNotIn("d1 migrations apply", result.stdout)
+            result = subprocess.run([BASH, "scripts/deploy-cloudflare.sh", "--environment", "production",
+                "--activate-production", "--activate-ai-suggestions", "--execute", "--local-checks-passed"],
+                cwd=repo, text=True, capture_output=True, check=False,
+                env={**os.environ, "NORULO_PYTHON": Path(sys.executable).as_posix(),
+                     "PATH": str(folder) + os.pathsep + os.environ["PATH"]})
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("--activate-email-auth", result.stderr)
+            self.assertNotIn("Fixture offline checks", result.stdout)
+            self.assertNotIn("Fixture source sync", result.stdout)
+            self.assertNotIn("pywrangler", result.stdout)
             paused = json.loads((ROOT / "cloudflare/server/wrangler.production.jsonc").read_text())
             self.assertEqual(paused["vars"]["NORULO_D1_ACCESS_ENABLED"], "0")
             self.assertEqual(paused["vars"]["NORULO_EMAIL_AUTH_ENABLED"], "0")
+            self.assertEqual(paused["vars"]["NORULO_JEV_SUGGESTIONS_ENABLED"], "0")
+            self.assertEqual(paused["vars"]["NORULO_JEV_SUGGESTIONS_EVALUATED"], "0")
 
     def test_email_activation_options_require_explicit_production_d1_activation(self):
         for cli in ((BASH, SCRIPT.relative_to(ROOT).as_posix()),

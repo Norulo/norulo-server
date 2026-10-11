@@ -1,0 +1,115 @@
+{
+  "recorded_at_local_date": "2026-10-11",
+  "recording_timezone": "Asia/Shanghai",
+  "record_scope": "Fresh Norulo real-provider quality capture; independent of imported source evidence",
+  "normalized_results_file": "ai-quality-2026-10-11-results.jsonl",
+  "normalized_results_sha256": "48b471c6fafdcfb0cd8bcf20b72e6056444147386cc626b5552998da30812a38",
+  "transport": "cpython-https-via-environment-proxy",
+  "quality": {
+    "samples": 36,
+    "byLanguage": {
+      "en": {
+        "samples": 18,
+        "category": {
+          "labeled": 18,
+          "clear": 16,
+          "clearSuggested": 16,
+          "suggested": 16,
+          "correct": 16,
+          "falseHints": 0,
+          "expectedUncertain": 2,
+          "correctlyWithheld": 2,
+          "selectiveAccuracy": 1.0,
+          "clearCoverage": 1.0,
+          "clearAccuracy": 1.0,
+          "uncertainRecall": 1.0
+        },
+        "target": {
+          "labeled": 18,
+          "clear": 16,
+          "clearSuggested": 16,
+          "suggested": 16,
+          "correct": 16,
+          "falseHints": 0,
+          "expectedUncertain": 2,
+          "correctlyWithheld": 2,
+          "selectiveAccuracy": 1.0,
+          "clearCoverage": 1.0,
+          "clearAccuracy": 1.0,
+          "uncertainRecall": 1.0
+        }
+      },
+      "zh": {
+        "samples": 18,
+        "category": {
+          "labeled": 18,
+          "clear": 16,
+          "clearSuggested": 16,
+          "suggested": 16,
+          "correct": 16,
+          "falseHints": 0,
+          "expectedUncertain": 2,
+          "correctlyWithheld": 2,
+          "selectiveAccuracy": 1.0,
+          "clearCoverage": 1.0,
+          "clearAccuracy": 1.0,
+          "uncertainRecall": 1.0
+        },
+        "target": {
+          "labeled": 18,
+          "clear": 16,
+          "clearSuggested": 16,
+          "suggested": 16,
+          "correct": 16,
+          "falseHints": 0,
+          "expectedUncertain": 2,
+          "correctlyWithheld": 2,
+          "selectiveAccuracy": 1.0,
+          "clearCoverage": 1.0,
+          "clearAccuracy": 1.0,
+          "uncertainRecall": 1.0
+        }
+      }
+    },
+    "category": {
+      "labeled": 36,
+      "clear": 32,
+      "clearSuggested": 32,
+      "suggested": 32,
+      "correct": 32,
+      "falseHints": 0,
+      "expectedUncertain": 4,
+      "correctlyWithheld": 4,
+      "selectiveAccuracy": 1.0,
+      "clearCoverage": 1.0,
+      "clearAccuracy": 1.0,
+      "uncertainRecall": 1.0
+    },
+    "target": {
+      "labeled": 36,
+      "clear": 32,
+      "clearSuggested": 32,
+      "suggested": 32,
+      "correct": 32,
+      "falseHints": 0,
+      "expectedUncertain": 4,
+      "correctlyWithheld": 4,
+      "selectiveAccuracy": 1.0,
+      "clearCoverage": 1.0,
+      "clearAccuracy": 1.0,
+      "uncertainRecall": 1.0
+    },
+    "falsePromptRate": 0.0,
+    "uncertainRate": 0.1667,
+    "optionOrder": {
+      "pairs": 6,
+      "consistent": 6,
+      "agreement": 1.0
+    },
+    "provenance": [
+      "agent-authored-synthetic"
+    ],
+    "providerEvidenceComplete": true,
+    "eligibleForReview": true
+  }
+}

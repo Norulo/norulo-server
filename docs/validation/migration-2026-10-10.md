@@ -49,12 +49,13 @@ No TLS or artifact verification was bypassed. The cache and wrapper live outside
 the tracked repository. pywrangler sync populated ignored runtime packages
 without changing dependency locks.
 
-## Current local acceptance
+## Migration local acceptance
 
 The complete Python suite passed: 2,553 tests and 66 subtests.
 S01 static config/OpenAPI/canonical SQL checks, Worker mirror sync/check, shell
-syntax checks and dependency compatibility checks passed. Remote configs remain
-unconfigured by design and the execution guard rejects them.
+syntax checks and dependency compatibility checks passed. At migration time,
+remote configs were unconfigured by design and the execution guard rejected them;
+subsequent production setup is recorded below.
 
 The [native local record](norulo-native-local-2026-10-10.json) covers 49 loopback
 HTTP requests and 1,671 native statements: 3,921 metered rows read, 689 metered rows
@@ -119,9 +120,9 @@ binding restricted to login@auth.norulo.com, without recipient restrictions.
 Six added DNS records are confined to the auth subdomain; the existing eight DNS
 records and two contact routing rules were preserved. The 19 public variables and
 three Secrets were retained, and D1/email-auth flags were both 0 at that stage. No actual email
-was sent for acceptance. Production email login still needs an independent
-admission implementation and real delivery/code/session acceptance. This does
-did not activate the full Server.
+was sent for acceptance at that stage; production admission and real delivery/
+code/session acceptance were still pending. Sender preparation did not activate
+the full Server. The subsequent email release and user acceptance are recorded below.
 
 The user subsequently resumed D1 setup with strict Rows Written cost discipline.
 The independent norulo-ledger-production database,
@@ -132,8 +133,8 @@ read and 367 rows written. Two rejected read-only compound-SELECT checks returne
 no native metrics, so those totals do not claim complete billing for rejected
 requests. Bounded five-table checks subsequently passed with zero rows written;
 no migration was replayed. All 77 schema objects/fingerprint match canonical v12,
-app_state has only four empty containers and the other 22 application tables are
-empty. No source database access, remote fixture or business acceptance write
+at initialization app_state had only four empty containers and the other 22
+application tables were empty. No source database access, remote fixture or business acceptance write
 occurred. See the [safe initialization summary](d1-production-init-2026-10-10.json).
 The complete Python Worker was subsequently published as version
 3ad0cffc-ecc3-47a4-ab5d-a53999528b8c, with the intended DB binding and runtime
@@ -144,17 +145,106 @@ Read-only public checks returned homepage 200, API/Web proxy health 200 and
 unauthenticated profile 401, all without Set-Cookie. The checks did not perform
 OAuth, send actual mail or make business acceptance writes. The user subsequently
 reported successful real GitHub sign-in. Installation, credential refresh and
-the complete ledger journey remain unverified; email sign-in is temporarily
-unavailable while its flag is 0 and production admission remains pending.
-The earlier bootstrap and D1 deferral are historical.
+the complete ledger journey remain unverified. At that first full-release stage,
+email sign-in was temporarily unavailable with its flag 0 and production admission
+pending. The earlier bootstrap and D1 deferral are historical.
+
+The subsequent email-enabled Python Worker release, built from main commit
+96d6bee, is version 815a1216-4468-4591-be58-e339d4d2c154. Settings readback verified
+all 19 public variables and three Secrets retained, the unchanged production DB,
+the restricted EMAIL sender and the independent EMAIL_ADMISSION / EmailAdmission
+namespace 6588312f00f74840a37463e72a2d75eb. Runtime D1/email flags are both 1 through
+the dual overlay; checked-in defaults stay 0. workers.dev and preview URLs remain
+disabled. Finite API/Web health checks returned 200 and unauthenticated profiles
+401, without Set-Cookie. The release did not run D1 migrations, seed remote
+fixtures or send acceptance mail. The user then confirmed receiving the
+verification code and successfully logging in by email. This establishes
+user-confirmed delivery/code/browser login acceptance, without claiming account
+linking, sign-out, refresh or other email abuse/security scenarios were tested
+against production. Existing local tests cover the separate security contracts.
 
 The remaining core acceptance includes the other App/session behaviors and actual
 authenticated ledger use; GitHub sign-in is user-confirmed and full Worker/DB
 publication is complete. The requested
-email login additionally needs independent production admission and real
-delivery/code/session acceptance; its sending domain and EMAIL binding are now
-prepared. Creem products/secrets, AI transport/quality
-gates and background recurrence are optional feature work. Existing source
+email login now has a published independent EmailAdmission SQLite DO, with native
+acceptance passed and actual code delivery/login confirmed by the user. Its
+limiter stores hashed subjects/counters, uses transactional fail-closed admission
+and does not write D1. Later releases must retain both --activate-production and
+--activate-email-auth overlays. Local reference tests reported 2,629 passes;
+118 focused tests passed after three overlay cases were added, with a separate
+62-test/27-subtest admission check. Twenty-six bounded native localhost POSTs
+verified limiter behavior without D1/provider bindings, remote requests or mail;
+the pinned 728-module packaging dry-run also passed. These overlapping runs are
+not additive totals. Next, configure TYPESAFE_API_KEY and verify actual AI quality,
+Owner entitlement and monthly allowance; then implement production recurrence
+before configuring cron. AI and recurring execution remain disabled. Creem
+products/secrets remain optional feature work.
+
+The subsequent AI preparation securely added TYPESAFE_API_KEY as the fourth
+Worker Secret, retaining the GitHub pair and email-code Secret. Both AI flags
+remain 0. At that preparation stage, the cloud network Secret binding was absent
+and the inspected revision-8 runtime had only the Cloudflare token. Real quality
+capture was blocked and real model calls were zero then. The complete local
+reference suite then passed 2,768 tests before the final email-preservation activation-guard repair. Five
+canonical native-gateway fake-provider cases passed without D1,
+remote application requests or real provider calls. No gateway repair was needed;
+native real-provider HTTPS remains unverified. The fixed 36-case quality journal
+allocates at most 99,108 micro-USD in conservative reservations, stops on failed/
+unknown outcomes and cannot be restarted elsewhere to retry. Current policy is
+the configurable default Pro $3 / Max $5 per UTC calendar month, Free $0, no
+rollover or daily request cap.
+The explicit --activate-ai-suggestions overlay and static guard are implemented,
+but are local changes not yet published, do not establish real quality acceptance
+and have not enabled production AI. After the guard repair, 177 targeted tests
+and 28 subtests passed, alongside S01 and shell checks. The final stable full
+reference suite passed 2,777 tests in 106.08 seconds after the guard/native-fixture
+repairs. These overlapping checks are not additive totals. Future AI releases
+must explicitly retain
+--activate-production and --activate-email-auth alongside the AI overlay.
+See the unchanged [AI local snapshot](ai-local-readiness-2026-10-10.json).
+
+The next AI stage is recorded on 2026-10-11 in Asia/Shanghai. Runtime specification
+11 has both network Secret bindings present, preserving the Cloudflare token.
+The existing single quality journal then completed exactly 36 real CPython HTTPS
+requests once: 73 events (one session, 36 reservations and 36 completions), 36
+valid responses, no retries and no remote D1/application requests. Both quality
+gates passed: English/Chinese each 18 cases, category and target each 32/32 clear
+labels correct and 4/4 uncertain labels withheld, all six reversed-order pairs
+consistent and no false actionable hints. Usage was 23,850 input / 4,144 output
+tokens, estimated $0.0010017, not an invoice. The full 99,108 micro-USD reservation
+remains retained. Fresh [results](ai-quality-2026-10-11-results.jsonl),
+[aggregate](ai-quality-2026-10-11-aggregate.json) and
+[execution/source envelope](ai-quality-2026-10-11-execution.json) are separate from
+both imported records and the earlier blocked snapshot. They do not prove
+customer error rates or native Worker real-provider HTTPS, which remains untested.
+Stored Owner Pro/Max entitlement/opt-in and UTC-month allowance fences passed
+local checks; production AI remains 0/0 pending final publication. Production
+recurring implementation was still pending at the AI-quality checkpoint, with
+no cron active then. That snapshot remains unchanged.
+
+Production recurrence is now implemented locally through the independent
+RECURRING_SCHEDULER / RecurringScheduler SQLite DO, fixed scope
+norulo-production-recurring-v1. Core review and 168 focused / 82 related tests
+passed; the final full suite passed 2,923 tests in 106.75 seconds after the
+localized D1 SQL-literal guard repair. Native acceptance passed 16 bounded local
+requests over three workerd incarnations, with 234 D1 statements / 805 rows read /
+57 written for setup, application, scheduler and probes. Separate twelve-file
+local CLI migration setup is excluded from those native totals. Exactly one
+Free expense/audit/occurrence and record-quota increment were verified, alongside
+idle/same-hour/cold-restart/future-hour gates. A manually parked durable active
+marker remained stopped after cold restart; no native lost-response injection
+was claimed. Independent review matched 83 source/dependency/migration hashes and
+41 raw metadata groups. See the
+[compact native proof](production-recurring-native-local-2026-10-11.json).
+
+All activation overlays and the exact hourly UTC cron passed frozen packaging
+(728 modules, 338.02 KiB gzip), with four Secrets, DB/EMAIL and two DO bindings
+preserved and temporary config removed. The current Cloudflare version after the
+user's Secret update is ec33db03-2fd4-49a4-8430-9e1cb13fc340. Its preflight flags are
+D1/email 1, both AI flags 0 and recurrence 0; there is no installed cron. Final
+AI/recurring publication and live scheduling acceptance remain pending. The new
+DO migration is distinct from D1; no remote D1 migration/fixture/model request was
+added by this local scheduler validation. Existing source
 provider IDs and historical approvals are not Norulo requirements or permissions.
 Database/provider acceptance, email delivery and real payment flows have not been
 claimed as local setup results. Keep secret values in secure settings.

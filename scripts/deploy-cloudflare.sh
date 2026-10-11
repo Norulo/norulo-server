@@ -7,9 +7,20 @@ execute=0
 local_checks=0
 activate_production=0
 activate_email_auth=0
+activate_ai_suggestions=0
+activate_recurring_expenses=0
+temporary_config=""
+
+cleanup() {
+  if [[ -n "$temporary_config" ]]; then rm -f -- "$temporary_config"; fi
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 usage() {
-  echo "Usage: $0 --environment preview|production [--execute --local-checks-passed] [--activate-production [--activate-email-auth]]" >&2
+  echo "Usage: $0 --environment preview|production [--execute --local-checks-passed] [--activate-production [--activate-email-auth [--activate-ai-suggestions [--activate-recurring-expenses]]]]" >&2
 }
 
 while (($#)); do
@@ -23,6 +34,8 @@ while (($#)); do
     --local-checks-passed) local_checks=1; shift ;;
     --activate-production) activate_production=1; shift ;;
     --activate-email-auth) activate_email_auth=1; shift ;;
+    --activate-ai-suggestions) activate_ai_suggestions=1; shift ;;
+    --activate-recurring-expenses) activate_recurring_expenses=1; shift ;;
     *) usage; exit 2 ;;
   esac
 done
@@ -36,6 +49,14 @@ if ((activate_email_auth)) && { [[ "$environment" != production ]] || ((!activat
   echo "--activate-email-auth requires --environment production --activate-production." >&2
   exit 2
 fi
+if ((activate_ai_suggestions)) && { [[ "$environment" != production ]] || ((!activate_production)) || ((!activate_email_auth)); }; then
+  echo "--activate-ai-suggestions requires --environment production --activate-production --activate-email-auth." >&2
+  exit 2
+fi
+if ((activate_recurring_expenses)) && { [[ "$environment" != production ]] || ((!activate_production)) || ((!activate_email_auth)) || ((!activate_ai_suggestions)); }; then
+  echo "--activate-recurring-expenses requires --environment production --activate-production --activate-email-auth --activate-ai-suggestions." >&2
+  exit 2
+fi
 if ((execute && !local_checks)); then
   echo "Remote execution requires completed local checks (--local-checks-passed)." >&2
   exit 2
@@ -45,12 +66,22 @@ cd "$repo_root"
 checker_args=(--environment "$environment")
 if ((activate_production)); then checker_args+=(--activate-production); fi
 if ((activate_email_auth)); then checker_args+=(--activate-email-auth); fi
+if ((activate_ai_suggestions)); then checker_args+=(--activate-ai-suggestions); fi
+config="wrangler.${environment}.jsonc"
+if ((activate_recurring_expenses)); then
+  temporary_config="$(mktemp "$repo_root/cloudflare/server/.norulo-recurring-deploy.XXXXXX.jsonc")"
+  config="$temporary_config"
+  checker_args+=(--activate-recurring-expenses --write-deploy-config "$temporary_config")
+fi
 if ((!execute)); then checker_args+=(--allow-placeholders); fi
 "${NORULO_PYTHON:-python3}" scripts/check-ledger-s01.py "${checker_args[@]}"
-config="wrangler.${environment}.jsonc"
 deploy_args=(--config "$config")
 if ((activate_production)); then deploy_args+=(--var NORULO_D1_ACCESS_ENABLED:1); fi
 if ((activate_email_auth)); then deploy_args+=(--var NORULO_EMAIL_AUTH_ENABLED:1); fi
+if ((activate_ai_suggestions)); then
+  deploy_args+=(--var NORULO_JEV_SUGGESTIONS_ENABLED:1 --var NORULO_JEV_SUGGESTIONS_EVALUATED:1)
+fi
+if ((activate_recurring_expenses)); then deploy_args+=(--var NORULO_RECURRING_EXPENSES_ENABLED:1); fi
 wrangler="cloudflare/server/node_modules/wrangler/wrangler-dist/cli.js"
 if ((execute)); then
   [[ -f "$wrangler" ]] || { echo "Pinned local Wrangler installation is missing." >&2; exit 2; }
@@ -62,6 +93,12 @@ if ((execute)); then
     if ((activate_email_auth)); then
       echo "Explicit production email authentication activation overlay; the checked-in email flag remains paused."
     fi
+    if ((activate_ai_suggestions)); then
+      echo "Explicit production AI suggestions activation overlay; the checked-in AI flags remain paused."
+    fi
+    if ((activate_recurring_expenses)); then
+      echo "Explicit production recurrence activation with one hourly UTC cron (0 * * * *); the checked-in config has no cron."
+    fi
   else
     echo "Runtime switches stay as configured."
   fi
@@ -70,5 +107,14 @@ if ((execute)); then
   uv run --frozen --python 3.14.2 pywrangler deploy "${deploy_args[@]}"
 else
   echo "Dry run only. After local verification, --execute --local-checks-passed would run:"
-  echo "cd cloudflare/server && uv run --frozen --python 3.14.2 pywrangler deploy ${deploy_args[*]}"
+  if ((activate_recurring_expenses)); then
+    echo "A fresh temporary configuration preserves Worker-relative src/migrations paths and installs one hourly UTC cron (0 * * * *)."
+    echo "This dry-run configuration is removed on exit; execution regenerates and validates it."
+    printf 'bash %q --environment production --activate-production --activate-email-auth --activate-ai-suggestions --activate-recurring-expenses --execute --local-checks-passed\n' "$repo_root/scripts/deploy-cloudflare.sh"
+    printf 'Validated deployment arguments: '
+    printf '%q ' "${deploy_args[@]}"
+    printf '\n'
+  else
+    echo "cd cloudflare/server && uv run --frozen --python 3.14.2 pywrangler deploy ${deploy_args[*]}"
+  fi
 fi

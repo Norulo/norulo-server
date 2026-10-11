@@ -1,0 +1,160 @@
+{
+  "recorded_at": "2026-10-10",
+  "scope": "Norulo AI local readiness; production AI not enabled",
+  "actual_model_acceptance": false,
+  "actual_model_quality_accepted": false,
+  "native_real_provider_https_accepted": false,
+  "production": {
+    "worker_secret_name_present": "TYPESAFE_API_KEY",
+    "application_secret_count": 4,
+    "ai_enabled": false,
+    "ai_evaluated": false,
+    "existing_email_user_acceptance_preserved": true,
+    "ai_helper_guard_changes_published": false
+  },
+  "cloud_environment": {
+    "typesafe_network_secret_bound": false,
+    "inspected_runtime_revision": 8,
+    "real_quality_status": "BLOCKED_NETWORK_SECRET_BINDING",
+    "real_provider_requests": 0
+  },
+  "owner_policy": {
+    "period": "utc-calendar-month",
+    "rollover": false,
+    "monthly_budget_usd": {
+      "free": "0.00",
+      "pro": "3.00",
+      "max": "5.00"
+    },
+    "per_attempt_reservation_microusd": 2753,
+    "daily_attempt_limit": null,
+    "requires_owner_paid_entitlement_and_opt_in": true,
+    "allowances_configurable": true
+  },
+  "reference_tests": {
+    "passed": 2777,
+    "runtime_seconds": 106.08,
+    "scope": "Final stable complete reference suite after email-preservation activation-guard and native-fixture repairs",
+    "reported_by": "root agent; not rerun during documentation update",
+    "real_provider_requests": 0,
+    "remote_d1_operations": 0
+  },
+  "native_gateway": {
+    "passed": true,
+    "localOnly": true,
+    "canonicalWorkerJevGateway": true,
+    "nativePythonFFI": true,
+    "endpointRemappedToLoopbackFakeProvider": true,
+    "nativeRealProviderHttpsAccepted": false,
+    "loopbackProviderAttempts": 5,
+    "clientRetries": 0,
+    "databaseBindings": [],
+    "durableObjectBindings": [],
+    "realProviderRequests": 0,
+    "remoteApplicationRequests": 0,
+    "remoteD1Operations": 0,
+    "pythonBundleSha256": "3c3fd5a4179230e21e018e28b0e735e7c4abd8fe8e4ff39d2fd6bb2ea3a2e260",
+    "workerdSha256": "eb449c84ddd55ea357dc73e6c1b50bd255ccdc5d1875544c162435b7bd6168b6",
+    "cases": [
+      {
+        "case": "valid",
+        "outcome": "accepted",
+        "providerAttempts": 1,
+        "failureCode": null,
+        "failureType": null,
+        "localLatencyMs": 51
+      },
+      {
+        "case": "redirect",
+        "outcome": "rejected",
+        "providerAttempts": 1,
+        "failureCode": null,
+        "failureType": "OSError",
+        "localLatencyMs": 22
+      },
+      {
+        "case": "oversized-header",
+        "outcome": "rejected",
+        "providerAttempts": 1,
+        "failureCode": "JEV_RESPONSE_TOO_LARGE",
+        "failureType": "ValueError",
+        "localLatencyMs": 15
+      },
+      {
+        "case": "oversized-stream",
+        "outcome": "rejected",
+        "providerAttempts": 1,
+        "failureCode": "JEV_RESPONSE_TOO_LARGE",
+        "failureType": "ValueError",
+        "localLatencyMs": 36
+      },
+      {
+        "case": "deadline",
+        "outcome": "rejected",
+        "providerAttempts": 1,
+        "failureCode": null,
+        "failureType": "JsException",
+        "localLatencyMs": 3009
+      }
+    ],
+    "oversizedFixture": {
+      "byteLength": 65537,
+      "validResponseWithoutGatewayCap": true
+    },
+    "evidence_revision": 5
+  },
+  "quality_capture": {
+    "state": "prepared_not_executed",
+    "fixed_cases": 36,
+    "fixture_sha256": "a8154f94fe24b1388dddca60febef7e864b70dfb42be68cc4fbab7001b242add",
+    "model_version": "jev-1.13.0",
+    "question_version": "ledger-suggest-v2",
+    "attempt_cap": 36,
+    "allocated_microusd": 99108,
+    "allocated_usd": "0.099108",
+    "per_attempt_reservation_microusd": 2753,
+    "provider_attempts": 0,
+    "valid_responses": 0,
+    "automatic_retries": 0,
+    "remote_d1_operations": 0,
+    "remote_application_requests": 0,
+    "transport": "cpython-https-via-environment-proxy",
+    "native_worker_provider_fetch": false,
+    "one_fixed_journal_only": true,
+    "failed_or_unknown_attempt_stops_run": true,
+    "usage_estimate_is_invoice": false
+  },
+  "source_sha256": {
+    "norulo_server/cloudflare_jev_gateway.py": "a83885b6d13d4ace2226e7b419d8500a617136f6362d17b8ae277dd8e873f567",
+    "norulo_server/cloudflare_ledger_suggestions.py": "f064b7466f4f294b5f5fc013834a2803df8ad7797c1d269133747048a2630299",
+    "norulo_server/ledger_plan_policy.py": "1e515b756600c917e27cf3a7a7ba8a51d2d6ce0cdc689bb1bdfbe95d7b7c3e38",
+    "norulo_server/typesafe_client.py": "7a18ee3bd21267e6e18b751902ea55561e6074c7c6d9968fff7d173015e7d903",
+    "scripts/check-jev-quality-local.py": "dc3f91b0a030011e1e870a1bdd52ab2b3ca7db7ffa05acfc09791d6c2d4031fd",
+    "scripts/evaluate-ledger-suggestions.py": "58485ee22824bef15263497c4421b083f7020d88fea2820d32295116d8a35eb9",
+    "scripts/check-jev-gateway-native-local.py": "c58c4fd4ca083485cace3a1845a69e544816464e99d5e7c5c2ee359ba138861d",
+    "scripts/check-ledger-s01.py": "8edd929e3c1738815ed834dc45e88594fbd6467f614155dc89c41cd6cea31a3b",
+    "scripts/deploy-cloudflare.sh": "5daac3df4d06d61387bb9a2acf9738a1b67532d0ebcda96accd9caa8f2eb7346"
+  },
+  "limitations": [
+    "Loopback fake-provider results do not prove model quality or native real-provider HTTPS.",
+    "No real model request was made; the direct CPython quality transport is separate from native Worker HTTPS.",
+    "Static activation checks do not read quality artifacts or prove provider acceptance.",
+    "Cost reservations and numeric usage estimates do not represent a final provider invoice."
+  ],
+  "post_guard_repair_checks": {
+    "targeted_tests_passed": 177,
+    "subtests_passed": 28,
+    "s01_default_passed": true,
+    "s01_production_all_overlays_passed": true,
+    "shell_syntax_passed": true,
+    "diff_check_passed": true,
+    "reported_by": "root agent; not rerun during documentation update",
+    "overlapping_runs_not_additive": true
+  },
+  "earlier_reference_tests": {
+    "passed": 2768,
+    "runtime_seconds": 107.46,
+    "scope": "Complete reference suite before final email-preservation activation-guard repair",
+    "reported_by": "root agent; not rerun during documentation update"
+  }
+}

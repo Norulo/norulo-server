@@ -2,7 +2,34 @@
 > not establish Norulo remote deployment, provider acceptance, resource ownership
 > or continuing user authorization. See [migration status](migration-2026-10-10.md).
 
-# TypeSafe Jev integration review
+# TypeSafe Jev integration review — imported history
+
+## Current Norulo policy — 2026-10-11 (Asia/Shanghai)
+
+The sections below describe the source service's historical 2026-10-06 review and
+preview deployment. Their Max-only eligibility, 20-attempt daily cap and preview
+activation permissions do not describe current Norulo policy or acceptance.
+Current policy admits the stored ledger Owner's Pro/Max entitlement and opt-in,
+reserving against a UTC calendar-month allowance of $3/$5 respectively, with no
+rollover; Free allowance is $0. Historical daily rows are retained but daily-cap
+reads/writes are not used. See the current
+[production readiness](production-readiness-2026-10-10.md#ai-configuration-and-acceptance-gates).
+
+Norulo's Worker has TYPESAFE_API_KEY as the fourth Secret, and runtime specification
+11 now confirms both network Secret bindings present with the Cloudflare token
+preserved. The sole fixed journal completed 36 real CPython HTTPS requests once,
+with both quality gates passing, no retry and no D1/application requests.
+[Fresh results](ai-quality-2026-10-11-results.jsonl),
+[aggregate](ai-quality-2026-10-11-aggregate.json) and the
+[execution/source envelope](ai-quality-2026-10-11-execution.json) record this
+current independent Norulo result. Both production Jev flags remain 0 pending
+final publication; native Worker real-provider HTTPS remains untested.
+The production recurring scheduler has separately passed local/core/native gates
+and the final 2,923-test suite, but its runtime flag remains 0 and no cron is
+installed. See [current recurring readiness](production-readiness-2026-10-10.md#production-recurring-implementation-and-local-acceptance). The
+[earlier local snapshot](ai-local-readiness-2026-10-10.json) is unchanged and records
+the superseded blocked stage. The historical results below are preserved and do
+not substitute for the fresh evaluation.
 
 Reviewed 2026-10-06 using the live official documentation. This review covers
 the expense ledger's model tasks, request/response contract, Worker transport,
