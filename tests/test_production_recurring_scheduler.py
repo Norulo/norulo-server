@@ -11,7 +11,8 @@ from types import SimpleNamespace
 import pytest
 
 from norulo_server.cloudflare_recurring_scheduler import (
-    MIGRATION_NAMES, RECURRING_SCHEDULER_SCOPE, RecurringJournal,
+    MIGRATION_NAMES, PRODUCTION_RECURRING_CRON, RECURRING_SCHEDULER_SCOPE, RecurringJournal,
+    owner_scope, daily_epoch,
 )
 from norulo_server.cloudflare_state_records import encode_record, record_name
 from test_d1_validation_budget import LocalSql
@@ -84,12 +85,25 @@ def production(app, monkeypatch):
     env = NoPreviewEnvironment(**ENABLED, DB=raw, NORULO_EMAIL_AUTH_ENABLED="0")
     connection = sqlite3.connect(":memory:")
     sql = LocalSql(connection)
-    ctx = SimpleNamespace(storage=SimpleNamespace(sql=sql))
+    ctx = SimpleNamespace(id=RECURRING_SCHEDULER_SCOPE, storage=SimpleNamespace(sql=sql))
     coordinator = entry.RecurringScheduler(ctx, env)
+    owners, connections = {}, []
+    def get(identity):
+        if identity == RECURRING_SCHEDULER_SCOPE:
+            return coordinator
+        if identity not in owners:
+            connection = sqlite3.connect(":memory:")
+            connections.append(connection)
+            owner_ctx = SimpleNamespace(id=identity, storage=SimpleNamespace(sql=LocalSql(connection)))
+            owners[identity] = entry.RecurringScheduler(owner_ctx, env)
+        return owners[identity]
+    env.RECURRING_SCHEDULER = SimpleNamespace(idFromName=lambda name: name, get=get)
     try:
         yield SimpleNamespace(entry=entry, coordinator=coordinator, ctx=ctx, env=env,
-            app=app, raw=raw, clock=clock, monkeypatch=monkeypatch)
+            app=app, raw=raw, clock=clock, monkeypatch=monkeypatch, owners=owners)
     finally:
+        for item in connections:
+            item.close()
         connection.close()
 
 
@@ -116,7 +130,7 @@ def test_production_scheduled_dispatches_only_fixed_namespace_with_no_rpc_clock(
         get=lambda identity: SimpleNamespace(runRecurring=tick) if identity == "fixed" else None)
     worker = entry.Default()
     worker.env = NoPreviewEnvironment(**ENABLED, RECURRING_SCHEDULER=namespace)
-    asyncio.run(worker.scheduled(SimpleNamespace(cron="0 * * * *", scheduledTime=(NOW+99999)*1000),
+    asyncio.run(worker.scheduled(SimpleNamespace(cron=PRODUCTION_RECURRING_CRON, scheduledTime=(NOW+99999)*1000),
         NoEffects(), NoEffects()))
     assert calls == [RECURRING_SCHEDULER_SCOPE, "completed"]
 
@@ -132,7 +146,7 @@ def test_production_scheduled_unknown_rpc_result_not_retried_or_fallback(result)
     worker.env = NoPreviewEnvironment(**ENABLED, RECURRING_SCHEDULER=SimpleNamespace(
         idFromName=lambda _: "fixed", get=lambda _: SimpleNamespace(runRecurring=tick)))
     with pytest.raises(RuntimeError, match="RECURRING_EXECUTION_UNAVAILABLE"):
-        asyncio.run(worker.scheduled(SimpleNamespace(cron="0 * * * *", scheduledTime=NOW*1000), None, None))
+        asyncio.run(worker.scheduled(SimpleNamespace(cron=PRODUCTION_RECURRING_CRON, scheduledTime=NOW*1000), None, None))
     assert calls == [1]
 
 
@@ -141,7 +155,17 @@ def test_production_missing_namespace_cannot_fall_back_to_preview():
     worker = entry.Default()
     worker.env = NoPreviewEnvironment(**ENABLED)
     with pytest.raises(RuntimeError, match="RECURRING_SCHEDULER_REQUIRED"):
-        asyncio.run(worker.scheduled(SimpleNamespace(cron="0 * * * *", scheduledTime=NOW*1000), None, None))
+        asyncio.run(worker.scheduled(SimpleNamespace(cron=PRODUCTION_RECURRING_CRON, scheduledTime=NOW*1000), None, None))
+
+
+@pytest.mark.parametrize("cron", ["0 * * * *", "0 16 * * *", "10 * * * *", "0 0 * * *"])
+def test_production_rejects_old_hourly_and_unreviewed_daily_triggers_without_rpc(cron):
+    entry = load_entry()
+    worker = entry.Default()
+    worker.env = NoEffects(**ENABLED)
+    assert PRODUCTION_RECURRING_CRON == "10 16 * * *"
+    with pytest.raises(RuntimeError, match="RECURRING_TRIGGER_INVALID"):
+        asyncio.run(worker.scheduled(SimpleNamespace(cron=cron, scheduledTime=NOW*1000), None, None))
 
 
 def test_rpc_no_caller_clock_and_no_http_tick_reset_or_debug():
@@ -175,7 +199,7 @@ def test_idle_keeps_expired_unrelated_activity_and_never_writes_d1(production):
     assert len(p.raw.dispatched) == before
     p.clock[0] += 3600
     assert asyncio.run(p.coordinator.runRecurring())["ok"] is True
-    assert len(p.raw.dispatched) == before+1  # schema verified only once per incarnation
+    assert len(p.raw.dispatched) == before  # daily dedupe also spans later hours
     assert p.raw.local_changes == 0
 
 
@@ -219,16 +243,16 @@ def test_generation_uses_current_free_owner_and_same_hour_dedup_persists_restart
     assert len(p.raw.dispatched) == before
 
 
-def test_whole_hour_ten_occurrence_cap_with_three_per_rule(production):
+def test_owner_chunks_remove_global_ten_cap_but_keep_three_per_rule(production):
     p = production
     for index in range(12):
         status, _ = p.app.call("POST", body=draft(purpose=str(index)), key="local-rule-"+str(index))
         assert status == 201
     legacy_due(p.app)
     result = asyncio.run(p.coordinator.runRecurring())
-    assert result["ok"] is True and result["scanned"] == 10 and result["created"] == 10
+    assert result["ok"] is True and result["scanned"] == 12 and result["created"] == 36
     occurrences = p.app.rows("expense_recurring_occurrences")
-    assert len(occurrences) == 10
+    assert len(occurrences) == 36
     assert max(sum(item["rule_id"] == row["rule_id"] for item in occurrences) for row in occurrences) <= 3
 
 
@@ -282,15 +306,19 @@ def test_committed_expense_with_lost_native_response_is_never_reissued(productio
             raise RuntimeError("synthetic lost response after local atomic commit")
     p.raw.after_commit = lose_financial_response
     result = asyncio.run(p.coordinator.runRecurring())
-    assert result["ok"] is False and result["metrics"]["complete"] is False
+    assert result["ok"] is True and result["failedOwners"] == 1 and result["metrics"]["complete"] is False
     assert len(p.app.rows("expenses")) == len(p.app.rows("expense_recurring_occurrences")) == 1
     assert len(p.app.rows("expense_events")) == 1
     before = len(p.raw.dispatched)
     p.raw.after_commit = None
     p.clock[0] += 3600
     restarted = p.entry.RecurringScheduler(p.ctx, p.env)
-    assert asyncio.run(restarted.runRecurring())["error"] == "RECURRING_OUTCOME_UNKNOWN"
+    assert asyncio.run(restarted.runRecurring())["skipped"] is True
     assert len(p.raw.dispatched) == before and len(p.app.rows("expenses")) == 1
+    owner = p.owners[owner_scope("owner")]
+    p.clock[0] += 86400
+    assert asyncio.run(owner.runOwnerChunk("owner", daily_epoch(p.clock[0]), 0))["error"] == "RECURRING_OUTCOME_UNKNOWN"
+    assert len(p.raw.dispatched) == before
 
 
 @pytest.mark.parametrize("constraint", ["plan_record_limit", "plan_write_rate", "plan_monthly_write_limit"])
@@ -309,9 +337,10 @@ def test_unknown_native_constraint_not_swallowed_into_quota_maintenance(producti
         return await original(statements)
     p.monkeypatch.setattr(p.raw, "batch", named_constraint)
     result = asyncio.run(p.coordinator.runRecurring())
-    assert result["error"] == "RECURRING_OUTCOME_UNKNOWN" and result["metrics"]["complete"] is False
+    assert result["ok"] is True and result["failedOwners"] == 1 and result["metrics"]["complete"] is False
     assert len(failed_batches) == 1
-    assert p.coordinator.journal.snapshot()["state"] == "stopped"
+    owner = p.owners[owner_scope("owner")]
+    assert asyncio.run(owner.ownerProgress("owner", daily_epoch(NOW)))["state"] == "stopped"
     assert not p.app.rows("expenses") and not p.app.rows("expense_recurring_pending")
     rule = p.app.rows("expense_recurring_rules")[0]
     assert rule["status"] == "active"
@@ -351,17 +380,19 @@ def test_cold_restart_inflight_marker_prevents_all_d1_contact(production):
     assert p.raw.dispatched == []
 
 
-def test_timeout_cancels_local_await_and_retains_durable_stop(production):
+def test_owner_timeout_retains_durable_stop_without_retry(production):
     p = production
-    p.monkeypatch.setattr(p.entry, "RECURRING_TIMEOUT_SECONDS", .02)
+    p.monkeypatch.setattr(p.entry, "OWNER_SOFT_SECONDS", .02)
     async def run():
         p.raw.entered, p.raw.release = asyncio.Event(), asyncio.Event()
-        result = await p.coordinator.runRecurring()
+        owner = p.env.RECURRING_SCHEDULER.get(owner_scope("owner"))
+        result = await owner.runOwnerChunk("owner", daily_epoch(NOW), 0)
         assert p.raw.entered.is_set()
-        assert result["error"] == "RECURRING_TIMEOUT" and result["metrics"]["complete"] is False
+        assert result["error"] == "RECURRING_OUTCOME_UNKNOWN" and result["metrics"]["complete"] is False
     asyncio.run(run())
-    assert p.coordinator.journal.snapshot()["state"] == "stopped"
-    assert p.coordinator._waiting == 0 and not p.coordinator._lock.locked()
+    owner = p.owners[owner_scope("owner")]
+    assert asyncio.run(owner.ownerProgress("owner", daily_epoch(NOW)))["state"] == "stopped"
+    assert owner._waiting == 0 and not owner._lock.locked()
 
 
 def test_rpc_cancellation_propagates_and_blocks_restarted_dispatch(production):
@@ -422,6 +453,26 @@ def test_clock_rollback_cannot_write_or_dispatch_after_completed_hour(production
     result = asyncio.run(p.coordinator.runRecurring())
     assert result["error"] == "RECURRING_CLOCK_INVALID"
     assert len(p.raw.dispatched) == count
+
+
+def test_daily_cadence_keeps_existing_completed_utc_hour_state_without_migration(production):
+    p = production
+    # Model the already published hourly scheduler's completed state. A new
+    # daily trigger must never reinterpret this persisted value as a UTC day.
+    existing = RecurringJournal(p.ctx.storage.sql)
+    previous_hour = NOW//3600-1
+    assert existing.begin(previous_hour) is True
+    existing.finish(previous_hour)
+    assert asyncio.run(p.coordinator.runRecurring())["skipped"] is True
+    assert p.coordinator.journal.snapshot()["completed_hour"] == previous_hour
+    before = len(p.raw.dispatched)
+    restarted = p.entry.RecurringScheduler(p.ctx, p.env)
+    assert asyncio.run(restarted.runRecurring())["skipped"] is True
+    assert len(p.raw.dispatched) == before
+    p.clock[0] += 24*3600
+    assert asyncio.run(restarted.runRecurring())["ok"] is True
+    assert restarted.journal.snapshot()["completed_hour"] == NOW//3600+24
+    assert p.raw.local_changes == 0  # no D1 heartbeat/migration/idle cleanup
 
 
 @pytest.mark.parametrize("run_retention", [None, 1, "false"])

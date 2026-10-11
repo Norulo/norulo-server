@@ -1,13 +1,16 @@
-"""Finite production scheduler proof against independent LOCAL Workerd D1 and DO.
+"""Historical singleton scheduler proof against independent LOCAL Workerd D1/DO.
 
 All account/session/category/rule data is synthetic and local. The real canonical
 Default.scheduled, production coordinator, NativeD1 and commercial plan adapter
 execute unchanged. The wrapper adds bounded LOCAL setup, clock and probe seams.
 No Cloudflare API, provider, remote database, deployed route or client retry.
+This fixture applies to the earlier singleton implementation. Current Owner
+fanout must use check-production-recurring-load-native-local.py instead.
 """
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import importlib.util
 import json
@@ -27,7 +30,7 @@ WORKER = ROOT / "cloudflare/server"
 spec = importlib.util.spec_from_file_location("recurring_native_dependencies", ROOT / "scripts/check-rest-parity-native-runtime.py")
 parity = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(parity)
-FIXTURE_NOW = 1791676800  # 2026-10-11 00:00:00 UTC, a synthetic clock.
+FIXTURE_NOW = 1791735000  # 2026-10-11 16:10:00 UTC, a synthetic clock.
 OWNER = "usr_github_795001"
 HTTP_CAP = 24
 PINNED_WORKERD_VERSION = "1.20260921.1"
@@ -44,9 +47,10 @@ from norulo_server.cloudflare_native_d1 import NativeD1
 from norulo_server.cloudflare_validation_budget import _field
 from norulo_server.cloudflare_d1_mapping import initialize_account
 from norulo_server.cloudflare_state_records import record_name, encode_record
-from norulo_server.cloudflare_recurring_scheduler import RECURRING_SCHEDULER_SCOPE, RecurringJournal
+from norulo_server.cloudflare_recurring_scheduler import (
+    PRODUCTION_RECURRING_CRON, RECURRING_SCHEDULER_SCOPE, RecurringJournal)
 
-FIXTURE_NOW=1791676800
+FIXTURE_NOW=1791735000
 OWNER="usr_github_795001"
 TABLES=("app_state","account_entitlement_authority","expense_categories","expenses",
     "expense_events","expense_recurring_rules","expense_recurring_occurrences",
@@ -154,12 +158,13 @@ class Default(canonical.Default):
         if path=="/_fixture/tick":
             status,code=200,None
             try:
-                await super().scheduled(SimpleNamespace(cron="0 * * * *",scheduledTime=float(FIXTURE_NOW*1000)),self.env,self.ctx)
+                await super().scheduled(SimpleNamespace(cron=PRODUCTION_RECURRING_CRON,scheduledTime=float(FIXTURE_NOW*1000)),self.env,self.ctx)
             except RuntimeError as error:
                 assert str(error)=="RECURRING_EXECUTION_UNAVAILABLE"
                 status,code=503,str(error)
             response=await stub.fetch(Request(str(request.url).replace('/_fixture/tick','/_fixture/probe'),method="GET",headers=dict(request.headers.items())))
             body=json.loads(await response.text())
+            body["productionCron"]=PRODUCTION_RECURRING_CRON
             body["canonicalDefaultScheduledCompleted"]=status==200
             body["strictBooleanRpcSuccessAccepted"]=status==200
             if code: body["defaultFailureCode"]=code
@@ -229,6 +234,7 @@ def verify(cases, groups):
     by_name={item["name"]:item["result"] for item in cases}
     setup,empty=by_name["setup"],by_name["idle_with_expired_activity"]
     assert empty["canonicalDefaultScheduledCompleted"] and empty["strictBooleanRpcSuccessAccepted"]
+    assert empty["productionCron"]=="10 16 * * *"
     assert empty["result"]["ok"] is True and empty["result"]["scanned"]==0
     assert empty["result"]["metrics"]["rowsWritten"]==0
     assert empty["integrity"]["tables"]==setup["integrity"]["tables"] and empty["integrity"]["expiredActivityPresent"]
@@ -277,6 +283,23 @@ def verify(cases, groups):
     assert sum(item["rowsWritten"] for item in metrics)==sum(item["rowsWritten"] for item in scheduler)
 
 
+def require_historical_singleton_core():
+    tree = ast.parse((WORKER / "src/entry.py").read_text(encoding="utf-8"))
+    coordinator = next((node for node in tree.body
+        if isinstance(node, ast.ClassDef) and node.name == "RecurringScheduler"), None)
+    if coordinator is None:
+        raise SystemExit("Historical recurring fixture requires the singleton RecurringScheduler entry")
+    methods = {node.name for node in coordinator.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    if methods & {"runOwnerChunk", "ownerProgress"}:
+        raise SystemExit(
+            "This historical singleton fixture cannot validate the current Owner scheduler. "
+            "No fixture directory or database was created. Use "
+            "scripts/check-production-recurring-load-native-local.py --occurrences 8 "
+            "--run-dir /workspace/.norulo-environment/recurring-load-FRESH "
+            "--output /workspace/.norulo-environment/recurring-load-FRESH/evidence.json")
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-dir",type=Path,required=True)
@@ -284,14 +307,34 @@ def main():
     parser.add_argument("--port",type=int,default=8946)
     parser.add_argument("--tzdata-cache",type=Path)
     args=parser.parse_args()
+    require_historical_singleton_core()
     directory=args.run_dir.resolve()
     if not directory.is_relative_to(Path("/workspace")) or not 1024<=args.port<=64535:
         raise SystemExit("Use a fresh /workspace directory and an unprivileged port")
     directory.mkdir(parents=True,exist_ok=False)
+    # Use the exact current packaged namespace, including its blank initializer.
+    # Canonical module bytes and package closure are verified before a native run.
+    coordinator=ROOT/"norulo_server/cloudflare_recurring_scheduler.py"
+    production_cron=next(ast.literal_eval(node.value) for node in ast.parse(coordinator.read_text()).body
+        if isinstance(node,ast.Assign) and any(isinstance(target,ast.Name)
+            and target.id=="PRODUCTION_RECURRING_CRON" for target in node.targets))
+    if production_cron!="10 16 * * *":
+        raise SystemExit("Native proof expects the reviewed daily 16:10 UTC production cron")
+    subprocess.run([str(Path(os.sys.executable)),str(WORKER/"sync_server_modules.py"),"--check"],cwd=ROOT,check=True)
+    canonical_files=sorted((ROOT/"norulo_server").glob("*.py"))
+    packaged_files=sorted((WORKER/"src/norulo_server").glob("*.py"))
+    if {path.name for path in canonical_files}!={path.name for path in packaged_files}:
+        raise SystemExit("Native proof requires exact canonical and packaged module namespace equivalence")
+    for path in canonical_files:
+        mirrored=WORKER/"src/norulo_server"/path.name
+        if path.name!="__init__.py" and path.read_bytes()!=mirrored.read_bytes():
+            raise SystemExit("Native proof found an outdated packaged module")
+    if (WORKER/"src/norulo_server/__init__.py").read_bytes()!=b"":
+        raise SystemExit("Native proof expects the canonical packaging blank initializer")
     source=directory/"src"; source.mkdir()
     (source/"entry.py").write_text(ENTRY,encoding="utf-8")
     shutil.copy2(WORKER/"src/entry.py",source/"application_entry.py")
-    shutil.copytree(ROOT/"norulo_server",source/"norulo_server",ignore=shutil.ignore_patterns("__pycache__","*.pyc"))
+    shutil.copytree(WORKER/"src/norulo_server",source/"norulo_server",ignore=shutil.ignore_patterns("__pycache__","*.pyc"))
     shutil.copytree(WORKER/"python_modules",directory/"python_modules",ignore=shutil.ignore_patterns("__pycache__","*.pyc"))
     package_root,package_manifest=parity.pinned_tzdata(args.tzdata_cache)
     shutil.copytree(package_root/"tzdata",directory/"python_modules/tzdata",dirs_exist_ok=True,ignore=shutil.ignore_patterns("__pycache__","*.pyc"))
@@ -302,6 +345,7 @@ def main():
     config={"name":"norulo-production-recurring-native-local-only","main":"src/entry.py",
         "compatibility_date":"2026-09-23","compatibility_flags":["python_workers"],
         "workers_dev":False,"preview_urls":False,"routes":[],
+        "triggers":{"crons":[production_cron]},
         "vars":{"NORULO_MODE":"production","NORULO_D1_ACCESS_ENABLED":"1",
             "NORULO_RECURRING_EXPENSES_ENABLED":"1","NORULO_PREVIEW_PRODUCT_ENABLED":"0",
             "NORULO_APP_URL":"https://norulo.com","NORULO_ALLOWED_ORIGINS":base,
@@ -331,11 +375,16 @@ def main():
     manifest=[(str(path.relative_to(source)),parity.sha256(path)) for path in files]
     evidence={"passed":False,"date":"2026-10-11","recordingTimezone":"Asia/Shanghai","localOnly":True,
         "nativePythonFFI":True,"nativeDurableObjectSQLite":True,"canonicalDefaultAndRecurringScheduler":True,
-        "productionModeLocalBinding":True,"singletonScope":"norulo-production-recurring-v1","fixtureClockStart":FIXTURE_NOW,
+        "productionModeLocalBinding":True,"productionCron":production_cron,
+        "cronTimezone":"UTC","displayCronTimezone":"Asia/Shanghai","displayCronTime":"00:10 daily",
+        "localFixtureOnlyExtraHourTicks":True,"realCronInvocationClaimed":False,"singletonScope":"norulo-production-recurring-v1","fixtureClockStart":FIXTURE_NOW,
         "fixtureClockAdvanceSeconds":[86400,3600,3600],"expectedSchemaVersion":12,
         "canonicalApplicationEntrySha256":parity.sha256(source/"application_entry.py"),
         "canonicalSourceTreeSha256":hashlib.sha256(json.dumps(manifest,separators=(",",":")).encode()).hexdigest(),
-        "canonicalSourceFileCount":len(files),"sourceSha256":dict(manifest),"fixtureEntrySha256":parity.sha256(source/"entry.py"),
+        "canonicalSourceFileCount":len(files),"sourceSha256":dict(manifest),
+        "canonicalRootSourceFileSha256":{path.name:parity.sha256(path) for path in canonical_files},
+        "packagedNamespaceVerified":True,"packagedSourceModuleCount":len(files)-1,
+        "packagedInitializerSha256":parity.sha256(source/"norulo_server/__init__.py"),"fixtureEntrySha256":parity.sha256(source/"entry.py"),
         "localWorkerConfigSha256":parity.sha256(config_path),
         "localMigrationSetup":{"canonicalMigrationFileSha256":{path.name:parity.sha256(path) for path in sorted((WORKER/"migrations").glob("*.sql"))},
             "migrationCount":12,"localOnly":True,"localCliReportedNativeMetadata":False,"includedInNativeTotals":False},
@@ -348,7 +397,7 @@ def main():
         "syntheticLocalFreeOwners":1,"syntheticLocalSessions":1,"maximumLocalRules":1,
         "remoteD1Operations":0,"remoteApplicationRequests":0,"realProviderRequests":0,"clientRetries":0,
         "localHttpCap":HTTP_CAP,"finiteLocalNativeRowCaps":{"rowsRead":READ_CAP,"rowsWritten":WRITE_CAP},
-        "scope":"Real LOCAL production coordinator and financial posting. Native totals exclude the distinct twelve-file LOCAL CLI migration setup. Remote scheduling/provider acceptance remains separate."}
+        "scope":"Real LOCAL daily-production coordinator and financial posting. Extra hour ticks and unknown-marker injection are private local fixture seams; no actual remote cron invocation is claimed. Native totals exclude the distinct twelve-file LOCAL CLI migration setup. Remote scheduling/provider acceptance remains separate."}
     process,attempted,cases,starts=None,0,[],0
     log_path=directory/"runtime.log"
     cli=["node",str(WORKER/"node_modules/wrangler/bin/wrangler.js")]

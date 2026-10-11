@@ -1,0 +1,253 @@
+{
+  "recorded_at_local_date": "2026-10-11",
+  "recording_timezone": "Asia/Shanghai",
+  "scope": "Official Cloudflare scheduler/runtime/D1 documentation provenance and unresolved interpretation boundaries only; no current application architecture, performance, publication or billing acceptance",
+  "authority": "Official public Cloudflare documentation; conditional plan-specific limits are not proof of this account billing entitlement",
+  "research_artifact_sha256": "c8aa64fdd1d67364c389878dfd912f19fa498ee48886623ab0ce914b851a3605",
+  "retrieval": "Official public HTTPS documentation through inherited proxy; TLS verification enabled.",
+  "source_count": 13,
+  "sources": [
+    {
+      "url": "https://developers.cloudflare.com/workers/platform/limits/",
+      "last_updated": "Oct 8, 2026",
+      "sha256": "89723fd85677b542a6155fa0c09fa7375d05ad791b8e67805e3eb5de71d43ec0",
+      "claims": [
+        {
+          "quote": "| CPU time per Cron Trigger | 10 ms | 30 seconds (< 1 hour interval) <br> 15 min (>= 1 hour interval) |",
+          "meaning": "On Paid, hourly and daily intervals both satisfy the >=1 hour category. Free has a 10 ms CPU limit."
+        },
+        {
+          "quote": "| [Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/) | 15 minutes | Scheduled Workers have a maximum wall time of 15 minutes per invocation. |",
+          "meaning": "The daily Cron caller has a 900 second hard wall-time bound."
+        },
+        {
+          "quote": "| Subrequests per invocation | 50 | 10,000 (up to 10M) |",
+          "meaning": "Generic Workers subrequest limits; this newer value must not be conflated with the older D1-specific query table."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T05:58:17.864600+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "workers-platform-limits.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers/wrangler/configuration/#limits",
+      "last_updated": "Oct 5, 2026",
+      "sha256": "151a175ae7c847a9f9abfbe27c83e65aab2587577849decce0912da919e7619f",
+      "claims": [
+        {
+          "quote": "Limits are only supported for the Standard Usage Model. Limits are only enforced when deployed to Cloudflare's network, not in local development. The CPU limit can be set to a maximum of 300,000 milliseconds (5 minutes).",
+          "meaning": "The configured production cpu_ms=300000 requires the Standard model and cannot be proved accepted by local Wrangler alone."
+        },
+        {
+          "quote": "The maximum number of subrequests allowed per invocation. This value defaults to 50 for free accounts and 10,000 for paid accounts. The free account maximum is 50 and the paid account maximum is 10,000,000.",
+          "meaning": "Explicit subrequests=9000 is bounded below the documented Paid default10000 and above the Free maximum50; remote deployment/settings acceptance proves this configuration capability, not subscription billing details."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T05:59:43.943319+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "workers-wrangler-configuration--limits.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/durable-objects/platform/limits/",
+      "last_updated": "Jun 1, 2026",
+      "sha256": "97a95f2f653c72e44d90098a89e620608da02b93a731cf48fe471c7337c665f1",
+      "claims": [
+        {
+          "quote": "CPU per request | 30 seconds (default) / configurable to 5 minutes of active CPU time",
+          "meaning": "A long owner chunk does not inherit the Cron caller's 15 minute CPU allowance. Network/D1 waiting is not active CPU."
+        },
+        {
+          "quote": "Each individual Object is inherently single-threaded.",
+          "meaning": "Different owner objects may overlap async work; single-object CPU work does not run in parallel."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T05:58:17.890071+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "durable-objects-platform-limits.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/durable-objects/api/state/",
+      "last_updated": "Sep 30, 2026",
+      "sha256": "51ebfda49e40b99577ba2a1a275582ae59702b68b5aaa3dfcfb6a82cbf284ae4",
+      "claims": [
+        {
+          "quote": "To help mitigate deadlocks there is a 30 second timeout applied when executing the callback. If this timeout is exceeded, the Durable Object will be reset.",
+          "meaning": "Never wrap the entire 120 second owner work in blockConcurrencyWhile."
+        },
+        {
+          "quote": "A promise passed to waitUntil prevents eviction until it settles or for up to 15 minutes, whichever comes first.",
+          "meaning": "waitUntil is a lifecycle aid, not a guarantee of durable completion or unlimited background runtime."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T05:58:17.994236+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "durable-objects-api-state.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/durable-objects/concepts/durable-object-lifecycle/",
+      "last_updated": "Sep 30, 2026",
+      "sha256": "4879ec83e2f790683185175ba9a9ef9b7de921dc0999379a82f28be2704d4172",
+      "claims": [
+        {
+          "quote": "When the Worker runtime system is being updated, in-flight requests have up to 30 seconds to complete.",
+          "meaning": "Incremental durable state and unknown-outcome handling remain necessary even below engineering timeouts."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T05:58:17.860476+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "durable-objects-concepts-durable-object-lifecycle.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/",
+      "last_updated": "Sep 4, 2026",
+      "sha256": "7d397a05780904ff4fe10d01adab9bfb8297b1a221f8c311bb22efb6ac275930",
+      "claims": [
+        {
+          "quote": "The runtime waits for the promise returned by the scheduled() handler to resolve (up to the 15-minute duration limit).",
+          "meaning": "Awaiting the drain keeps the Cron invocation active; waitUntil does not add another unlimited runtime window."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T05:59:43.793435+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "workers-runtime-apis-handlers-scheduled.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/",
+      "last_updated": "Oct 8, 2026",
+      "sha256": "0054b7dbd7befcf6d7047a1bb3112b33ecb33e572ad708935de8a8f5ec092fbd",
+      "claims": [
+        {
+          "quote": "A client that is itself another Worker is considered to have disconnected when its own execution context ends.",
+          "meaning": "A callee RPC cannot be assumed to safely continue after its Cron caller ends."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T05:58:18.012969+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "workers-runtime-apis-rpc-lifecycle.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/durable-objects/api/alarms/",
+      "last_updated": "Apr 21, 2026",
+      "sha256": "8454ba59542c3e5b0badffad828057ba42144ef2d75c99dd4422139d650a4420",
+      "claims": [
+        {
+          "quote": "The alarm() handler has guaranteed at-least-once execution and will be retried upon failure using exponential backoff, starting at 2 second delays for up to 6 retries.",
+          "meaning": "Alarms are a possible continuation design, but require idempotent durable financial claims and unknown-outcome fences. They are not implemented in the selected first version."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T05:58:18.046854+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "durable-objects-api-alarms.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/d1/platform/limits/",
+      "last_updated": "Apr 21, 2026",
+      "sha256": "64b6e4b5bb2a0f52cc2e8140ea50602f748ce0032b9b6257da15cd60fc705f24",
+      "claims": [
+        {
+          "quote": "Each individual D1 database is inherently single-threaded, and processes queries one at a time.",
+          "meaning": "Bounded owner parallelism overlaps client/network stages but does not multiply SQL write throughput on the same database."
+        },
+        {
+          "quote": "| Queries per Worker invocation (read subrequest limits) | 1000 (Workers Paid) / 50 (Free) |",
+          "meaning": "Use the D1-specific table as a conservative SQL-operation planning bound. Statement-vs-dispatch counting and DO RPC reset are not explicitly promised here."
+        },
+        {
+          "quote": "Requests to Cloudflare API must resolve in 30 seconds. Therefore, this duration limit also applies to the entire batch call.",
+          "meaning": "The 120 second owner chunk may contain multiple bounded batch calls, each subject to the documented 30 second batch limit."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T06:04:29.345129+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "d1-platform-limits.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/d1/worker-api/d1-database/#batch",
+      "last_updated": "Jun 22, 2026",
+      "sha256": "f4d4ed3a8b4ef23f64e11c25cc0782bd50f0134c0494eac0ee72d086087dfd32",
+      "claims": [
+        {
+          "quote": "Sends multiple SQL statements inside a single call to the database.",
+          "meaning": "Multiple statements share one upstream binding call, but this does not prove the quota table counts only upstream calls."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T06:04:29.489930+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "d1-worker-api-d1-database.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/#limits",
+      "last_updated": "Oct 7, 2026",
+      "sha256": "0af918ec065ca1caa991d391c842f8467babf9e63bd225523a53a1cd307ce06e",
+      "claims": [
+        {
+          "quote": "A single request has a maximum of 32 Worker invocations, and each call to a Service binding counts towards this limit.",
+          "meaning": "Do not replace owner DO stubs with hundreds of WorkerEntrypoint/service-binding calls. This text does not establish whether the same rule applies to DO RPC."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T06:00:16.083325+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "workers-runtime-apis-bindings-service-bindings.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/workers/platform/pricing/#workers",
+      "last_updated": "Oct 2, 2026",
+      "sha256": "a1ab5660c941a0aa0e069082263cd2d36f9daba666f01dc3d4d606ffa8ba230e",
+      "claims": [
+        {
+          "quote": "Users on the Workers Paid plan have access to the Standard usage model.",
+          "meaning": "Observed account default model standard is consistent with Paid Standard capability, but is not a billing subscription readout or proof of each current Worker's actual settings."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T06:02:42.104957+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "workers-platform-pricing.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    },
+    {
+      "url": "https://developers.cloudflare.com/api/resources/workers/subresources/account_settings/methods/get/",
+      "last_updated": null,
+      "sha256": "734c0be788f33c3a1c2b2b1bbcf3c1affee07a2d5ede848a282ede7c285bdad5",
+      "claims": [
+        {
+          "quote": "GET/accounts/{account_id}/workers/account-settings",
+          "meaning": "Only a read-only nonsecret usage-model observation was performed."
+        }
+      ],
+      "retrieved_at_utc": "2026-10-11T06:01:19.438099+00:00",
+      "retrieval_time_basis": "File saved immediately after verified HTTPS response; local file mtime is retrieval completion time.",
+      "raw_capture_filename": "workers-account-settings-api.txt",
+      "sha256_scope": "Exact saved official Markdown/text response bytes; not the full response headers or HTML."
+    }
+  ],
+  "quote_validation": {
+    "all_saved_source_hashes_rechecked": true,
+    "normalized_short_excerpts_rechecked": 20,
+    "normalization": "Strip Markdown links/inline-code delimiters and escaped underscores, then normalize whitespace; no paraphrase used for the quoted excerpt."
+  },
+  "unresolved_public_documentation_boundaries": [
+    "D1 query table is older than generic Workers subrequest table; their terminology and version differ.",
+    "A single D1 batch dispatch can contain several SQL statements; no precise public quota counting rule was found.",
+    "No explicit public guarantee that each owner DO RPC resets D1 query/subrequest quotas was found.",
+    "If verified on a subsequent publication, acceptance/readback of cpu_ms=300000 would establish configuration capability, not a billing receipt or thousand-expense production acceptance.",
+    "CPU time is distinct from wall time. Do not claim configured cpu_ms=300000 gives a DO 900000 ms CPU, or assume a configured global cap is overridden by the Cron default."
+  ],
+  "account_state_and_engineering_design_excluded": true,
+  "excluded_claims": [
+    "No Paid billing confirmation is inferred from default_usage_model=standard or an unreadable subscription endpoint.",
+    "No guarantee is asserted that a separate owner Durable Object invocation resets the D1 query/subrequest quota.",
+    "An 800-SQL-statement chunk cap is an independent engineering bound, not a published Cloudflare limit or proof of entitlement.",
+    "No source here establishes the final application timeout/concurrency design or thousand-expense native/production acceptance."
+  ]
+}

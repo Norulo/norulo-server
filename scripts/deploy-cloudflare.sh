@@ -75,6 +75,9 @@ if ((activate_recurring_expenses)); then
 fi
 if ((!execute)); then checker_args+=(--allow-placeholders); fi
 "${NORULO_PYTHON:-python3}" scripts/check-ledger-s01.py "${checker_args[@]}"
+if ((activate_recurring_expenses)); then
+  production_cron="$("${NORULO_PYTHON:-python3}" -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["triggers"]["crons"][0])' "$temporary_config")"
+fi
 deploy_args=(--config "$config")
 if ((activate_production)); then deploy_args+=(--var NORULO_D1_ACCESS_ENABLED:1); fi
 if ((activate_email_auth)); then deploy_args+=(--var NORULO_EMAIL_AUTH_ENABLED:1); fi
@@ -97,7 +100,7 @@ if ((execute)); then
       echo "Explicit production AI suggestions activation overlay; the checked-in AI flags remain paused."
     fi
     if ((activate_recurring_expenses)); then
-      echo "Explicit production recurrence activation with one hourly UTC cron (0 * * * *); the checked-in config has no cron."
+      echo "Explicit production recurrence activation with one daily UTC cron ($production_cron); the checked-in config has no cron."
     fi
   else
     echo "Runtime switches stay as configured."
@@ -108,7 +111,7 @@ if ((execute)); then
 else
   echo "Dry run only. After local verification, --execute --local-checks-passed would run:"
   if ((activate_recurring_expenses)); then
-    echo "A fresh temporary configuration preserves Worker-relative src/migrations paths and installs one hourly UTC cron (0 * * * *)."
+    echo "A fresh temporary configuration preserves Worker-relative src/migrations paths and installs one daily UTC cron ($production_cron)."
     echo "This dry-run configuration is removed on exit; execution regenerates and validates it."
     printf 'bash %q --environment production --activate-production --activate-email-auth --activate-ai-suggestions --activate-recurring-expenses --execute --local-checks-passed\n' "$repo_root/scripts/deploy-cloudflare.sh"
     printf 'Validated deployment arguments: '

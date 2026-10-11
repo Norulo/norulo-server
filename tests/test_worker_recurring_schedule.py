@@ -7,6 +7,7 @@ import pytest
 
 from norulo_server.cloudflare_plan_limits import PlanLimitedD1
 from norulo_server.cloudflare_preview_schema import SCHEMA_VERSION
+from norulo_server.cloudflare_recurring_scheduler import PRODUCTION_RECURRING_CRON
 from norulo_server.cloudflare_validation_budget import BUDGET_SCOPE, BudgetError, BudgetJournal
 from test_d1_validation_budget import LocalSql
 from test_worker_production_runtime import load_entry
@@ -88,6 +89,7 @@ def test_scheduled_awaits_fixed_singleton_rpc_without_caller_clock_or_direct_d1(
 
 @pytest.mark.parametrize("cron,scheduled", [
     ("* * * * *", NOW * 1000), ("0 0 * * *", NOW * 1000), ("", NOW * 1000),
+    (PRODUCTION_RECURRING_CRON, NOW * 1000),
     (CRON, -1), (CRON, float("inf")), (CRON, float("-inf")), (CRON, float("nan")),
     (CRON, 9007199254740992), (CRON, "not-a-time"), (CRON, None),
 ])

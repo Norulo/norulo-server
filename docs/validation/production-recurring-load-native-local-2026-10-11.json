@@ -1,0 +1,579 @@
+{
+  "recorded_at_local_date": "2026-10-11",
+  "recording_timezone": "Asia/Shanghai",
+  "scope": "Final finite LOCAL daily recurring Root/Owner capacity and native metadata acceptance; production daily publication/financial execution not claimed",
+  "passed": true,
+  "local_only": true,
+  "daily_publication_confirmed_at_recording": false,
+  "shared_cron": "10 16 * * *",
+  "display_time": "00:10 daily Asia/Shanghai",
+  "same_existing_binding_class_namespace": true,
+  "existing_namespace_id": "b3f41def1906481e9c72662debf4b505",
+  "legacy_completed_hour_units_and_active_stopped_state_retained": true,
+  "journal_reset_or_reinitialization": false,
+  "engineering_bounds": {
+    "root_selected_owners": 5000,
+    "root_handled_occurrences": 10000,
+    "all_child_rpcs_including_progress": 8192,
+    "owner_page_and_deferred_carry": 64,
+    "logical_owner_parallelism": 8,
+    "owner_chunk_occurrences": 20,
+    "owner_chunk_native_sql_statements": 800,
+    "occurrence_sql_reserve": 200,
+    "owner_hard_wall_seconds_including_schema_execution": 120,
+    "root_stop_new_launch_soft_seconds": 600,
+    "await_started_owners_before_return": true,
+    "production_config_limits": {
+      "cpu_ms": 300000,
+      "subrequests": 9000
+    }
+  },
+  "official_limit_reference": {
+    "record": "cloudflare-scheduler-limits-2026-10-11.json",
+    "cron_wall_seconds": 900,
+    "documented_paid_d1_queries_per_worker_invocation": 1000,
+    "documented_free_d1_queries_per_worker_invocation": 50,
+    "statement_vs_batch_dispatch_counting_not_established": true,
+    "per_owner_rpc_counter_reset_not_established": true,
+    "paid_billing_not_confirmed_by_local_tests_or_config_acceptance": true,
+    "raw_acceptance_label_below_paid1000_is_numeric_comparison_not_verified_official_statement_counting": true
+  },
+  "failure_semantics": {
+    "known_native_financial_unknown": "Affected Owner remains permanently stopped; other Owners may continue",
+    "rpc_transport_unknown": "Advance only if read-only progress proves that exact chunk settled; otherwise stop new launches, await siblings, then preserve permanent Root global unknown stop",
+    "unknown_automatic_retry": false,
+    "quarantine_or_reset_endpoint": false,
+    "completed_same_chunk_replay": "Known cached result without D1; next chunk identity is unique",
+    "known_pre_dispatch_minute_quota": "Release worker slot and defer to next minute without SQL heartbeat or permanent rule block"
+  },
+  "source_chain": {
+    "producer_script": "scripts/check-production-recurring-load-native-local.py",
+    "producer_script_sha256": "ff29a25d8d3f96963a93252cb7f5fa4b6ed7b93585d21f11996dab1a2924e22d",
+    "producer_summary_sha256": "aba53ddd2909ff893e9862ff6c5cb9ccf080b75be4df44bec27f3959fab059ea",
+    "entry_sha256": "f2c17488a74d7dca871f11af57dc59825f314978a6452a29b43ade3182c677c0",
+    "scheduler_helper_sha256": "43f8298787758ab61ea1c76a67808fe3c8a09018a6415b3142ab1107290dcf5a",
+    "ledger_recurring_sha256": "706e8f316ba01c4e3e5b5e9b8982f4be04bc96fa13995f2372444ef058bed17c",
+    "packaged_source_tree_sha256": "e9d4e730c8a0acdfa935234bdb9b4330597130b3e3906d7f1da552e6421235ba",
+    "fixture_entry_sha256": "d2a5471ffae1275bba11b40098860a4416a020c1a7b12619703e1ef38c7cf76b",
+    "packaged_canonical_module_count": 64,
+    "separate_blank_initializer_verified": true,
+    "packaged_module_sha256": {
+      "norulo_server/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "norulo_server/account_cycle_rules.py": "f0cc61223ce05a3075461a81bff1469eca656fa003bdee121031cd9258ad8e7c",
+      "norulo_server/api_key_dto_rules.py": "d0bceb8ddda53ec5712f0a7c2ace38fd734248692da23345e2973a87dda6748d",
+      "norulo_server/billing_account_rules.py": "50e1b5ca2a9e397b66721f0c155ebf5cfdd3e8e211c1fd236c8871bd194df2a2",
+      "norulo_server/billing_catalog_rules.py": "018858bccc3576eeea6d67a998355befb6cbd7be244cb30c1384417041e459e4",
+      "norulo_server/billing_projection.py": "e4e59d349edc2f52574d599eb4769690d7f0b4cb5dfb5a365eaedcca2dd268a9",
+      "norulo_server/cloudflare_account_adapter.py": "c7c0378da2982510671bea8fa027954194662c17201c663424cebee3fd086e46",
+      "norulo_server/cloudflare_api_key_read.py": "58a07641d9094387e58e59137c943ce898e9813d2888bf5dd2279e195127d7fe",
+      "norulo_server/cloudflare_api_key_write.py": "a54a1b4027d6734ce8ce236f59555fe4ae12337e840f2d2ef522831a44deab7c",
+      "norulo_server/cloudflare_billing_catalog.py": "8981fecb4fba5a21300fc1828a1258f18eef2f9cfe232e7c01f95baba66f49aa",
+      "norulo_server/cloudflare_billing_catalog_refresh.py": "42acec5860e4bfe11eb4e4b8b5f1e456cf2a785f2a6a875ef0408b0cdf715aee",
+      "norulo_server/cloudflare_billing_catalog_write.py": "145ec58d410b47ba0f92a891db3aa8b6cf53a97ac0cfe8d51f8c6c45cb97f486",
+      "norulo_server/cloudflare_billing_mutations.py": "1cdc274b0a540bd9f78833755393ba5bd029be788b5d9766827a2177e68066a6",
+      "norulo_server/cloudflare_billing_read.py": "27dc12ec4d37e6885d11a699189b97111b686b704988595fb00fdecbef704759",
+      "norulo_server/cloudflare_creem_gateway.py": "742522e857317374bfac87a8c0e8049988cb1664b7a8bd4bd4b307c26b662750",
+      "norulo_server/cloudflare_creem_handler.py": "4af4c9917c59b450a2e593af6c88639589d1fef79b078158eb745a0470fddc0e",
+      "norulo_server/cloudflare_d1_batch.py": "f3e3e4df4f9d8892683b061cbac8a90c6ba33b5903216e8dc600a5dd3008ca9c",
+      "norulo_server/cloudflare_d1_mapping.py": "30a9bbc39b5e4e695d3c17aeb7a9b53eb2ed86c6faf12ac8e57e7c59ef61ba1c",
+      "norulo_server/cloudflare_email_admission.py": "a13971bb8e6ceb1c618afbefd3f772be68991acd96df3f0c02cb2cc098922a60",
+      "norulo_server/cloudflare_email_auth.py": "fa1526981ddf1b147ef43d68d120dede7c78fa2e1709e58df0073f47841fbdaf",
+      "norulo_server/cloudflare_email_gateway.py": "acffa2a5aebfcbf8430fbcdcff7460a164682656cb234efa6d43ab10007b12e1",
+      "norulo_server/cloudflare_expense_retention.py": "7a783191129e6500de935530805bf63b24cf14aac42c0a31d14f2f885b3e5457",
+      "norulo_server/cloudflare_github_gateway.py": "f30b25bbafcf56e53b8573cb5fa74b16b9ec78892e4e8a44f5802042b42cf749",
+      "norulo_server/cloudflare_github_identity_http.py": "205557fe3678324c3d17c78e7692caa569e16b3289a6e01b5e45d48743565e11",
+      "norulo_server/cloudflare_github_refresh.py": "44fb113c1a9e65795ae7f6832cd1f5b57568bf891a098ecfaabf8c399d1741d7",
+      "norulo_server/cloudflare_http_contract.py": "54894c6024220577a2b4f3db98b57c357d2c0b081d28f2d6c8fab4066a6c035e",
+      "norulo_server/cloudflare_jev_gateway.py": "a83885b6d13d4ace2226e7b419d8500a617136f6362d17b8ae277dd8e873f567",
+      "norulo_server/cloudflare_jev_preferences.py": "2426fcf9825fb84720167c560fd3e4944a9903d559ac558899081b9f391ccb96",
+      "norulo_server/cloudflare_ledger_activity.py": "45c2f25ae916d71fa51ab3db4e7fcadb3b11dc0fe27cf31f8dc38b3e86615dad",
+      "norulo_server/cloudflare_ledger_api.py": "62f00ac100867b1d4876fd809599b81517d09321a8cec01a0aa38a99068bafba",
+      "norulo_server/cloudflare_ledger_auth.py": "4e8931934bec62618ffcc4d388e0c6a62416c1a9d2fd3465886287ebbefef7fb",
+      "norulo_server/cloudflare_ledger_categories.py": "3b768281db66faf909a24e51495db62ca9df3fe8c8947025f6df41f3c76e5019",
+      "norulo_server/cloudflare_ledger_expenses.py": "e29ac29c936cd7ee0415f3a602167c721080fdae437d33980adfe0c3a89f4e8d",
+      "norulo_server/cloudflare_ledger_profile.py": "7a21ecbb5a7eda37f3e6dc4309f486dad8b7dd0c6c61a4037e7ae6e9c07a8e54",
+      "norulo_server/cloudflare_ledger_recurring.py": "706e8f316ba01c4e3e5b5e9b8982f4be04bc96fa13995f2372444ef058bed17c",
+      "norulo_server/cloudflare_ledger_reports.py": "ae7119ce1754c938b5685083f85deab9206f8593c0acbf942fa848d66bcc3890",
+      "norulo_server/cloudflare_ledger_review.py": "0e81b0d99ecb3fd01978e6d0ab1296197c3160cfc5dd49834496623c1334e3e9",
+      "norulo_server/cloudflare_ledger_suggestions.py": "f064b7466f4f294b5f5fc013834a2803df8ad7797c1d269133747048a2630299",
+      "norulo_server/cloudflare_native_d1.py": "b19bb7e352c24e76af94e3f5e4f0f6969bde9853ce92f7735a4189b80e67a930",
+      "norulo_server/cloudflare_oauth_state_adapter.py": "7586855d9deca10c0763d5d0ac24ad9c335c574fb98ef207b90a74c5cabe56bd",
+      "norulo_server/cloudflare_plan_limits.py": "2c1d621f84f9cc94a817c9d7315bd6d842805ae0605ef8e9e3aa5e992c24530e",
+      "norulo_server/cloudflare_preview_budget.py": "c0ce9d8a8b0a82b7a58c04512888b7a16cbe069623f5dad9056181759b964224",
+      "norulo_server/cloudflare_preview_business_clear.py": "a70e9436d8026725b7dd2262c0eea61b1196fd6d89ca0445e169801ff3bee984",
+      "norulo_server/cloudflare_preview_rate.py": "5aadbe66a803496d63db8493890b6ca665953f78bbe30b883a1599cbe9bc6ede",
+      "norulo_server/cloudflare_preview_schema.py": "79dca0e8f9e0c939861af5a39fbae43400b1f692e94c499c27b22b07c7fbc52d",
+      "norulo_server/cloudflare_principal.py": "1b7c9e0be413fbdc2d38c0d44d71d228617f9474ede2cf0e66559632f3dd1bdb",
+      "norulo_server/cloudflare_project_erasure.py": "e6af5d8812fa0e85587a4e0e421a745fe9237370e45daa5b73271062e6a1dc45",
+      "norulo_server/cloudflare_project_repositories.py": "a7310b6721e6976d8424b904a1f0d90c8e52c0ba6ddbf3f1b3e1fd4601cfbf78",
+      "norulo_server/cloudflare_recurring_assistance.py": "8571f43be0aefb45423e6b8f0aa3e969c93165aed36306703749341993537bf3",
+      "norulo_server/cloudflare_recurring_notifications.py": "29c5c5a9fb21e8bb8dc6207d4a80d569d690984efbe2a10efe67f7d5b08f951a",
+      "norulo_server/cloudflare_recurring_scheduler.py": "43f8298787758ab61ea1c76a67808fe3c8a09018a6415b3142ab1107290dcf5a",
+      "norulo_server/cloudflare_session_adapter.py": "0043a42082eb45f280782adea7d52a5a85eda597c6cf16af62277a54db3ca79d",
+      "norulo_server/cloudflare_state_records.py": "49ae0272e49ae481e6748bcc0e1835bd08b6fa40aca68ab4c339c4c830fed990",
+      "norulo_server/cloudflare_validation_budget.py": "b7682bfafdea56de7cb6aeb9204378ea9b22bde95c71e5dc68f3a8c06bb5f65f",
+      "norulo_server/cloudflare_webhook_receipts.py": "71d4cdddba613b68f58c8dcd685bcc3fe7a176ff85eee0a36d09fabc9d1ff3e3",
+      "norulo_server/cloudflare_workspaces.py": "acbf606779357d756e87a86c812a8799214b8e10eaa75d22ac02eb5c63092a12",
+      "norulo_server/creem_event_rules.py": "7f1054d8bf4d04009a48385ed3d393ed983d9e33f940e260d5f757fcbcca1614",
+      "norulo_server/creem_public_catalog_rules.py": "45403e0a0b019bfbec6fcb81e116180127c5b60955fc5913f97f9b17e1ded9dd",
+      "norulo_server/creem_signature.py": "3cb105e50952a79365d64f8946db39f7647f5b5da1b52b3e1c4d70cab11787cc",
+      "norulo_server/json_input.py": "3f5699b1eef9ef6a6119edaf735eadb3cee40fbc863982262c5dede1fbc704b8",
+      "norulo_server/ledger_money_totals.py": "552c26b9c14343336f9e858488552e05ce1bd90345e3d2f10422c14634124de1",
+      "norulo_server/ledger_plan_policy.py": "1e515b756600c917e27cf3a7a7ba8a51d2d6ce0cdc689bb1bdfbe95d7b7c3e38",
+      "norulo_server/ledger_recurrence_calendar.py": "21e33ed0fe7c92de453a8839dece749b2a964b0226ef182915843b859234af41",
+      "norulo_server/preview_plan_grants.py": "05f721de80a65033d7154f38a1601393ca96fcf694798b435e2aca9af3a3fa06",
+      "norulo_server/typesafe_client.py": "7a18ee3bd21267e6e18b751902ea55561e6074c7c6d9968fff7d173015e7d903"
+    },
+    "worker_dependency_sha256": {
+      "pyproject.toml": "9c7f1c1bc5541a5b33be846e90479b1efa1b251203eac5f6c9ee100548f0999c",
+      "uv.lock": "d8bbd3fca064e356204226ef9970278ef9b176523aaf1bc8c64792620e1fc9b0",
+      "pylock.toml": "d7a3bb80dc3055b5abd8b0bc2414b38c5cd6929f5c19434260a1b5c6654fa54e",
+      "package.json": "ee591b5b146a2cf7dc67f6018b42aa3f7d063fa35ab06ee4f9f382188a24fee1",
+      "package-lock.json": "2f92e86058d50ccbc0fb32c4e20dc67ae9cf0bede05238db32e2e4b5361493b0"
+    },
+    "runtime_provenance": {
+      "workerdVersion": "1.20260921.1",
+      "workerdSha256": "eb449c84ddd55ea357dc73e6c1b50bd255ccdc5d1875544c162435b7bd6168b6",
+      "pythonBundleSha256": "3c3fd5a4179230e21e018e28b0e735e7c4abd8fe8e4ff39d2fd6bb2ea3a2e260",
+      "miniflareD1SourceSha256": "eb213ff08bfc9f2992253e8ff01fe31229a069728431df54a3f44c9c4c191ee7"
+    },
+    "tzdata_manifest_sha256": "6aed7e2bf3fce2a8f05d8f7937142b5f4c734d27ce9aa0cd7dca929d3d3fd3de",
+    "local_migration_setup": {
+      "files": {
+        "0001_ledger.sql": "9c55859edadcb1837ce226a3df07b48c4522223ba30915d5d20c514eb75e9538",
+        "0002_identity_billing_keys.sql": "1dabed034c4e8f9ea62e3ab71308dddbab5ad47907d367375a771cfcb2293a31",
+        "0003_ledger_suggestions.sql": "8b258f5a64f2f5cc559aa0c7aad3a9f187a975880ff3799ccdbf740d0903e412",
+        "0004_ledger_plan_usage.sql": "febe80c0f21a9a3697a1a9a6b8b7f35ed1dc28fc831b65ce948e87e9df41d514",
+        "0005_workspaces_repositories.sql": "dccc2c7d4e8bd695158b1748c10c8b527be6d84c4dc2be073e63e4ade6650bc9",
+        "0006_blank_projects.sql": "544bf65c506f0bc2becc6f38678d26ecd6a42aa378a60e1de8da2b1c47b6cfa2",
+        "0007_recurring_expenses_project_links.sql": "5993f4ec02bd02d18ef067ae1fc9d0fcef1472da89d3e3a20733af2ac8baa339",
+        "0008_workspace_join_approval.sql": "882a79e4d6135aa3af4d24b794c0d7417a64e1791fc2d26a236ee0ce3bcfd430",
+        "0009_activity_log.sql": "c6aeb2ce902aab69b63c8004a0fba421aa20c6d377dab816e2afecc497a8cd1e",
+        "0010_project_removal.sql": "e4b4fda5f3be4ee0ef174e11b5a9ec7231ea5cb32955b75748ccef917edf1fd1",
+        "0011_business_erasure.sql": "eb24baa4a56a526e787985b9236891a4aa764eae2c41bb5758637b5d15af6ba9",
+        "0012_recurring_pending.sql": "f32ec014a37f6e1dea81a0a61d66057776e057c0a1446b00102c71330ab97c8d"
+      },
+      "localOnly": true,
+      "includedInNativeTotals": false,
+      "localCliReportedNativeMetadata": false
+    },
+    "canonical_source_dependency_migration_hashes_independently_checked_per_profile": 83
+  },
+  "packaging": {
+    "passed": true,
+    "actual_artifact_modules": 729,
+    "total_kib": 1675.1,
+    "gzip_kib": 348.25,
+    "helper_kib": 29.06,
+    "verification_artifact_sha256": "8d7d099c5879dae7146fccdd306ff3603db1c1ca219f0c29a119c225817930a5",
+    "canonical_modules_byte_equal_actual_artifact": 64,
+    "absolute_and_relative_import_closure": true,
+    "blank_initializer_verified": true,
+    "remote_d1_operations": 0,
+    "real_provider_requests": 0
+  },
+  "local_test_checkpoints": {
+    "server_full_suite": {
+      "passed": 3009,
+      "seconds": 115.01,
+      "reported_by": "root agent"
+    },
+    "prior_web_whole_suite_passed": 1654,
+    "prior_web_whole_suite_is_historical_checkpoint": true,
+    "web_current_change": "Production API-guide URL/text correction; focused checks and production build tracked separately",
+    "overlapping_runs_not_additive": true
+  },
+  "independent_local_record_checks": {
+    "all_three_raw_artifact_hashes_verified": true,
+    "all_native_groups_and_statement_row_arithmetic_verified": true,
+    "profile_current_source_dependency_migration_hashes": 83,
+    "packaged_64_modules_plus_separate_initializer_matched": true,
+    "whole_profile_vs_actual_daily_window_separated": true,
+    "performed_by": "server_migration docs agent; separate root/migration_review read-only review"
+  },
+  "profiles": [
+    {
+      "label": "overlap_diagnostic_8",
+      "passed": true,
+      "local_raw_evidence_path": "/workspace/.norulo-environment/production-recurring-load-overlap-final-native-local-20261011/evidence.json",
+      "raw_evidence_sha256": "b2d879315e76a5b0d516320e239ef2c05f133d7c249c44f40bf14cc8fba7513d",
+      "raw_evidence_bytes": 199758,
+      "occurrences_created": 8,
+      "synthetic_local_free_owners": 8,
+      "rules_per_owner": 1,
+      "application_http_rule_creations": 8,
+      "fixture_control_http_requests": 16,
+      "runtime_incarnations": 4,
+      "runtime_stopped": true,
+      "actual_daily_pass_wall_seconds": 1.6213812300002246,
+      "injected_first_native_await_delay_ms": 1200,
+      "latency_scope": "Local overlap diagnostic with injected wait; not performance evidence",
+      "observed_owner_rpc_peak_concurrency": 8,
+      "maximum_native_sql_statements_per_owner_rpc": 30,
+      "maximum_native_sql_statements_per_root_rpc": 3,
+      "actual_daily_window": {
+        "selected_owners": 8,
+        "created": 8,
+        "blocked": 0,
+        "replayed": 0,
+        "failed_owners": 0,
+        "backlog": false,
+        "owner_rpcs": 8,
+        "native_sql_statements": 185,
+        "native_rows_read": 1551,
+        "native_rows_written": 192,
+        "metadata_complete": true
+      },
+      "entire_local_profile": {
+        "native_sql_statements": 484,
+        "native_rows_read": 2614,
+        "native_rows_written": 416,
+        "raw_metadata_groups": 203,
+        "phases": {
+          "fixture-setup": {
+            "statements": 48,
+            "rowsRead": 8,
+            "rowsWritten": 96
+          },
+          "integrity-probe": {
+            "statements": 88,
+            "rowsRead": 770,
+            "rowsWritten": 0
+          },
+          "root-scheduler": {
+            "statements": 4,
+            "rowsRead": 190,
+            "rowsWritten": 0
+          },
+          "application": {
+            "statements": 160,
+            "rowsRead": 112,
+            "rowsWritten": 128
+          },
+          "owner-scheduler": {
+            "statements": 184,
+            "rowsRead": 1534,
+            "rowsWritten": 192
+          }
+        },
+        "includes": "Finite fixture setup, HTTP rule creation, scheduler, replay/failure-marker cases and integrity probes",
+        "excludes": "Separate twelve-file local CLI migrations and Durable Object billing"
+      },
+      "native_attempts_observed": [
+        null
+      ],
+      "native_attempts_fabricated": false,
+      "root_replay_and_unknown_marker_native_d1": {
+        "same_epoch_replay": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        },
+        "cold_restart_replay": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        },
+        "unknown_cold_restart": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        }
+      },
+      "owner_manual_unknown_marker_native_d1": {
+        "owner_unknown_next_day": {
+          "ok": false,
+          "error": "RECURRING_OUTCOME_UNKNOWN",
+          "state": "active",
+          "nativeStatements": 0
+        },
+        "owner_unknown_cold_restart": {
+          "ok": false,
+          "error": "RECURRING_OUTCOME_UNKNOWN",
+          "state": "active",
+          "nativeStatements": 0
+        }
+      },
+      "native_financial_and_quota_acceptance": {
+        "exactExpenseAuditOccurrenceAndOwnerQuota": true,
+        "boundedNativeOwnerConcurrency": true,
+        "perOwnerRpcBelowConfiguredSqlCapAndPaid1000": true,
+        "sameEpochAndColdRestartNoDuplicateOrD1Writes": true,
+        "unknownLegacyRootMarkerColdRestartFailClosed": true,
+        "unknownOwnerMarkerNextDayAndColdRestartNoD1": true,
+        "nativeRootAndOwnerMetricsMatchRawMetadata": true,
+        "manualUnknownMarkerFixtureNotLostCommitSimulation": true,
+        "nativeSchemaAndJournal": true,
+        "commercialFreePlanLimitsUnchanged": true,
+        "realProviderRequests": 0,
+        "remoteD1Operations": 0
+      },
+      "remote_d1_operations": 0,
+      "remote_application_requests": 0,
+      "real_provider_requests": 0,
+      "client_retries": 0
+    },
+    {
+      "label": "natural_1000",
+      "passed": true,
+      "local_raw_evidence_path": "/workspace/.norulo-environment/production-recurring-load-1000-native-local-20261011/evidence.json",
+      "raw_evidence_sha256": "96f0a4aa73b54dbeda54bd4e05269c5a1091a286794bfe5049c7123835e3b98e",
+      "raw_evidence_bytes": 12094716,
+      "occurrences_created": 1000,
+      "synthetic_local_free_owners": 200,
+      "rules_per_owner": 5,
+      "application_http_rule_creations": 1000,
+      "fixture_control_http_requests": 16,
+      "runtime_incarnations": 4,
+      "runtime_stopped": true,
+      "actual_daily_pass_wall_seconds": 33.98499433000052,
+      "injected_first_native_await_delay_ms": 0,
+      "latency_scope": "Observed local run only; not production latency or throughput SLA",
+      "observed_owner_rpc_peak_concurrency": 8,
+      "maximum_native_sql_statements_per_owner_rpc": 178,
+      "maximum_native_sql_statements_per_root_rpc": 6,
+      "actual_daily_window": {
+        "selected_owners": 200,
+        "created": 1000,
+        "blocked": 0,
+        "replayed": 0,
+        "failed_owners": 0,
+        "backlog": false,
+        "owner_rpcs": 200,
+        "native_sql_statements": 27606,
+        "native_rows_read": 73063,
+        "native_rows_written": 24000,
+        "metadata_complete": true
+      },
+      "entire_local_profile": {
+        "native_sql_statements": 48897,
+        "native_rows_read": 164618,
+        "native_rows_written": 41600,
+        "raw_metadata_groups": 21615,
+        "phases": {
+          "fixture-setup": {
+            "statements": 1200,
+            "rowsRead": 200,
+            "rowsWritten": 2400
+          },
+          "integrity-probe": {
+            "statements": 88,
+            "rowsRead": 72098,
+            "rowsWritten": 0
+          },
+          "root-scheduler": {
+            "statements": 9,
+            "rowsRead": 3433,
+            "rowsWritten": 0
+          },
+          "application": {
+            "statements": 20000,
+            "rowsRead": 19084,
+            "rowsWritten": 15200
+          },
+          "owner-scheduler": {
+            "statements": 27600,
+            "rowsRead": 69803,
+            "rowsWritten": 24000
+          }
+        },
+        "includes": "Finite fixture setup, HTTP rule creation, scheduler, replay/failure-marker cases and integrity probes",
+        "excludes": "Separate twelve-file local CLI migrations and Durable Object billing"
+      },
+      "native_attempts_observed": [
+        null
+      ],
+      "native_attempts_fabricated": false,
+      "root_replay_and_unknown_marker_native_d1": {
+        "same_epoch_replay": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        },
+        "cold_restart_replay": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        },
+        "unknown_cold_restart": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        }
+      },
+      "owner_manual_unknown_marker_native_d1": {
+        "owner_unknown_next_day": {
+          "ok": false,
+          "error": "RECURRING_OUTCOME_UNKNOWN",
+          "state": "active",
+          "nativeStatements": 0
+        },
+        "owner_unknown_cold_restart": {
+          "ok": false,
+          "error": "RECURRING_OUTCOME_UNKNOWN",
+          "state": "active",
+          "nativeStatements": 0
+        }
+      },
+      "native_financial_and_quota_acceptance": {
+        "exactExpenseAuditOccurrenceAndOwnerQuota": true,
+        "boundedNativeOwnerConcurrency": true,
+        "perOwnerRpcBelowConfiguredSqlCapAndPaid1000": true,
+        "sameEpochAndColdRestartNoDuplicateOrD1Writes": true,
+        "unknownLegacyRootMarkerColdRestartFailClosed": true,
+        "unknownOwnerMarkerNextDayAndColdRestartNoD1": true,
+        "nativeRootAndOwnerMetricsMatchRawMetadata": true,
+        "manualUnknownMarkerFixtureNotLostCommitSimulation": true,
+        "nativeSchemaAndJournal": true,
+        "commercialFreePlanLimitsUnchanged": true,
+        "realProviderRequests": 0,
+        "remoteD1Operations": 0
+      },
+      "remote_d1_operations": 0,
+      "remote_application_requests": 0,
+      "real_provider_requests": 0,
+      "client_retries": 0
+    },
+    {
+      "label": "natural_3000",
+      "passed": true,
+      "local_raw_evidence_path": "/workspace/.norulo-environment/production-recurring-load-3000-native-local-20261011/evidence.json",
+      "raw_evidence_sha256": "107db9f7cf8eb4be949dbab3a8cec1802f04ca3030edf6dc4cc14d2947e610df",
+      "raw_evidence_bytes": 36170308,
+      "occurrences_created": 3000,
+      "synthetic_local_free_owners": 600,
+      "rules_per_owner": 5,
+      "application_http_rule_creations": 3000,
+      "fixture_control_http_requests": 16,
+      "runtime_incarnations": 4,
+      "runtime_stopped": true,
+      "actual_daily_pass_wall_seconds": 107.63546840600065,
+      "injected_first_native_await_delay_ms": 0,
+      "latency_scope": "Observed local run only; not production latency or throughput SLA",
+      "observed_owner_rpc_peak_concurrency": 8,
+      "maximum_native_sql_statements_per_owner_rpc": 178,
+      "maximum_native_sql_statements_per_root_rpc": 12,
+      "actual_daily_window": {
+        "selected_owners": 600,
+        "created": 3000,
+        "blocked": 0,
+        "replayed": 0,
+        "failed_owners": 0,
+        "backlog": false,
+        "owner_rpcs": 600,
+        "native_sql_statements": 82812,
+        "native_rows_read": 228201,
+        "native_rows_written": 72000,
+        "metadata_complete": true
+      },
+      "entire_local_profile": {
+        "native_sql_statements": 146503,
+        "native_rows_read": 502333,
+        "native_rows_written": 124800,
+        "raw_metadata_groups": 64821,
+        "phases": {
+          "fixture-setup": {
+            "statements": 3600,
+            "rowsRead": 600,
+            "rowsWritten": 7200
+          },
+          "integrity-probe": {
+            "statements": 88,
+            "rowsRead": 216098,
+            "rowsWritten": 0
+          },
+          "root-scheduler": {
+            "statements": 15,
+            "rowsRead": 18971,
+            "rowsWritten": 0
+          },
+          "application": {
+            "statements": 60000,
+            "rowsRead": 57261,
+            "rowsWritten": 45600
+          },
+          "owner-scheduler": {
+            "statements": 82800,
+            "rowsRead": 209403,
+            "rowsWritten": 72000
+          }
+        },
+        "includes": "Finite fixture setup, HTTP rule creation, scheduler, replay/failure-marker cases and integrity probes",
+        "excludes": "Separate twelve-file local CLI migrations and Durable Object billing"
+      },
+      "native_attempts_observed": [
+        null
+      ],
+      "native_attempts_fabricated": false,
+      "root_replay_and_unknown_marker_native_d1": {
+        "same_epoch_replay": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        },
+        "cold_restart_replay": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        },
+        "unknown_cold_restart": {
+          "statements": 0,
+          "rowsRead": 0,
+          "rowsWritten": 0
+        }
+      },
+      "owner_manual_unknown_marker_native_d1": {
+        "owner_unknown_next_day": {
+          "ok": false,
+          "error": "RECURRING_OUTCOME_UNKNOWN",
+          "state": "active",
+          "nativeStatements": 0
+        },
+        "owner_unknown_cold_restart": {
+          "ok": false,
+          "error": "RECURRING_OUTCOME_UNKNOWN",
+          "state": "active",
+          "nativeStatements": 0
+        }
+      },
+      "native_financial_and_quota_acceptance": {
+        "exactExpenseAuditOccurrenceAndOwnerQuota": true,
+        "boundedNativeOwnerConcurrency": true,
+        "perOwnerRpcBelowConfiguredSqlCapAndPaid1000": true,
+        "sameEpochAndColdRestartNoDuplicateOrD1Writes": true,
+        "unknownLegacyRootMarkerColdRestartFailClosed": true,
+        "unknownOwnerMarkerNextDayAndColdRestartNoD1": true,
+        "nativeRootAndOwnerMetricsMatchRawMetadata": true,
+        "manualUnknownMarkerFixtureNotLostCommitSimulation": true,
+        "nativeSchemaAndJournal": true,
+        "commercialFreePlanLimitsUnchanged": true,
+        "realProviderRequests": 0,
+        "remoteD1Operations": 0
+      },
+      "remote_d1_operations": 0,
+      "remote_application_requests": 0,
+      "real_provider_requests": 0,
+      "client_retries": 0
+    }
+  ],
+  "historical_records_not_overwritten": [
+    "production-recurring-native-local-2026-10-11.json",
+    "production-recurring-native-daily-local-2026-10-11.json",
+    "production-release-2026-10-11.json",
+    "ai-quality-2026-10-11-execution.json"
+  ],
+  "acceptance_limits": {
+    "load_spread_across_owners_not_single_owner_throughput_claim": true,
+    "application_free_owner_entitlement_not_platform_free_plan": true,
+    "cloudflare_production_latency_or_throughput_sla_claimed": false,
+    "actual_daily_cron_invocation_claimed": false,
+    "native_lost_commit_or_rpc_transport_failure_injected": false,
+    "unknown_markers_manually_parked_local_only": true,
+    "native_minute_quota_deferral_exercised_by_these_profiles": false,
+    "native_worker_real_provider_https_tested": false,
+    "recurring_failure_email_delivery_tested": false,
+    "complete_remote_cloudflare_bill_claimed": false,
+    "native_attempt_metadata_missing_is_null_not_fabricated": true,
+    "real_ai_quality_36_call_journal_and_six_source_hashes_unchanged": true
+  }
+}

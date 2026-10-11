@@ -162,7 +162,12 @@ remain 0. Do not infer other email behavior from sender settings or local tests.
 Production recurrence now has an independent RECURRING_SCHEDULER /
 RecurringScheduler SQLite Durable Object implementation and passed core/native
 review. The post-packaging-fix full suite passed 2,942 tests in 106.73 seconds.
-Its runtime flag remains 0 and no cron is installed pending publication. The fixed scope is norulo-production-recurring-v1,
+Verified release A on 2026-10-11 at 05:38:43 UTC has all five runtime flags 1
+and one hourly UTC cron (0 * * * *), version b5642a63-1643-418a-b494-bb7bcf427050.
+The scheduler namespace is b3f41def1906481e9c72662debf4b505, separate from the
+retained EmailAdmission namespace. This is dated configuration/read-only
+verification, not proof of a live scheduled financial posting. The fixed scope
+is norulo-production-recurring-v1,
 with one durable completed-hour/in-flight marker and no reset/retry HTTP endpoint.
 Unknown execution remains stopped across incarnations; no automatic retry or D1
 heartbeat/idle maintenance write. Local native proof covers a manually parked
@@ -178,17 +183,60 @@ from the unchanged 2026-10-10 blocked snapshot and imported source history.
 Do not repeat that completed journal or start another directory to bypass the
 36-attempt scope. Native Worker real-provider HTTPS remains untested, distinct
 from direct HTTPS quality capture and the five loopback native checks. Both
-production AI flags remain 0 pending the final reviewed release.
+production AI flags are 1 in verified release A; real native provider HTTPS and
+customer suggestion acceptance remain untested.
 --activate-ai-suggestions requires production and both D1/email activation
 overlays; the static guard cannot prove quality. Preserve all four Worker Secrets.
 The reviewed --activate-recurring-expenses release requires production plus all
-D1/email/AI activation overlays, creating one hourly UTC cron (0 * * * *) in a
-fresh temporary config while source defaults stay 0 and source has no cron.
-Core/native/final local gates are complete; do not claim live scheduling from
-those checks. The new DO migration does not run D1 migrations. See
-[local recurring proof](docs/validation/production-recurring-native-local-2026-10-11.json)
-for finite costs and limitations. Preserve the user-confirmed email behavior and
-all four Secrets through final AI/recurring publication.
+D1/email/AI activation overlays. The prepared daily revision uses shared
+PRODUCTION_RECURRING_CRON=10 16 * * * (UTC), Beijing 00:10, in a fresh temporary
+config while source defaults stay 0 and source has no cron. Release A above
+remains the last verified hourly deployment until daily release readback.
+The prepared capacity revision uses permanent, validated hash scopes for Owner
+DOs in the existing namespace/class and a Root daily checkpoint. Preserve legacy
+completed_hour units and active/stopped state; do not reset/reinitialize storage
+or bypass an old permanent unknown stop. Root limits are 5,000 selected Owners,
+10,000 handled occurrences and 8,192 total child RPCs, including progress reads,
+with Owner pages/deferred carry bounded to 64. Logical Owner parallelism is 8;
+each chunk handles at most 20 occurrences with an 800 native-SQL-statement
+engineering cap and conservative 200-statement occurrence reserve. Each financial
+posting retains its independent canonical batch and actual Owner/actor/member/
+key/CAS/idempotency/quota checks. Known pre-dispatch minute-quota denial releases
+the worker slot and defers to the next minute without a SQL heartbeat or permanent
+block. Owner hard wall deadline is 120 seconds including schema/execution. Root
+stops launching at its 600-second soft deadline, then awaits started Owners for
+at most their remaining 120 seconds, within the official 900-second Cron wall
+limit. Unknown native financial execution permanently stops that Owner while
+other Owners continue. RPC transport uncertainty advances only when read-only
+progress proves the chunk settled; otherwise stop new launches, await siblings
+and retain a permanent Root global unknown stop. Never retry an unknown chunk.
+Known completed-chunk replay uses cached results without D1; next chunk identity
+is unique. No quarantine/reset API is added. A daily UTC poll scans stored
+next_run_at <= server time, retaining each rule timezone/original period date;
+other timezones can wait nearly 24 hours. The final whole suite passed 3,009
+tests in 115.01 seconds. Final finite local capacity profiles passed for 8-way
+overlap and 1,000/3,000 occurrences across 200/600 Owners. Natural daily passes
+took 33.985/107.635 seconds at peak parallelism 8; these are local observations,
+not a same-Owner throughput promise or production SLA. The
+[capacity proof](docs/validation/production-recurring-load-native-local-2026-10-11.json)
+separates actual daily-window costs from fixture/setup/integrity/replay costs.
+Daily publication/readback remains pending.
+Do not infer live scheduling/performance from
+the immutable earlier 16-request minimal proof. The capacity revision uses the same binding/class/namespace and needs no D1
+migration. Production limits must remain exactly cpu_ms=300000 and
+subrequests=9000, preserved in source-paused/temporary activation configurations.
+Static validation/actual publication readback establish configuration support,
+not confirmed Paid billing. The
+[official provenance](docs/validation/cloudflare-scheduler-limits-2026-10-11.json)
+does not establish whether batch SQL statements count as dispatches or whether
+Owner DO invocations reset D1 limits. The 800-statement cap is independent
+engineering policy. See the
+[earlier local recurring proof](docs/validation/production-recurring-native-local-2026-10-11.json)
+for historical finite costs and limitations. Preserve the user-confirmed email behavior and
+all four Secrets and all activation overlays through subsequent publication.
+The [dated production record](docs/validation/production-release-2026-10-11.json)
+records verified versions/bindings/cron. It does not guarantee future latest
+versions or remote migration-tag readback; that API field was absent.
 
 ## Verification and repository hygiene
 

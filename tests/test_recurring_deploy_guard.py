@@ -1,5 +1,6 @@
 """Isolated production recurrence needs explicit activation and an exact cron."""
 import copy
+from datetime import datetime, timedelta, timezone
 import importlib.util
 import json
 import os
@@ -10,6 +11,7 @@ import sys
 
 import pytest
 from deployment_config_fixture import configured_runtime
+from norulo_server.cloudflare_recurring_scheduler import PRODUCTION_RECURRING_CRON
 
 ROOT = Path(__file__).resolve().parents[1]
 FLAGS = ("NORULO_D1_ACCESS_ENABLED", "NORULO_EMAIL_AUTH_ENABLED", "NORULO_JEV_SUGGESTIONS_ENABLED",
@@ -34,12 +36,14 @@ def test_only_exact_hourly_coordinated_preview_schedule_is_allowed(tmp_path):
     path = tmp_path / "wrangler.preview.jsonc"
     path.write_text(json.dumps(original))
     module.validate_config("preview", False)
-    for kind in ("high_frequency", "extra_cron", "disabled", "no_upgrade", "uncoordinated", "paused", "no_cron"):
+    for kind in ("high_frequency", "extra_cron", "daily", "disabled", "no_upgrade", "uncoordinated", "paused", "no_cron"):
         config = copy.deepcopy(original)
         if kind == "high_frequency":
             config["triggers"]["crons"] = ["* * * * *"]
         elif kind == "extra_cron":
             config["triggers"]["crons"].append("30 * * * *")
+        elif kind == "daily":
+            config["triggers"]["crons"] = [PRODUCTION_RECURRING_CRON]
         elif kind == "no_cron":
             config.pop("triggers")
         else:
@@ -54,6 +58,7 @@ def test_only_exact_hourly_coordinated_preview_schedule_is_allowed(tmp_path):
 def test_production_remains_paused_and_has_no_background_activation(tmp_path):
     module = checker(tmp_path)
     original = configured_runtime("production")
+    assert original["limits"] == {"cpu_ms": 300000, "subrequests": 9000}
     assert original["vars"]["NORULO_D1_ACCESS_ENABLED"] == "0"
     assert not original.get("triggers", {}).get("crons")
     assert original["vars"].get("NORULO_RECURRING_EXPENSES_ENABLED", "0") == "0"
@@ -65,7 +70,7 @@ def test_production_remains_paused_and_has_no_background_activation(tmp_path):
         if key in {"flag", "both"}:
             config["vars"]["NORULO_RECURRING_EXPENSES_ENABLED"] = "1"
         if key in {"cron", "both"}:
-            config["triggers"] = {"crons": ["0 * * * *"]}
+            config["triggers"] = {"crons": [PRODUCTION_RECURRING_CRON]}
         path.write_text(json.dumps(config))
         with pytest.raises(ValueError):
             module.validate_config("production", False)
@@ -84,7 +89,7 @@ def validate(module, config, *, activate=False):
 def active_production():
     config = configured_runtime("production")
     config["vars"].update({flag: "1" for flag in FLAGS})
-    config["triggers"] = {"crons": ["0 * * * *"]}
+    config["triggers"] = {"crons": [PRODUCTION_RECURRING_CRON]}
     return config
 
 
@@ -96,6 +101,44 @@ def test_production_recurrence_accepts_only_its_independent_scheduler_without_pr
     assert config["vars"].get("NORULO_PREVIEW_SCHEMA_V7_UPGRADE_ENABLED", "0") == "0"
     validate(module, config)
     validate(module, configured_runtime("production"), activate=True)
+
+
+def test_production_cron_is_daily_at_beijing_ten_minutes_past_midnight_and_preview_stays_hourly(tmp_path):
+    module = checker(tmp_path)
+    assert PRODUCTION_RECURRING_CRON == "10 16 * * *"
+    assert module.PRODUCTION_CRONS == [PRODUCTION_RECURRING_CRON]
+    assert module.PREVIEW_CRONS == ["0 * * * *"]
+    minute, hour, *calendar = PRODUCTION_RECURRING_CRON.split()
+    assert calendar == ["*", "*", "*"]
+    beijing = datetime(2026, 10, 11, int(hour), int(minute), tzinfo=timezone.utc).astimezone(
+        timezone(timedelta(hours=8)))
+    assert (beijing.day, beijing.hour, beijing.minute) == (12, 0, 10)
+
+
+@pytest.mark.parametrize("limits", [None, {}, 300000,
+    {"cpu_ms": 300000}, {"subrequests": 9000},
+    {"cpu_ms": "300000", "subrequests": 9000}, {"cpu_ms": 300000.0, "subrequests": 9000},
+    {"cpu_ms": True, "subrequests": 9000}, {"cpu_ms": 299999, "subrequests": 9000},
+    {"cpu_ms": 300001, "subrequests": 9000},
+    {"cpu_ms": 300000, "subrequests": "9000"}, {"cpu_ms": 300000, "subrequests": 9000.0},
+    {"cpu_ms": 300000, "subrequests": True}, {"cpu_ms": 300000, "subrequests": 8999},
+    {"cpu_ms": 300000, "subrequests": 9001}, {"cpu_ms": 300000, "subrequests": 10000000},
+    {"cpu_ms": 300000, "subrequests": 9000, "extra": 1}])
+@pytest.mark.parametrize("activate", [False, True])
+def test_production_runtime_limits_cannot_be_missing_changed_or_broadened(tmp_path, limits, activate):
+    module = checker(tmp_path)
+    config = configured_runtime("production")
+    config["limits"] = limits
+    with pytest.raises(ValueError, match="exactly the reviewed 300000 ms CPU and 9000 subrequest limits"):
+        validate(module, config, activate=activate)
+
+
+def test_preview_validation_does_not_require_the_production_cpu_setting(tmp_path):
+    module = checker(tmp_path)
+    config = configured_runtime("preview", recurring=True)
+    assert "limits" not in config
+    (tmp_path / "wrangler.preview.jsonc").write_text(json.dumps(config))
+    module.validate_config("preview", False)
 
 
 @pytest.mark.parametrize("flag", FLAGS)
@@ -117,7 +160,8 @@ def test_recurring_overlay_cannot_repair_a_polluted_raw_switch(tmp_path, value, 
         validate(module, config, activate=activate)
 
 
-@pytest.mark.parametrize("crons", [None, "0 * * * *", [None], ["* * * * *"], ["0 * * * *", "30 * * * *"]])
+@pytest.mark.parametrize("crons", [None, PRODUCTION_RECURRING_CRON, [None], ["* * * * *"],
+    ["0 * * * *"], ["0 16 * * *"], ["10 0 * * *"], [PRODUCTION_RECURRING_CRON, "30 * * * *"]])
 @pytest.mark.parametrize("activate", [False, True])
 def test_recurring_overlay_cannot_mask_an_invalid_or_extra_cron(tmp_path, crons, activate):
     module = checker(tmp_path)
@@ -133,7 +177,7 @@ def test_recurring_overlay_cannot_hide_partial_source_activation(tmp_path, activ
     module = checker(tmp_path)
     config = configured_runtime("production")
     if partial == "cron_only":
-        config["triggers"] = {"crons": ["0 * * * *"]}
+        config["triggers"] = {"crons": [PRODUCTION_RECURRING_CRON]}
     else:
         config["vars"][FLAGS[-1]] = "1"
     with pytest.raises(ValueError, match="matching activation"):
@@ -214,7 +258,7 @@ def test_recurring_cli_cannot_disable_accepted_features_or_activate_preview(cli,
     assert "S01 static checks passed" not in result.stdout
 
 
-def test_recurring_dry_run_validates_hourly_overlay_and_removes_private_config_without_mutation():
+def test_recurring_dry_run_validates_daily_overlay_and_removes_private_config_without_mutation():
     worker = ROOT / "cloudflare/server"
     before = (worker / "wrangler.production.jsonc").read_bytes()
     files = set(worker.glob(".norulo-recurring-deploy.*.jsonc"))
@@ -222,7 +266,8 @@ def test_recurring_dry_run_validates_hourly_overlay_and_removes_private_config_w
         cwd=ROOT, text=True, capture_output=True, check=False,
         env={**os.environ, "NORULO_PYTHON": sys.executable})
     assert result.returncode == 0, result.stderr
-    assert "0 * * * *" in result.stdout
+    assert PRODUCTION_RECURRING_CRON in result.stdout
+    assert "daily UTC cron" in result.stdout
     assert "execution regenerates and validates it" in result.stdout
     assert all(f"{flag}:1" in result.stdout for flag in FLAGS)
     assert "d1 migrations apply" not in result.stdout
@@ -292,9 +337,9 @@ def test_actual_builder_receives_complete_validated_config_and_cleanup_on_every_
     assert all(f"{flag}:1" in built["args"] for flag in FLAGS)
     config = built["config"]
     assert all(config["vars"][flag] == "1" for flag in FLAGS)
-    assert config["triggers"]["crons"] == ["0 * * * *"]
+    assert config["triggers"]["crons"] == [PRODUCTION_RECURRING_CRON]
     original = json.loads(before)
-    for key in ("main", "$schema", "d1_databases", "durable_objects", "migrations", "secrets"):
+    for key in ("main", "$schema", "limits", "d1_databases", "durable_objects", "migrations", "secrets"):
         assert config[key] == original[key]
     assert len(config["secrets"]["required"]) == 4
     assert config["durable_objects"]["bindings"][0]["class_name"] == "EmailAdmission"

@@ -22,12 +22,24 @@ with both quality gates passing, no retry and no D1/application requests.
 [Fresh results](ai-quality-2026-10-11-results.jsonl),
 [aggregate](ai-quality-2026-10-11-aggregate.json) and the
 [execution/source envelope](ai-quality-2026-10-11-execution.json) record this
-current independent Norulo result. Both production Jev flags remain 0 pending
-final publication; native Worker real-provider HTTPS remains untested.
+current independent Norulo result. Verified release A on 2026-10-11 at 05:38:43
+UTC has both runtime Jev flags 1; native Worker real-provider HTTPS remains
+untested. The [dated release record](production-release-2026-10-11.json) preserves
+that configuration checkpoint separately from real model quality acceptance.
 The production recurring scheduler has separately passed local/core/native gates
 and the post-packaging-fix 2,942-test suite. The earlier attempted release was
 rejected for an omitted scheduler module; repaired 729-module packaging is
-locally verified, but the runtime flag remains 0 and no cron is installed. See [current recurring readiness](production-readiness-2026-10-10.md#production-recurring-implementation-and-local-acceptance). The
+locally verified and subsequently published in release A with recurrence 1 and
+one hourly UTC cron. The later daily replacement is prepared locally for
+Beijing 00:10 with bounded parallel Owner chunks, not yet published. Final
+full suite passed 3,009 tests; the
+[final local capacity proof](production-recurring-load-native-local-2026-10-11.json)
+passed 8-way overlap and 1,000/3,000 occurrences across 200/600 Owners. Natural
+daily passes took 33.985/107.635 seconds; these are local observations, not a
+production SLA. Daily publication/readback remains pending. The
+completed real AI journal and
+its source hashes are unchanged and must not be repeated.
+Live financial scheduling remains untested. See [current recurring readiness](production-readiness-2026-10-10.md#production-recurring-implementation-and-local-acceptance). The
 [earlier local snapshot](ai-local-readiness-2026-10-10.json) is unchanged and records
 the superseded blocked stage. The historical results below are preserved and do
 not substitute for the fresh evaluation.

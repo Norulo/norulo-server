@@ -85,7 +85,8 @@
       },
       "remote_d1_operations": 0,
       "real_provider_requests": 0,
-      "actual_publication_confirmed": false
+      "actual_publication_confirmed": false,
+      "scope": "Local artifact/import-closure check before the later release A; original actual_publication_confirmed=false is historical"
     }
   },
   "preflight": {
@@ -358,7 +359,7 @@
     "Local native totals include setup/application/probes and exclude separately applied CLI migrations; they do not represent remote usage or a full Cloudflare bill.",
     "Native attempt metadata was absent and remains null; no attempt count was fabricated.",
     "Provider delivery, real TypeSafe Worker HTTPS, live hourly scheduling and production recurring financial acceptance were not exercised.",
-    "The runtime recurrence flag remains zero and no cron is installed; local gates do not establish actual publication or live scheduled/provider acceptance."
+    "At this local-native/preflight checkpoint the runtime recurrence flag was zero and no cron was installed; later release A activation is linked separately, and local gates do not establish live scheduled/provider acceptance."
   ],
   "rejected_publication_checkpoint": {
     "reported_by": "root agent",
@@ -374,6 +375,19 @@
     "runtime_ai_flags": 0,
     "runtime_recurring_flag": 0,
     "cron_schedules": [],
-    "followup_complete_artifact_publication": "pending"
+    "followup_complete_artifact_publication": "pending",
+    "historical_only": true,
+    "superseded_by_later_release_record": "production-release-2026-10-11.json"
+  },
+  "later_production_release_checkpoint": {
+    "record": "production-release-2026-10-11.json",
+    "release_checkpoint": "A",
+    "checked_at_utc": "2026-10-11T05:38:43.202100+00:00",
+    "worker_version": "b5642a63-1643-418a-b494-bb7bcf427050",
+    "all_five_runtime_activation_flags": 1,
+    "hourly_cron": "0 * * * *",
+    "recurring_scheduler_namespace": "b3f41def1906481e9c72662debf4b505",
+    "native_acceptance_and_source_chain_unchanged": true,
+    "scope": "Later publication/read-only configuration; not live scheduled financial/provider acceptance"
   }
 }

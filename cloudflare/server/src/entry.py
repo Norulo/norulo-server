@@ -31,10 +31,14 @@ from norulo_server.cloudflare_ledger_profile import read_ledger_me
 from norulo_server.cloudflare_ledger_api import handle_ledger_request
 from norulo_server.cloudflare_ledger_recurring import run_due_recurring
 from norulo_server.cloudflare_recurring_scheduler import (
-    RECURRING_SCHEDULER_SCOPE, RECURRING_TIMEOUT_SECONDS, RECURRING_QUEUE_LIMIT,
+    RECURRING_SCHEDULER_SCOPE, PRODUCTION_RECURRING_CRON,
+    RECURRING_TIMEOUT_SECONDS, RECURRING_QUEUE_LIMIT,
     RECURRING_QUEUE_WAIT_SECONDS, RecurringFailure, RecurringJournal,
     ObservedRecurringD1, production_recurring_enabled, require_recurring_success,
-    verify_recurring_schema,
+    verify_recurring_schema, DispatchJournal, require_role, owner_scope, rpc_integer,
+    daily_epoch, execute_owner_chunk, drain_owners, server_now,
+    MAX_OWNER_NATIVE_SQL,
+    OWNER_SOFT_SECONDS, validate_owner_state,
 )
 from norulo_server.cloudflare_jev_gateway import WorkerJevGateway
 from norulo_server.cloudflare_ledger_reports import CsvExport
@@ -413,7 +417,8 @@ class Default(WorkerEntrypoint):
         if not production and not _recurring_enabled(self.env):
             return
         scheduled = float(controller.scheduledTime)
-        if (str(controller.cron) != "0 * * * *" or not 0 <= scheduled <= 9007199254740991):
+        expected_cron = PRODUCTION_RECURRING_CRON if production else "0 * * * *"
+        if (str(controller.cron) != expected_cron or not 0 <= scheduled <= 9007199254740991):
             raise RuntimeError("RECURRING_TRIGGER_INVALID")
         namespace = getattr(self.env, "RECURRING_SCHEDULER" if production else "VALIDATION_BUDGET", None)
         if namespace is None:
@@ -514,81 +519,188 @@ class RecurringScheduler(DurableObject):
         return Response.json({"error": {"code": "METHOD_NOT_ALLOWED"}}, status=405,
             headers={"Cache-Control": "no-store"})
 
-    async def runRecurring(self):
-        """No caller-supplied clock. An uncertain attempt never clears its marker."""
+    def _clock(self):
+        # Keep the entry clock injectable in LOCAL native fixtures. No caller
+        # argument can choose authority, entitlement or expiry time.
+        value = time.time()
+        if type(value) not in {int, float} or not 0 <= value <= 9007199254740991:
+            raise RecurringFailure("RECURRING_CLOCK_INVALID")
+        return rpc_integer(int(value))
+
+    async def _enter(self):
+        if self._waiting >= RECURRING_QUEUE_LIMIT:
+            return False
+        self._waiting += 1
+        try:
+            await asyncio.wait_for(self._lock.acquire(), timeout=RECURRING_QUEUE_WAIT_SECONDS)
+            return True
+        except BaseException:
+            self._waiting -= 1
+            raise
+
+    def _leave(self):
+        self._lock.release()
+        self._waiting -= 1
+
+    async def ownerProgress(self, owner, epoch):
+        """Binding-only read of settled DO progress, never D1 or a replay."""
         if not production_recurring_enabled(self.env):
             return {"ok": False, "error": "RECURRING_DISABLED"}
-        if self._waiting >= RECURRING_QUEUE_LIMIT:
-            return {"ok": False, "error": "RECURRING_BUSY"}
-        self._waiting += 1
-        acquired = False
-        observed = None
-        active = False
         try:
-            try:
-                await asyncio.wait_for(self._lock.acquire(), timeout=RECURRING_QUEUE_WAIT_SECONDS)
-                acquired = True
-            except asyncio.TimeoutError:
-                return {"ok": False, "error": "RECURRING_BUSY"}
-            # Validate configuration before reserving anything or touching D1.
-            policy = parse_policy(getattr(self.env, "NORULO_PLAN_LIMITS_JSON", ""))
-            stamp = time.time()
-            if (type(stamp) not in {int, float} or not 0 <= stamp <= 9007199254740991):
-                raise RecurringFailure("RECURRING_CLOCK_INVALID")
-            now, hour = int(stamp), int(stamp) // 3600
-            if self.journal is None:
-                self.journal = RecurringJournal(self.ctx.storage.sql)
-            if not self.journal.begin(hour):
-                return {"ok": True, "skipped": True, "scanned": 0, "created": 0,
-                    "blocked": 0, "replayed": 0,
-                    "metrics": {"operations": 0, "rowsRead": 0, "rowsWritten": 0, "complete": True}}
-            active = True  # Persisted before every D1/provider await below.
-            observed = ObservedRecurringD1(NativeD1(self.env.DB))
+            require_role(self.ctx, self.env, owner)
+            epoch = rpc_integer(epoch)
+            if epoch != daily_epoch(self._clock()):
+                raise RecurringFailure("RECURRING_INPUT_INVALID")
+            # Progress must not CREATE a table or initialize an absent job.
+            rows = list(self.ctx.storage.sql.exec("SELECT identity,payload FROM norulo_recurring_dispatch WHERE id=1").toArray())
+            if len(rows) != 1 or _field(rows[0], "identity") != owner_scope(owner):
+                raise RecurringFailure("RECURRING_OUTCOME_UNKNOWN")
+            state = json.loads(_field(rows[0], "payload"))
+            validate_owner_state(state, owner)
+            if state.get("epoch") != epoch or state.get("owner") != owner:
+                raise RecurringFailure("RECURRING_OUTCOME_UNKNOWN")
+            return {"ok": True, "state": state["state"], "nextChunk": state["nextChunk"],
+                "result": state.get("result")}
+        except Exception:
+            return {"ok": False, "error": "RECURRING_OUTCOME_UNKNOWN"}
 
+    async def runOwnerChunk(self, owner, epoch, expected_chunk):
+        if not production_recurring_enabled(self.env):
+            return {"ok": False, "error": "RECURRING_DISABLED"}
+        acquired = active = False
+        journal = state = observed = None
+        try:
+            # Wrong object/Owner/clock/sequence fails before any storage access.
+            require_role(self.ctx, self.env, owner)
+            epoch, expected_chunk = rpc_integer(epoch), rpc_integer(expected_chunk)
+            if epoch != daily_epoch(self._clock()) or expected_chunk > 8192:
+                raise RecurringFailure("RECURRING_INPUT_INVALID")
+            policy = parse_policy(getattr(self.env, "NORULO_PLAN_LIMITS_JSON", ""))
+            acquired = await self._enter()
+            if not acquired:
+                return {"ok": False, "error": "RECURRING_BUSY"}
+            journal = DispatchJournal(self.ctx.storage.sql, owner_scope(owner))
+            state = journal.read()
+            if state is not None:
+                validate_owner_state(state, owner)
+                if state.get("owner") != owner or state.get("state") not in {"ready", "complete"}:
+                    raise RecurringFailure("RECURRING_OUTCOME_UNKNOWN")
+                if state["epoch"] > epoch:
+                    raise RecurringFailure("RECURRING_CLOCK_INVALID")
+            if state is None or state["epoch"] < epoch:
+                if expected_chunk != 0:
+                    raise RecurringFailure("RECURRING_INPUT_INVALID")
+                state = {"owner": owner, "epoch": epoch, "state": "ready", "nextChunk": 0,
+                    "rules": None, "cursor": 0, "catchup": {}, "result": None}
+            if expected_chunk == state["nextChunk"] - 1 and state.get("result") is not None:
+                return state["result"]  # known duplicate, zero D1/provider calls
+            if expected_chunk != state["nextChunk"] or state["state"] == "complete":
+                raise RecurringFailure("RECURRING_INPUT_INVALID")
+            state["state"] = "active"
+            journal.write(state)
+            active = True
+            observed = ObservedRecurringD1(NativeD1(self.env.DB), query_limit=MAX_OWNER_NATIVE_SQL)
             async def execute():
                 if not self._schema_verified:
                     await verify_recurring_schema(observed)
                     self._schema_verified = True
-                application = PlanLimitedD1(observed, now=now, policy=policy)
-                application.email_gateway = WorkerEmailGateway(self.env)
-                observed.email_gateway = application.email_gateway
-                result = await run_due_recurring(binding=application,
-                    maintenance_binding=observed, gateway=WorkerGitHubGateway(self.env),
-                    now=now, rule_limit=10, occurrence_limit=10, run_retention=False)
-                if (set(result) != {"scanned", "created", "blocked", "replayed"}
-                        or any(type(value) is not int or not 0 <= value <= 10 for value in result.values())
-                        or sum(result[key] for key in ("created", "blocked", "replayed")) > 10):
-                    raise RecurringFailure("RECURRING_OUTCOME_UNKNOWN")
-                self.journal.finish(hour)
-                return {"ok": True, **result, "metrics": observed.metrics()}
+                return await execute_owner_chunk(env=self.env, observed=observed, state=state,
+                    policy=policy, gateway=WorkerGitHubGateway(self.env),
+                    email_gateway=WorkerEmailGateway(self.env), clock=self._clock)
+            result = await asyncio.wait_for(execute(), timeout=OWNER_SOFT_SECONDS)
+            state.update(state="complete" if result["complete"] else "ready",
+                nextChunk=result["nextChunk"], result=result)
+            journal.write(state)
+            active = False
+            return result
+        except BaseException as error:
+            code = error.code if isinstance(error, RecurringFailure) else "RECURRING_OUTCOME_UNKNOWN"
+            if active:
+                try:
+                    state.update(state="stopped", error=code)
+                    journal.write(state)
+                except Exception:
+                    pass  # The durable active marker remains authoritative.
+            if isinstance(error, asyncio.CancelledError):
+                raise
+            return {"ok": False, "error": code, **({"metrics": observed.metrics()} if observed else {})}
+        finally:
+            if acquired:
+                self._leave()
 
-            result = await asyncio.wait_for(execute(), timeout=RECURRING_TIMEOUT_SECONDS)
+    async def runRecurring(self):
+        """The legacy root now discovers/fans out; it never generates expenses."""
+        if not production_recurring_enabled(self.env):
+            return {"ok": False, "error": "RECURRING_DISABLED"}
+        acquired = active = False
+        observed = None
+        drained = None
+        try:
+            require_role(self.ctx, self.env)
+            parse_policy(getattr(self.env, "NORULO_PLAN_LIMITS_JSON", ""))
+            acquired = await self._enter()
+            if not acquired:
+                return {"ok": False, "error": "RECURRING_BUSY"}
+            now = self._clock()
+            hour, epoch = now // 3600, daily_epoch(now)
+            if self.journal is None:
+                self.journal = RecurringJournal(self.ctx.storage.sql)
+            legacy = self.journal.snapshot()
+            if legacy["state"] != "idle":
+                raise RecurringFailure("RECURRING_OUTCOME_UNKNOWN")
+            if legacy["completed_hour"] > hour:
+                raise RecurringFailure("RECURRING_CLOCK_INVALID")
+            dispatch = DispatchJournal(self.ctx.storage.sql, RECURRING_SCHEDULER_SCOPE)
+            daily = dispatch.read()
+            # An old hourly completion at/after today's anchor conservatively
+            # skips today. Keep its original hour; never reset or reinterpret it.
+            if (daily is not None and daily.get("epoch") == epoch
+                    or legacy["completed_hour"] >= epoch // 3600):
+                return {"ok": True, "skipped": True, "scanned": 0, "created": 0,
+                    "blocked": 0, "replayed": 0,
+                    "metrics": {"operations": 0, "rowsRead": 0, "rowsWritten": 0, "complete": True}}
+            if daily is not None and daily.get("epoch", epoch) > epoch:
+                raise RecurringFailure("RECURRING_CLOCK_INVALID")
+            self.journal.begin(hour)
+            active = True
+            observed = ObservedRecurringD1(NativeD1(self.env.DB))
+            if not self._schema_verified:
+                await verify_recurring_schema(observed)
+                self._schema_verified = True
+            result = await drain_owners(env=self.env, observed=observed, epoch=epoch,
+                clock=self._clock, previous=daily)
+            drained = result
+            checkpoint = result.pop("checkpoint")
+            dispatch.write({"epoch": epoch, **checkpoint})
+            self.journal.finish(hour)
+            active = False
             print(json.dumps({"recurringScheduler": result}))
             return result
         except BaseException as error:
-            code = ("RECURRING_TIMEOUT" if isinstance(error, asyncio.TimeoutError)
-                else error.code if isinstance(error, RecurringFailure)
-                else "PLAN_POLICY_INVALID" if not active and isinstance(error, ValueError)
+            code = (error.code if isinstance(error, RecurringFailure)
+                else "RECURRING_BUSY" if isinstance(error, asyncio.TimeoutError) and not active
+                else "PLAN_POLICY_INVALID" if isinstance(error, ValueError) and not active
                 else "RECURRING_OUTCOME_UNKNOWN")
             if active:
                 try:
-                    self.journal.stop(code if code in {"RECURRING_TIMEOUT", "RECURRING_SCHEMA_REQUIRED"}
-                        else "RECURRING_OUTCOME_UNKNOWN")
+                    self.journal.stop(code if code == "RECURRING_SCHEMA_REQUIRED" else "RECURRING_OUTCOME_UNKNOWN")
                 except Exception:
-                    # A durable active marker already exists. Never retry or
-                    # let an uncertain storage response authorize another tick.
                     pass
             if isinstance(error, asyncio.CancelledError):
                 raise
             result = {"ok": False, "error": code}
-            if observed is not None:
+            if isinstance(error, RecurringFailure) and hasattr(error, "metrics"):
+                result.update(metrics=error.metrics, **error.counts)
+            elif drained is not None:
+                result.update(metrics={**drained["metrics"], "complete": False},
+                    **{key: drained[key] for key in ("scanned", "created", "blocked", "replayed")})
+            elif observed is not None:
                 result["metrics"] = observed.metrics()
             print(json.dumps({"recurringScheduler": result}))
             return result
         finally:
             if acquired:
-                self._lock.release()
-            self._waiting -= 1
+                self._leave()
 
 
 class ValidationBudget(DurableObject):

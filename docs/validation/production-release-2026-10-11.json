@@ -1,0 +1,202 @@
+{
+  "recorded_at_local_date": "2026-10-11",
+  "recording_timezone": "Asia/Shanghai",
+  "release_checkpoint": "A",
+  "scope": "Dated production publication, configuration and finite read-only transport verification; not future-latest or live financial/provider acceptance",
+  "passed": true,
+  "reported_by": "root agent; sanitized readback proof independently copied and cross-checked locally",
+  "sanitized_readback_evidence_sha256": "a36a3718eaf7bb5397b10b2ff127c73c04fae63606af5610e75b288014df587b",
+  "deployed_source_heads": {
+    "server": "ebd11baf0da9d6aa83f8718b55e0c630e04108bd",
+    "web": "3531f8ab23ac976f6e17caf1c2246dcbf5ea125c"
+  },
+  "packaging": {
+    "actual_module_count": 729,
+    "total_kib": 1649.12,
+    "gzip_kib": 340.66,
+    "canonical_module_count": 64,
+    "all_canonical_modules_byte_equal_actual_artifact": true,
+    "canonical_source_hashes_rechecked_for_this_record": 64,
+    "canonical_module_manifest_sha256": "9e73b7d5b31418deda85c87ed7edb998890a380a1f9ed895f0b114aba0165f3f",
+    "manifest_hash_recipe": "SHA-256 of canonicalModules list from the packaging proof, JSON sort_keys=true and separators=(comma,colon)",
+    "sanitized_packaging_evidence_sha256": "c05d5800c6446609a2f3d24eb4b006cbb92fb8a07f5439e6be6c9d8dd839ece8",
+    "helper_source_sha256": "9c921d364a5225cb221ceda4431f6cf5f23fadcc419801adfde1f0f2a63c0d34",
+    "source_production_config_sha256": "ba243280c1a7b6a645d0c4b005689651d255a9b6c28676e35096b508d62bc9fc",
+    "earlier_incomplete_728_module_upload_rejected_with_code": 10021
+  },
+  "local_validation": {
+    "server_full_suite": {
+      "passed": 2942,
+      "seconds": 106.73,
+      "exit_code": 0,
+      "post_packaging_fix": true
+    },
+    "web_suite": {
+      "passed": 1654,
+      "reported_by": "root agent"
+    },
+    "native_recurring_evidence": "production-recurring-native-local-2026-10-11.json",
+    "direct_https_real_quality_evidence": "ai-quality-2026-10-11-execution.json",
+    "accepted_native_and_quality_historical_source_hashes_unchanged": true,
+    "overlapping_checks_not_additive": true
+  },
+  "verification": {
+    "checkedAtUtc": "2026-10-11T05:38:43.202100+00:00",
+    "recordingTimezone": "Asia/Shanghai",
+    "accountId": "84e421f26c708c0cf437e287eed11fa1",
+    "readOnlyCloudflareRequests": 7,
+    "remoteD1SqlOperations": 0,
+    "remoteApplicationMutations": 0,
+    "providerRequests": 0,
+    "manualCronInvocations": 0,
+    "realEmailsSentByAgent": 0,
+    "migrationReplay": 0,
+    "automaticRetries": 0,
+    "tlsVerification": true,
+    "server": {
+      "versionId": "b5642a63-1643-418a-b494-bb7bcf427050",
+      "publicVars": {
+        "NORULO_ALLOWED_ORIGINS": "https://norulo.com",
+        "NORULO_APP_URL": "https://norulo.com",
+        "NORULO_COOKIE_SAME_SITE": "None",
+        "NORULO_CREEM_API_BASE_URL": "https://api.creem.io",
+        "NORULO_CREEM_PRODUCT_IDS_JSON": "{}",
+        "NORULO_D1_ACCESS_ENABLED": "1",
+        "NORULO_EMAIL_AUTH_ENABLED": "1",
+        "NORULO_EMAIL_FROM": "login@auth.norulo.com",
+        "NORULO_GITHUB_APP_SLUG": "norulo",
+        "NORULO_GITHUB_CALLBACK_URL": "https://norulo.com/api/auth/github/callback",
+        "NORULO_GITHUB_CLIENT_ID": "Iv23li78ZPeUgSxJkLUj",
+        "NORULO_JEV_SUGGESTIONS_ENABLED": "1",
+        "NORULO_JEV_SUGGESTIONS_EVALUATED": "1",
+        "NORULO_MODE": "production",
+        "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":100,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\"},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\"},\"max\":{\"projects\":100,\"records\":100000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"5.00\"}}",
+        "NORULO_PREVIEW_BUSINESS_CLEAR_ID": "",
+        "NORULO_PREVIEW_BUSINESS_CLEAR_MANIFEST": "",
+        "NORULO_PREVIEW_SCHEMA_V11_UPGRADE_ENABLED": "0",
+        "NORULO_RECURRING_EXPENSES_ENABLED": "1"
+      },
+      "secretNames": [
+        "NORULO_EMAIL_CODE_SECRET",
+        "NORULO_GITHUB_CLIENT_SECRET",
+        "NORULO_GITHUB_TOKEN_KEY",
+        "TYPESAFE_API_KEY"
+      ],
+      "resources": [
+        {
+          "database_id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+          "id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+          "name": "DB",
+          "type": "d1"
+        },
+        {
+          "allowed_sender_addresses": [
+            "login@auth.norulo.com"
+          ],
+          "name": "EMAIL",
+          "type": "send_email"
+        },
+        {
+          "class_name": "EmailAdmission",
+          "name": "EMAIL_ADMISSION",
+          "namespace_id": "6588312f00f74840a37463e72a2d75eb",
+          "type": "durable_object_namespace"
+        },
+        {
+          "class_name": "RecurringScheduler",
+          "name": "RECURRING_SCHEDULER",
+          "namespace_id": "b3f41def1906481e9c72662debf4b505",
+          "type": "durable_object_namespace"
+        }
+      ],
+      "subdomain": {
+        "enabled": false,
+        "previews_enabled": false
+      },
+      "compatibilityFlags": [
+        "python_workers"
+      ],
+      "migrationTag": null,
+      "schedules": [
+        {
+          "cron": "0 * * * *",
+          "created_on": "2026-10-11T05:37:56.523406Z",
+          "modified_on": "2026-10-11T05:37:56.523406Z"
+        }
+      ]
+    },
+    "web": {
+      "versionId": "26697b80-76dc-405b-a0c0-c2ea7c0735f7",
+      "publicVars": {
+        "NORULO_API_ORIGIN": "https://api.norulo.com",
+        "NORULO_MODE": "production"
+      },
+      "secretNames": [],
+      "resources": [
+        {
+          "name": "ASSETS",
+          "type": "assets"
+        },
+        {
+          "environment": "production",
+          "name": "NORULO_SERVER",
+          "service": "norulo-server-production",
+          "type": "service"
+        }
+      ],
+      "subdomain": {
+        "enabled": false,
+        "previews_enabled": false
+      },
+      "compatibilityFlags": [],
+      "migrationTag": null
+    },
+    "publicRequests": [
+      {
+        "url": "https://api.norulo.com/health",
+        "status": 200,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/api/health",
+        "status": 200,
+        "setCookie": false
+      },
+      {
+        "url": "https://api.norulo.com/api/v1/me",
+        "status": 401,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/api/api/v1/me",
+        "status": 401,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/",
+        "status": 200,
+        "setCookie": false
+      }
+    ],
+    "originalLogoSha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f",
+    "wwwRedirect": {
+      "status": 308,
+      "location": "https://norulo.com/login?source=release-check"
+    },
+    "passed": true
+  },
+  "acceptance_limits": {
+    "native_worker_real_provider_https_tested": false,
+    "actual_customer_ai_suggestions_tested": false,
+    "live_scheduled_financial_posting_tested": false,
+    "recurring_failure_email_delivery_tested": false,
+    "remote_migration_tag_verified": false,
+    "remote_migration_tag_api_value": null,
+    "checked_in_do_tag_definitions_retained": true,
+    "namespace_identity_verified": true,
+    "github_signin_user_confirmed": true,
+    "email_code_delivery_and_login_user_confirmed": true,
+    "repository_installation_linking_signout_refresh_and_complete_ledger_journey_not_claimed": true,
+    "version_ids_are_dated_release_A_not_guaranteed_future_latest": true
+  }
+}

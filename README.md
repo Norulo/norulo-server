@@ -22,11 +22,15 @@ containers were seeded; the other 22 application tables were empty at initializa
 test fixtures, business acceptance writes or source data were inserted.
 The complete Python Worker was first published as version
 3ad0cffc-ecc3-47a4-ab5d-a53999528b8c. The email feature release was
-815a1216-4468-4591-be58-e339d4d2c154; the current Cloudflare version after the user's
-Secret update is ec33db03-2fd4-49a4-8430-9e1cb13fc340. It retains the initialized DB
-and the earlier activation overlays setting
-runtime NORULO_D1_ACCESS_ENABLED=1 and NORULO_EMAIL_AUTH_ENABLED=1 through explicit
-overlays. The earlier bootstrap and D1 deferral are historical.
+815a1216-4468-4591-be58-e339d4d2c154. Verified release A on 2026-10-11 at
+05:38:43 UTC is b5642a63-1643-418a-b494-bb7bcf427050, from server main ebd11baf.
+It retains the initialized DB, EMAIL, EmailAdmission namespace and four Secrets,
+sets all five D1/email/AI/recurrence flags to 1 through explicit overlays, and
+has exactly one hourly UTC cron (0 * * * *). Web release A is
+26697b80-76dc-405b-a0c0-c2ea7c0735f7 from main 3531f8a. The earlier Secret-update
+revision ec33db03-2fd4-49a4-8430-9e1cb13fc340 is historical. See the dated
+[release record](docs/validation/production-release-2026-10-11.json); it does not
+assert that these version IDs remain the latest after later uploads. The earlier bootstrap and D1 deferral are historical.
 Finite read-only checks confirmed homepage HTTP 200, both API/Web proxy health
 endpoints HTTP 200 and unauthenticated profile endpoints HTTP 401, with no
 Set-Cookie. These checks verify publication and authenticated access enforcement;
@@ -41,7 +45,7 @@ NORULO_EMAIL_CODE_SECRET. The published Python Worker retains 19 public variable
 Secrets at that release, with both GitHub Secrets retained. These checks establish
 presence/settings consistency; actual login acceptance is reported separately
 below. The later AI preparation added TYPESAFE_API_KEY as a fourth Worker Secret,
-while both AI flags remain 0.
+while both AI flags were still 0 at that preparation checkpoint.
 The earlier sending-domain API 403 was resolved after the token permission update.
 auth.norulo.com is now enabled with DNS status ready and sending previews disabled.
 The Worker has an EMAIL send binding restricted to login@auth.norulo.com, with no
@@ -96,7 +100,10 @@ email, payments, AI providers or remote Cloudflare behavior.
 The [Worker guide](cloudflare/server/README.md) explains local and remote setup.
 Preview remains paused and undeployed. The production config selects the initialized
 independent D1 database, keeps its default access switch at 0, and has no schedules.
-AI and scheduled recurrence remain disabled; payments remain unconfigured.
+All five checked-in feature flags stay 0 and the source has no schedule. Verified
+release A uses explicit overlays to enable D1/email/AI/recurrence and one hourly
+cron. The requested daily revision is prepared locally, not yet published:
+10 16 * * * UTC is Beijing 00:10. Payments remain unconfigured.
 Production has the prepared EMAIL
 send binding and independent admission namespace; email authentication is enabled
 in the published runtime through the explicit overlay. Production's public
@@ -130,13 +137,33 @@ provider HTTPS acceptance. Current Owner allowance is Pro $3 / Max $5 per UTC
 calendar month under the configurable default policy, with no rollover; Free has
 no AI allowance. Stored Owner entitlement/opt-in and monthly fences passed local
 checks; native Worker real-provider HTTPS remains untested. The AI helper/guard
-changes are local, and production AI remains 0/0 pending final publication.
+changes are published in verified release A, with both runtime AI flags 1.
 The independent production RecurringScheduler is implemented and locally
 reviewed: native 16-request/three-incarnation acceptance and the post-packaging-fix
 full suite passed 2,942 tests in 106.73 seconds. Local D1 metadata totals were 234 statements, 805 rows read and 57
 written, including setup/application/probes and excluding the separate CLI
-migration setup. Its runtime flag remains 0 and no cron is active; final
-publication remains pending. The earlier 728-module release package omitted the
+migration setup. Verified release A has recurrence 1 and the exact hourly UTC
+cron; this control-plane verification does not prove a live financial posting.
+The requested daily capacity revision is prepared, not yet published. It uses
+bounded parallel Owner chunks: 8 logical workers, at most 20 occurrences and
+800 SQL statements per chunk, with 120-second Owner deadlines. Root stops new
+launches after 600 seconds and awaits started work; daily engineering caps are
+5,000 selected Owners, 10,000 handled occurrences and 8,192 child RPCs. Financial
+quotas/atomic batches remain unchanged; these caps do not guarantee throughput
+or allow development writes to remote D1. Rule frequencies, timezones and period
+dates remain intact; other timezones can wait nearly 24 hours. Known financial
+unknowns stop the affected Owner; unresolved transport uncertainty stops new
+launches and ultimately Root, with no automatic retry. One user-requested
+production capacity SELECT found total/active/due rules all zero, read 1/write 0,
+with no fixtures. Final local load acceptance passed: 1,000 occurrences across
+200 Owners completed in 33.985 seconds and 3,000 across 600 Owners in 107.635
+seconds, both at peak concurrency 8. These local measurements are not a production
+SLA. See the [compact capacity proof](docs/validation/production-recurring-load-native-local-2026-10-11.json)
+for separate daily-window and whole-profile costs. Daily publication/readback
+and live financial execution remain pending.
+The [earlier minimal daily proof](docs/validation/production-recurring-native-daily-local-2026-10-11.json)
+is an immutable historical checkpoint, not evidence of the new load capacity.
+The earlier 728-module release package omitted the
 scheduler helper and was rejected by Cloudflare validation 10021. Three read-only
 reconciliations confirmed that the live version and configuration stayed unchanged.
 The repaired actual artifact contains 729 modules, with all 64 canonical modules

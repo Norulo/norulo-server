@@ -175,14 +175,15 @@ and does not write D1. Later releases must retain both --activate-production and
 62-test/27-subtest admission check. Twenty-six bounded native localhost POSTs
 verified limiter behavior without D1/provider bindings, remote requests or mail;
 the pinned 728-module packaging dry-run also passed. These overlapping runs are
-not additive totals. Next, configure TYPESAFE_API_KEY and verify actual AI quality,
-Owner entitlement and monthly allowance; then implement production recurrence
-before configuring cron. AI and recurring execution remain disabled. Creem
+not additive totals. The next requested steps then were to configure
+TYPESAFE_API_KEY and verify actual AI quality, Owner entitlement and monthly
+allowance, followed by production recurrence before cron. AI/recurrence were
+still disabled at that checkpoint. Creem
 products/secrets remain optional feature work.
 
 The subsequent AI preparation securely added TYPESAFE_API_KEY as the fourth
 Worker Secret, retaining the GitHub pair and email-code Secret. Both AI flags
-remain 0. At that preparation stage, the cloud network Secret binding was absent
+were 0 at that preparation stage; the cloud network Secret binding was absent
 and the inspected revision-8 runtime had only the Cloudflare token. Real quality
 capture was blocked and real model calls were zero then. The complete local
 reference suite then passed 2,768 tests before the final email-preservation activation-guard repair. Five
@@ -193,9 +194,9 @@ allocates at most 99,108 micro-USD in conservative reservations, stops on failed
 unknown outcomes and cannot be restarted elsewhere to retry. Current policy is
 the configurable default Pro $3 / Max $5 per UTC calendar month, Free $0, no
 rollover or daily request cap.
-The explicit --activate-ai-suggestions overlay and static guard are implemented,
-but are local changes not yet published, do not establish real quality acceptance
-and have not enabled production AI. After the guard repair, 177 targeted tests
+The explicit --activate-ai-suggestions overlay and static guard were implemented
+locally at this checkpoint, before publication/production activation. Their
+implementation did not itself establish real quality acceptance. After the guard repair, 177 targeted tests
 and 28 subtests passed, alongside S01 and shell checks. The final stable full
 reference suite passed 2,777 tests in 106.08 seconds after the guard/native-fixture
 repairs. These overlapping checks are not additive totals. Future AI releases
@@ -218,7 +219,7 @@ remains retained. Fresh [results](ai-quality-2026-10-11-results.jsonl),
 both imported records and the earlier blocked snapshot. They do not prove
 customer error rates or native Worker real-provider HTTPS, which remains untested.
 Stored Owner Pro/Max entitlement/opt-in and UTC-month allowance fences passed
-local checks; production AI remains 0/0 pending final publication. Production
+local checks; production AI was 0/0 at that quality checkpoint. Production
 recurring implementation was still pending at the AI-quality checkpoint, with
 no cron active then. That snapshot remains unchanged.
 
@@ -250,7 +251,8 @@ gzip), with all 64 canonical modules byte-equal to source. Absolute/relative
 entry imports and full module closure are now checked. Local fresh Worker/Vite
 health checks returned 200/200 and protected profile 401; local migration
 application found no unapplied files, without remote D1/provider requests.
-Final AI/recurring publication and live scheduling acceptance remain pending. The new
+The later verified release A is recorded below; live scheduling acceptance
+remains separate. The new
 DO migration is distinct from D1; no remote D1 migration/fixture/model request was
 added by this local scheduler validation. Existing source
 provider IDs and historical approvals are not Norulo requirements or permissions.
@@ -259,3 +261,90 @@ claimed as local setup results. Keep secret values in secure settings.
 All development/regression/browser fixture tests stay on local D1 or SQLite;
 remote smoke checks are read-only. Never seed or rebuild production for testing,
 repeat remote write-based acceptance or blindly retry unknown migration outcomes.
+
+## Verified production release A — 2026-10-11
+
+At 05:38:43 UTC, finite read-only verification accepted Server version
+b5642a63-1643-418a-b494-bb7bcf427050 from main ebd11baf and Web version
+26697b80-76dc-405b-a0c0-c2ea7c0735f7 from main 3531f8a. All five runtime flags
+are 1, with exactly one hourly UTC cron (0 * * * *), the original DB/EMAIL,
+retained EmailAdmission namespace and four Secrets, and new RecurringScheduler
+namespace b3f41def1906481e9c72662debf4b505. Workers.dev and preview URLs remain
+disabled. The earlier ec33/no-cron and rejected-upload records above are history.
+
+Seven Cloudflare GETs and finite public checks verified both health endpoints
+200, both unauthenticated profile endpoints 401, homepage 200, no Set-Cookie,
+original-logo hash and www redirect 308 preserving path/query. This verification
+used zero remote D1 SQL, business mutations, model/email requests, manual cron
+invocations or replayed migrations. The remote migration-tag field was absent;
+namespace identity was verified while checked-in tag definitions were retained.
+
+The [durable dated record](production-release-2026-10-11.json) binds full source
+heads and the final 2,942 Server / 1,654 Web test checkpoints. It is release A,
+not a guarantee that these version IDs remain latest after later uploads. Native
+Worker real-provider HTTPS and live scheduled financial posting remain untested;
+the prior direct HTTPS quality capture and local native proof remain unchanged.
+
+## Earlier minimal daily preparation — 2026-10-11
+
+After release A, the user requested once-daily polling and delegated the
+recommended Beijing 00:10 schedule, 10 16 * * * UTC. That minimal daily revision was locally
+prepared, not published; the capacity revision below supersedes it. Release A
+remains the verified hourly checkpoint.
+Weekly/monthly/quarterly/yearly rule frequencies and each rule's timezone/period
+date remain unchanged. Stored UTC due times are scanned once per day; other
+timezones can wait nearly 24 hours. Existing completed_hour journal semantics,
+scope/class/tag/namespace and no-retry unknown stops were retained at that
+checkpoint. Its then-existing 10-rule/10-handled/3-global-catch-up limits could leave a backlog
+above 10 due rules. One user-requested production capacity SELECT found
+total/active/due counts zero with native read 1/write 0, no fixtures or retries.
+
+Fresh [daily native proof](production-recurring-native-daily-local-2026-10-11.json)
+passed 16 local requests across three incarnations, 234 statements/read 805/
+written 57, excluding distinct local CLI migration setup. Extra-hour ticks and
+manual unknown markers are local fixture seams; no remote cron/provider
+acceptance is claimed. All 83 current source/dependency/migration hashes and the
+64-module mirror plus separate blank initializer matched. Final daily suite/
+packaging and actual release/readback remain pending. The hourly proof, release
+A JSON and completed real AI journal/source hashes remain immutable.
+
+## Prepared daily capacity revision — not yet published
+
+The new source retains Beijing 00:10 (10 16 * * * UTC), per-rule timezone and
+original period date, but replaces the small global tick bound with validated
+hash-scoped Owner chunks in the existing DO binding/class/namespace. No D1
+migration or journal reset is introduced. Legacy completed_hour units and
+active/stopped states remain compatible, with an additional daily checkpoint.
+Root caps selection at 5,000 Owners, handling at 10,000 occurrences, all child
+RPCs (including read-only progress) at 8,192, and page/deferred carry at 64.
+Eight logical workers handle chunks of at most 20 occurrences, 800 native SQL
+statements and a conservative 200-statement occurrence reserve. Actual financial
+quotas, independent atomic batches, actor/member/key/CAS/idempotency fences stay
+enforced. Known pre-dispatch minute-quota denial defers to the next minute,
+releasing the worker slot without a D1 heartbeat or permanent block.
+
+Each Owner has a 120-second hard schema/execution deadline. Root stops new
+launches at 600 seconds and awaits started Owners within their remaining bound,
+below the official Cron wall limit of 900 seconds. Native financial uncertainty
+permanently stops its Owner while others continue. A transport exception can
+advance only after read-only progress proves the exact chunk completed; otherwise
+new launches stop, siblings settle and Root remains permanently globally stopped.
+Same-chunk completed replay uses cached results with no D1; no unknown retries,
+quarantine/reset API or reinterpretation of old hour state is added.
+
+Strict production limits are cpu_ms=300000 and subrequests=9000. The
+[official source record](cloudflare-scheduler-limits-2026-10-11.json) preserves
+conditional plan limits and D1 counting ambiguities; supported configuration
+readback does not confirm Paid billing. Frozen actual packaging has 729 modules,
+1675.10 KiB total/348.25 KiB gzip, with all 64 canonical bytes and import closure
+verified. The definitive final full suite passed 3,009 tests in 115.01 seconds.
+The [final compact local capacity proof](production-recurring-load-native-local-2026-10-11.json)
+records 8-way overlap and natural 1,000/3,000-occurrence profiles across 200/600
+Free Owners. Natural daily passes took 33.985/107.635 seconds with peak 8 and
+maximum Owner SQL 178. Actual daily-window totals were respectively
+27,606/73,063/24,000 and 82,812/228,201/72,000 SQL/read/write; whole-profile
+fixture/setup/integrity totals are recorded separately. Warm/cold manual unknown
+markers remained stopped without D1; no real lost-response injection or production
+SLA is claimed. Daily publication/readback and live financial execution remain
+pending. Earlier hourly/release A/minimal
+daily records and all completed real AI quality evidence remain unchanged.

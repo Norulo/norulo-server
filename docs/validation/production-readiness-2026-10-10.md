@@ -16,12 +16,16 @@ bootstrap. The user later resumed D1 setup and full production deployment.
 The independent Norulo database is initialized and verified against schema v12;
 the full Python application is published and its read-only health/transport checks passed.
 The email-enabled feature version was 815a1216-4468-4591-be58-e339d4d2c154, built
-from main commit 96d6bee. The latest Cloudflare revision after the user's Secret
-update is ec33db03-2fd4-49a4-8430-9e1cb13fc340, before the new AI/recurring release. Runtime D1 and email-auth flags are both 1 through explicit
-activation overlays; checked-in defaults remain 0. The user subsequently confirmed
+from main commit 96d6bee. The Secret-update revision
+ec33db03-2fd4-49a4-8430-9e1cb13fc340 is an earlier checkpoint. Verified release A
+on 2026-10-11 at 05:38:43 UTC is Server b5642a63-1643-418a-b494-bb7bcf427050
+from main ebd11baf and Web 26697b80-76dc-405b-a0c0-c2ea7c0735f7 from main 3531f8a.
+All five runtime D1/email/AI/recurrence flags are 1 through explicit overlays,
+with one hourly UTC cron (0 * * * *); checked-in defaults remain 0/no cron. The user subsequently confirmed
 receipt of the verification code and successful email login. Account linking,
 sign-out and session refresh remain separately unverified. AI and recurrence
-remain disabled pending final release. TYPESAFE_API_KEY is the fourth Worker
+are enabled in this dated release; native real-provider HTTPS and live scheduled
+financial execution remain untested. TYPESAFE_API_KEY is the fourth Worker
 Secret, and runtime specification 11 confirms both network Secret bindings present
 with the Cloudflare token retained. Fresh Norulo quality evidence completed 36
 real CPython HTTPS calls once, with both review gates passing and no retry or D1/
@@ -116,8 +120,9 @@ successful live OAuth. No secret value belongs in release evidence.
 The user deliberately postponed D1 during these earlier stages, then explicitly
 resumed setup. The placeholder has now been replaced by the verified Norulo UUID.
 The checked-in D1 default remains paused; explicit production activation follows
-schema verification. AI and scheduled recurrence remain disabled; payments remain
-unconfigured and preview stays undeployed. The safe local stage
+schema verification. AI and scheduled recurrence were still disabled at this
+earlier stage; release A below supersedes it. Payments remain unconfigured and
+preview stays undeployed. The safe local stage
 record is /workspace/.norulo-environment/cloudflare-production-stage.json; it
 contains public configuration, status booleans and Secret names, never values.
 The subsequent local system-sender-plan.json records the sender setup. These
@@ -157,10 +162,11 @@ bootstrap, as version 3ad0cffc-ecc3-47a4-ab5d-a53999528b8c. At that stage, Cloud
 settings readback confirmed Python compatibility, the intended DB and restricted
 EMAIL binding, all three Secrets and 19 public variables. The activation overlay
 set NORULO_D1_ACCESS_ENABLED=1; email auth was still 0. Its initialization JSON is a
-historical snapshot, not the later email release state. Current email-enabled
-version 815a1216-4468-4591-be58-e339d4d2c154 retains those resources and sets both
-runtime activation flags to 1 as recorded below. Checked-in defaults remain 0;
-workers_dev, preview_urls, recurring execution and AI remain disabled.
+historical snapshot, not the later email release state. The subsequent
+email-enabled version 815a1216-4468-4591-be58-e339d4d2c154 retained those resources
+and set both runtime activation flags to 1 as recorded below; AI/recurrence were
+still disabled then. All source defaults remain 0 and Workers.dev/previews stay
+disabled; release A later enabled runtime AI/recurrence with the hourly cron.
 
 Finite read-only public checks, all without Set-Cookie, confirmed:
 
@@ -234,8 +240,8 @@ The earlier production blocker was the inherited preview-only admission adapter.
 An independent production implementation is now present in
 [EmailAdmission](../../norulo_server/cloudflare_email_admission.py) and
 [the entry point](../../cloudflare/server/src/entry.py), with guard/contract coverage.
-Local reference/native gates and publication passed. The current email-enabled
-Python Worker is version 815a1216-4468-4591-be58-e339d4d2c154, built from main
+Local reference/native gates and publication passed. The earlier email-enabled
+feature release was version 815a1216-4468-4591-be58-e339d4d2c154, built from main
 commit 96d6bee. The earlier core version 3ad0cffc-ecc3-47a4-ab5d-a53999528b8c had
 email auth disabled. The user has now confirmed receipt of the verification code
 and successful email login, establishing actual delivery/code/browser-login
@@ -404,9 +410,9 @@ below are mandatory for the email-login feature explicitly requested by the user
 | Feature | Secrets | Public settings/bindings | Current production behavior |
 | --- | --- | --- | --- |
 | Creem subscriptions | NORULO_CREEM_API_KEY and NORULO_CREEM_WEBHOOK_SECRET | NORULO_CREEM_API_BASE_URL=https://api.creem.io; NORULO_CREEM_PRODUCT_IDS_JSON maps pro/max to explicit month/year live product IDs | Core free ledger does not require payments; checkout/changes fail closed, and an unconfigured public price catalog is unavailable |
-| Jev assistance | TYPESAFE_API_KEY is present as the fourth Worker Secret; runtime spec 11 has the network binding present | Both NORULO_JEV_SUGGESTIONS_ENABLED and NORULO_JEV_SUGGESTIONS_EVALUATED use the reviewed release overlay | Fresh 36-case real HTTPS quality gates passed; production flags remain 0 pending final publication; native real-provider HTTPS untested; manual entry remains available |
+| Jev assistance | TYPESAFE_API_KEY is present as the fourth Worker Secret; runtime spec 11 has the network binding present | Both NORULO_JEV_SUGGESTIONS_ENABLED and NORULO_JEV_SUGGESTIONS_EVALUATED use the reviewed release overlay | Fresh 36-case direct HTTPS quality gates passed; release A runtime flags 1/1 verified; native real-provider HTTPS/user suggestions remain untested; manual entry remains available |
 | Email verification | NORULO_EMAIL_CODE_SECRET, at least 32 characters; securely stored | Authenticated sender/domain/EMAIL and independent EMAIL_ADMISSION SQLite DO published with the dual D1/email overlay | Runtime flag 1; user-confirmed code receipt and successful email login; checked-in flag stays 0 |
-| Scheduled recurring execution | No extra provider Secret | Independent RECURRING_SCHEDULER / RecurringScheduler SQLite DO, scoped hourly journal and reviewed cron overlay | Implementation/core/native/final-suite gates passed; runtime flag 0 and no production cron pending publication |
+| Scheduled recurring execution | No extra provider Secret | Independent RECURRING_SCHEDULER / RecurringScheduler SQLite DO, scoped hourly journal and reviewed cron overlay | Implementation/core/native/final-suite gates passed; release A runtime flag 1 and exactly one hourly UTC cron verified; live financial/provider execution untested |
 
 Creem IDs are public configuration, not prices or secrets. The JSON must be a
 plain-text JSON string, for example
@@ -428,10 +434,10 @@ do not interpret sender preparation as acceptance of those notifications.
 
 The inherited preview path remains isolated under _recurring_enabled and
 ValidationBudget. A separate production RecurringScheduler is now implemented and
-locally verified; it never reuses that preview journal. The current published
-Worker still has recurrence 0 and no cron. Local implementation/packaging does
-not prove actual publication, live background posting or provider delivery; record
-those separately after the reviewed final release.
+locally verified; it never reuses that preview journal. Verified release A has
+recurrence 1 and exactly one hourly UTC cron. Control-plane publication/readback
+and local implementation/packaging do not prove live background financial posting
+or provider delivery; retain that distinction in later acceptance records.
 
 ## AI configuration and acceptance gates
 
@@ -442,22 +448,24 @@ binding and real quality capture was blocked. Runtime specification 11 now
 confirms both network Secret bindings present, retaining the Cloudflare token.
 The existing single quality journal completed 36 real direct CPython HTTPS calls
 once; both quality gates passed and independent review accepted this bounded
-synthetic result. Native Worker real-provider HTTPS remains untested. Production
-AI flags are still 0/0 pending final publication.
+synthetic result. Native Worker real-provider HTTPS remains untested. Both
+production AI flags are 1 in verified release A; actual customer suggestions
+remain separate from direct HTTPS quality capture and configuration readback.
 
 The local deployment helper now supports --activate-ai-suggestions. Its final
 email-preservation guard repair requires production, --activate-production and
---activate-email-auth together; these AI helper/guard changes are not yet
-published. It overlays both Jev flags to 1 while their checked-in defaults
+--activate-email-auth together; these AI helper/guard changes are published in
+release A. It overlays both Jev flags to 1 while their checked-in defaults
 remain 0. The static guard rejects mismatched or malformed flags, paused D1, placeholder/source/shared databases and a missing TYPESAFE_API_KEY declaration.
 It does not consume quality artifacts or establish model/transport acceptance.
-Actual quality review is complete; the final release is still pending. The
-reviewed AI release command preserves all three activation overlays:
+Actual quality review and release A publication/readback are complete. Preserve
+the now-enabled recurrence too: the current release command uses all four
+activation overlays:
 
 ```bash
 ./scripts/deploy-cloudflare.sh --environment production \
   --activate-production --activate-email-auth --activate-ai-suggestions \
-  --execute --local-checks-passed
+  --activate-recurring-expenses --execute --local-checks-passed
 ```
 
 Inherit all four Secrets so AI activation does not pause accepted email login or
@@ -539,24 +547,24 @@ results and obsolete Max-only/daily-limit text; it is not Norulo acceptance.
 
 [RecurringScheduler](../../cloudflare/server/src/entry.py) and its
 [coordination/observed-D1 module](../../norulo_server/cloudflare_recurring_scheduler.py)
-use an independent SQLite DO binding, RECURRING_SCHEDULER, fixed scope
-norulo-production-recurring-v1 and class migration tag
-norulo-recurring-scheduler-v1. A single durable completed-hour/in-flight marker
-serializes each UTC hour; it is persisted before D1/provider awaits. Unknown
-execution remains active/stopped across cold starts with no automatic retry,
-refund or reset/reconciliation HTTP API. Scheduled entry accepts the exact hourly
-cron and uses server time, not caller-supplied time. RPC success must be strict
-boolean true. Owner, quota, permission, integer-money and occurrence-idempotency
-fences remain in the canonical financial application.
+retain the independent RECURRING_SCHEDULER SQLite namespace, class and migration
+tag. The prepared daily capacity revision uses a Root coordinator and validated
+permanent hash scopes for Owner DOs in that same namespace. Existing
+completed_hour units and active/stopped state remain compatible, with an
+additional daily epoch/checkpoint; no reset, namespace replacement, D1 migration
+or public reconciliation endpoint is introduced. Release A remains the last
+verified hourly live checkpoint until new publication/readback.
 
-The observed D1 wrapper requires complete native rows_read/rows_written metadata.
-Failed/unknown dispatch is not treated as a harmless business denial. Schema v12
-and twelve journal names are checked read-only once per incarnation; no schema
-repair, fixture seed or D1 migration is provided. Completed-hour replay avoids
-D1 work, and idle/future-hour scans perform no D1 writes or activity cleanup.
-Real due postings and ordinary failure/inbox handling retain their existing
-necessary authorization and quotas. There is no D1 heartbeat or invented calendar
-write budget; DO SQLite state is distinct from D1.
+Shared PRODUCTION_RECURRING_CRON is 10 16 * * * UTC, Beijing 00:10. Scheduled
+entry uses server time. Existing weekly/monthly/quarterly/yearly frequencies,
+per-rule timezone and original period date are retained. The daily scan compares
+stored UTC next_run_at <= server time; other timezones can be delayed by nearly
+24 hours. RPC success requires strict boolean true. Actual Owner/actor/member/key,
+CAS, integer-money, idempotency and quota fences remain in each independent
+canonical financial batch. The observed D1 wrapper requires complete native
+row metadata; a failed/unknown dispatch is not a harmless business denial.
+
+## Earlier hourly local acceptance — historical
 
 Core review and 168 focused / 82 related tests passed. A whole-suite checkpoint
 had 2,918 passes and one failure because the existing D1 SQL-literal AST test
@@ -620,11 +628,140 @@ The final reviewed publication command is:
 ```
 
 The recurring overlay requires all preceding production/D1/email/AI overlays,
-materializes exactly 0 * * * * in a fresh Worker-relative temporary config, and
-does not run D1 migrations. The actual AI/recurring release is still pending.
-After publication, record its version, flags, independent scheduler namespace,
-preserved bindings/Secrets and exact cron; do not create remote fixtures or make
-repeated financial acceptance writes to claim live schedule/provider acceptance.
+now materializes the prepared daily cron 10 16 * * * in a fresh Worker-relative
+temporary config and does not run D1 migrations. Release A publication/readback
+below used the earlier hourly cron; the daily replacement is not yet published.
+Preserve the same activation overlays and inherited Secrets on later uploads;
+do not create remote fixtures or make repeated financial acceptance writes to
+claim live schedule/provider acceptance.
+
+## Verified production release A — 2026-10-11
+
+The successful release used Server main
+ebd11baf0da9d6aa83f8718b55e0c630e04108bd and Web main
+3531f8ab23ac976f6e17caf1c2246dcbf5ea125c. At 05:38:43 UTC, seven read-only
+Cloudflare GETs verified Server version b5642a63-1643-418a-b494-bb7bcf427050 and
+Web version 26697b80-76dc-405b-a0c0-c2ea7c0735f7. This dated release A is a
+checkpoint, not a guarantee of the latest versions after subsequent uploads.
+
+- Nineteen Server public variables exactly match source with the five activation
+  flags overlaid to 1. Exactly one cron, 0 * * * *, was created at 05:37:56 UTC.
+- DB c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5, EMAIL sender login@auth.norulo.com,
+  EmailAdmission namespace 6588312f00f74840a37463e72a2d75eb and four Secret names
+  were retained. RecurringScheduler namespace
+  b3f41def1906481e9c72662debf4b505 is independently verified. Workers.dev and
+  preview URLs are disabled for both services.
+- The remote migration-tag field was absent/null. Namespace identity is verified
+  and checked-in DO migration-tag definitions are retained; no remote tag
+  readback is claimed.
+- API and Web proxy health returned 200; both unauthenticated profile endpoints
+  returned 401; homepage returned 200, with no Set-Cookie on these checks. The
+  original logo hash matched and www returned 308 preserving path/query.
+
+The final Server suite passed 2,942 tests in 106.73 seconds and Web passed 1,654
+tests; fixed actual packaging contains 729 modules with all 64 canonical modules
+byte-equal to source. This verification performed zero remote D1 SQL, application
+mutations, provider/email requests, manual cron invocations or migration replays.
+It did not repeat completed model-quality calls or native financial fixtures.
+Native Worker real-provider HTTPS and live scheduled financial posting remain
+untested. User-confirmed GitHub sign-in and email code/login remain accepted.
+
+The [durable release record](production-release-2026-10-11.json) preserves the
+sanitized proof hash, exact source heads, configuration/readback and these
+acceptance limits. Earlier ec33/no-cron and rejected-upload checkpoints above
+remain historical; the local/native and real-quality source hashes are unchanged.
+
+## Prepared daily capacity revision — not yet published
+
+The user requested support for thousands of same-day postings and bounded
+parallelism, superseding the earlier minimal daily plan. That earlier
+[16-request proof](production-recurring-native-daily-local-2026-10-11.json) remains
+an immutable historical checkpoint; it is not the new capacity acceptance. The
+verified live release A still has hourly polling until daily publication/readback.
+The recommended daily time stays Beijing 00:10, 10 16 * * * UTC. Per-rule timezones
+and original period dates remain intact; one daily scan can delay other
+timezones by nearly 24 hours. No daily rule frequency is added.
+
+The final source uses these explicit engineering bounds:
+
+| Scope | Bound | Behavior at the boundary |
+| --- | --- | --- |
+| Root selection | 5,000 Owners; pages of 64; deferred/carry at most 64 | Persist bounded progress/backlog rather than retaining an unbounded owner set |
+| Root handling | 10,000 handled occurrences | Preserve remaining backlog; this is a safety cap, not a throughput guarantee or D1 writing allowance |
+| Child calls | 8,192 total RPCs, including status/read-only progress | Stop launching when the budget is reached |
+| Owner concurrency | 8 logical workers | Each Owner's financial work remains serial and isolated in its validated hash scope |
+| Owner chunk | At most 20 occurrences; 800 native SQL statements; 200-statement occurrence reserve | Stop before exceeding the conservative engineering reservation; actual native metrics remain distinct |
+| Owner wall time | 120 seconds hard, including schema validation and execution | Bound the started Owner operation; uncertain financial work is not retried |
+| Root wall time | Stop new launches at 600 seconds, then await started Owners within their remaining 120 seconds | Drain launched work under the official 900-second Cron wall ceiling |
+
+Each posting retains its original independent atomic financial batch and actual
+Owner/actor/member/key/CAS/idempotency/quota checks. A known pre-dispatch
+minute-quota rejection defers to the next minute and releases the logical worker
+slot. It does not write a SQL heartbeat, permanently block the rule, refund an
+unknown operation or replay a completed posting. An Owner's completed same-chunk
+replay returns cached metadata without D1; the next chunk has a unique identity.
+
+Failure scopes are deliberately different. Native financial uncertainty leaves
+that Owner permanently stopped while other Owners continue. An RPC transport
+exception is advanced only when one read-only progress check proves the exact
+chunk settled. If settlement cannot be proved, stop new launches, await started
+siblings, then retain the existing Root global permanent unknown stop. There is
+no automatic retry of unknown chunks, quarantine/reset API or journal
+reinitialization. Legacy completed_hour storage remains an hour bucket, with
+old active/stopped compatibility and an additional daily checkpoint.
+
+Production config limits are strictly cpu_ms=300000 and subrequests=9000,
+preserved in source-paused and temporary activated configurations. These are CPU
+and subrequest settings, not a 900-second DO CPU allowance. The
+[official provenance](cloudflare-scheduler-limits-2026-10-11.json) documents
+Cron's 900-second wall ceiling, conditional Paid CPU limits and DO's default
+30/configurable 300 CPU seconds. Paid billing remains unconfirmed. The D1-specific
+1,000/50 query table and newer generic subrequest table do not establish SQL
+statement-versus-batch-dispatch counting or resets per Owner DO invocation;
+800 statements is an independent conservative engineering bound. Actual
+publication/readback must verify accepted settings without implying a billing
+receipt or production throughput guarantee.
+
+One separately user-requested real production capacity SELECT found total/active/
+due rule counts all zero, native read 1/write 0, no fixtures or retries. This is
+a dated capacity snapshot, not a daily writing budget. Development, failure
+injection and scale fixtures remain on isolated local D1; no new remote SQL
+migrations, synthetic fixtures or financial acceptance writes are required.
+
+Frozen actual packaging passed 729 modules, 1675.10 KiB total/348.25 KiB gzip,
+including the 29.06 KiB scheduler helper. All 64 canonical module bytes, the
+separate blank initializer and absolute/relative entry import closure match.
+The earlier capacity full-suite checkpoint passed 3,006 tests in 111.20 seconds
+before three failure cases were added; the definitive final whole suite passed
+**3,009 tests in 115.01 seconds**. The earlier Web whole-suite checkpoint passed
+1,654 tests; its subsequent production API-guide URL/text correction is being
+validated with focused checks and a production build separately.
+
+Final native capacity acceptance passed. The
+[compact proof](production-recurring-load-native-local-2026-10-11.json) preserves
+the producer/runtime/source chain, all 83 source/dependency/migration hashes,
+raw capture hashes and precise phase totals without committing large raw
+financial snapshots.
+
+| Local profile | Owners × rules | Daily-pass wall time | Peak Owner concurrency | Daily SQL / rows read / rows written | Whole-profile SQL / rows read / rows written |
+| --- | --- | --- | --- | --- | --- |
+| Overlap diagnostic | 8 × 1 | 1.621 s, including an injected 1,200 ms wait per Owner | 8 | 185 / 1,551 / 192 | 484 / 2,614 / 416 |
+| Natural 1,000 occurrences | 200 × 5 | 33.985 s | 8 | 27,606 / 73,063 / 24,000 | 48,897 / 164,618 / 41,600 |
+| Natural 3,000 occurrences | 600 × 5 | 107.635 s | 8 | 82,812 / 228,201 / 72,000 | 146,503 / 502,333 / 124,800 |
+
+The natural profiles' maximum per-Owner SQL was 178; Root SQL maxima were 6/12.
+All Owner and daily-window metrics matched the underlying native statement
+groups, including rows read/written. Same-epoch/cold Root replay and warm/cold
+manually parked Owner/legacy Root unknown markers used zero D1. These markers
+do not demonstrate native lost-commit or RPC transport fault injection; known
+minute-quota deferral is covered by reference tests. Whole-profile totals
+include fixtures, rule creation, setup and integrity probes; local CLI migrations
+and DO SQLite billing are excluded. The overlap wait is diagnostic only. Natural
+timings describe local workloads spread across Owners, not a same-Owner limit,
+production SLA or a complete Cloudflare bill. Daily publication/readback and
+live scheduled financial/provider behavior are not yet claimed.
+The completed 36-call real AI journal and its six accepted source hashes remain
+unchanged and must not be replayed.
 
 ## Remaining release checklist
 
@@ -638,8 +775,8 @@ synthetic business writes.
 | Requested email login — published and user-confirmed | Preserve the independent admission, dual activation overlays, existing domain/EMAIL and all four now-configured Secrets | Code receipt and successful browser login are user-confirmed; account linking, sign-out/refresh and production abuse scenarios remain separate; local tests cover expiry/single use and bounded admission |
 | GitHub repository associations — optional | A user's App installation and chosen repository grants; no numeric App ID/private key required | Actual installation Setup callback with server-issued state and authorized repository discovery/synchronization; standalone projects do not need installation |
 | Paid plans — optional | Independent live Creem products for the available plan/cadence pairs, API/webhook Secrets and explicit inheritance, signed webhook registration | Accurate public prices and idempotent entitlement changes from verified webhooks; no charge or subscription mutation is part of core acceptance |
-| Jev AI assistance — quality reviewed, final release pending | Worker and network Secrets ready; preserve all four Secrets and D1/email overlays in the reviewed AI publication | Fixed real quality suite and local Owner/monthly fences passed; runtime AI activation/user suggestions remain unverified, and native real-provider HTTPS was not exercised |
-| Recurring posting — implementation/local gates complete, publication pending | Preserve the independent scheduler, all four Secrets and previous activation overlays; use the reviewed hourly-cron release | Native/core/final suite passed; actual version/bindings/cron readback and live scheduled/provider behavior remain separate, without remote fixtures |
+| Jev AI assistance — published/enabled, quality reviewed | Preserve all four Secrets and all D1/email/AI/recurrence activation overlays | Fixed real quality suite and local Owner/monthly fences passed; release A runtime flags verified; actual customer suggestions and native real-provider HTTPS remain untested |
+| Recurring posting — release A hourly; daily capacity replacement locally accepted | Preserve Root/Owner journals, existing namespace, four Secrets, strict CPU/subrequest limits and all overlays; daily cron 10 16 * * * (Beijing 00:10) | Final whole suite 3,009 passed; 8-way overlap and natural 1,000/3,000-occurrence native profiles passed; actual daily publication/readback and live financial/provider behavior untested; bounded progress/backlog remains possible |
 
 Production domains, frontend assets, the published API/Web transport, system sending
 domain/binding and the original three Secret names are already recorded above.
@@ -651,12 +788,11 @@ receiving mailbox is required by the Server for its system sender.
 Email publication and user-confirmed code/login acceptance are complete. The AI
 stage now has its Worker/network Secret bindings, independently reviewed fixed
 real quality evidence and locally verified Owner/monthly allowance fences.
-Production AI remains 0/0 pending final publication. The distinct production
-scheduler/coordinator has passed implementation, native/core review and the final
-full suite; its runtime flag remains 0 with no installed cron. The prepared final
-release activates AI and recurrence together while preserving D1 and email.
-AI and recurrence remain disabled now; adding a Secret or cron does not substitute
-for those gates. Any new provider Secret must be explicitly inherited on later
+Verified release A has both runtime AI flags 1 and recurrence 1 with the hourly
+UTC cron, preserving D1 and accepted email login. The distinct production
+scheduler/coordinator passed implementation, native/core review and the final
+full suite. Publication/configuration readback does not establish actual native
+provider HTTPS, customer suggestions or scheduled financial/provider behavior. Any new provider Secret must be explicitly inherited on later
 uploads, retaining all four now configured. No remote fixture writes, real charge or
 subscription modification is implied by this sequence.
 

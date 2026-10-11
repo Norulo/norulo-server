@@ -591,7 +591,10 @@ async def _defer_capacity(binding, row, authority, template, occurred, following
     return updated
 
 
-async def generate_occurrence(*, binding, maintenance_binding, gateway, row, now):
+async def generate_occurrence(*, binding, maintenance_binding, gateway, row, now,
+                              yield_on_rate_limit=False):
+    if type(yield_on_rate_limit) is not bool:
+        raise ValueError("recurring rate yield")
     if row["target_kind"] == "project":
         # A row selected before a concurrent removal must not publish anything,
         # including replay-pointer maintenance, or contact a provider.
@@ -622,6 +625,8 @@ async def generate_occurrence(*, binding, maintenance_binding, gateway, row, now
     except (PrincipalAuthError, GitHubFailure) as error:
         return await _maintenance(maintenance_binding, row, now=now, code=error.code), "blocked"
     except PlanLimitError as error:
+        if yield_on_rate_limit and error.code == "WRITE_RATE_LIMIT":
+            raise
         if error.code in CAPACITY_FAILURE_CODES:
             return await _defer_capacity(maintenance_binding, row, authority, template, occurred, following, error.code, now), "blocked"
         return await _maintenance(maintenance_binding, row, now=now, code=error.code), "blocked"
@@ -639,6 +644,8 @@ async def generate_occurrence(*, binding, maintenance_binding, gateway, row, now
     try:
         await binding.batch(commands)
     except PlanLimitError as error:
+        if yield_on_rate_limit and error.code == "WRITE_RATE_LIMIT":
+            raise
         if error.code in CAPACITY_FAILURE_CODES:
             return await _defer_capacity(maintenance_binding, row, authority, template, occurred, following, error.code, now), "blocked"
         return await _maintenance(maintenance_binding, row, now=now, code=error.code), "blocked"

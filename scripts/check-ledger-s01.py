@@ -14,6 +14,9 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "cloudflare" / "server"
+sys.path.insert(0, str(ROOT))
+from norulo_server.cloudflare_recurring_scheduler import PRODUCTION_RECURRING_CRON
+
 PLACEHOLDER_ID = "00000000-0000-0000-0000-000000000000"
 # The imported service's databases are historical evidence, never Norulo targets.
 SOURCE_DATABASE_IDS = frozenset({
@@ -21,7 +24,10 @@ SOURCE_DATABASE_IDS = frozenset({
     "80a29a0d-5699-449f-9541-a01dc461ca9d",
 })
 EMAIL_SENDER = "login@auth.norulo.com"
-HOURLY_CRONS = ["0 * * * *"]
+PREVIEW_CRONS = ["0 * * * *"]
+PRODUCTION_CRONS = [PRODUCTION_RECURRING_CRON]
+PRODUCTION_CPU_MS = 300_000
+PRODUCTION_SUBREQUESTS = 9_000
 EMAIL_BINDINGS = [{"name": "EMAIL_ADMISSION", "class_name": "EmailAdmission"}]
 EMAIL_MIGRATIONS = [{"tag": "norulo-email-admission-v1", "new_sqlite_classes": ["EmailAdmission"]}]
 PRODUCTION_BINDINGS = EMAIL_BINDINGS + [{"name": "RECURRING_SCHEDULER", "class_name": "RecurringScheduler"}]
@@ -50,6 +56,12 @@ def _validated_config(environment: str, allow_placeholders: bool,
         raise ValueError("Server Worker entry is missing")
     if config.get("workers_dev") is not False or config.get("preview_urls") is not False:
         raise ValueError("unreviewed public Worker URL")
+    if environment == "production":
+        limits = config.get("limits")
+        if (not isinstance(limits, dict) or set(limits) != {"cpu_ms", "subrequests"}
+                or type(limits.get("cpu_ms")) is not int or limits["cpu_ms"] != PRODUCTION_CPU_MS
+                or type(limits.get("subrequests")) is not int or limits["subrequests"] != PRODUCTION_SUBREQUESTS):
+            raise ValueError("production requires exactly the reviewed 300000 ms CPU and 9000 subrequest limits")
     routes = config.get("routes", [])
     if len(routes) != 1:
         raise ValueError("one reviewed hostname is required")
@@ -83,8 +95,8 @@ def _validated_config(environment: str, allow_placeholders: bool,
     if not isinstance(crons, list) or any(not isinstance(cron, str) for cron in crons):
         raise ValueError("cron expressions must be an explicit list of strings")
     if environment == "production" and (crons or recurring == "1"):
-        if recurring != "1" or crons != HOURLY_CRONS:
-            raise ValueError("production recurrence requires matching activation and one exact hourly cron")
+        if recurring != "1" or crons != PRODUCTION_CRONS:
+            raise ValueError("production recurrence requires matching activation and one exact daily cron")
     if activate_production:
         if environment != "production":
             raise ValueError("production activation requires the production environment")
@@ -97,7 +109,7 @@ def _validated_config(environment: str, allow_placeholders: bool,
         vars_["NORULO_JEV_SUGGESTIONS_EVALUATED"] = "1"
     if activate_recurring_expenses:
         vars_["NORULO_RECURRING_EXPENSES_ENABLED"] = "1"
-        config.setdefault("triggers", {})["crons"] = HOURLY_CRONS.copy()
+        config.setdefault("triggers", {})["crons"] = PRODUCTION_CRONS.copy()
     product_preview = (environment == "preview" and
                        vars_.get("NORULO_PREVIEW_PRODUCT_ENABLED") == "1")
     access = vars_.get("NORULO_D1_ACCESS_ENABLED")
@@ -156,11 +168,11 @@ def _validated_config(environment: str, allow_placeholders: bool,
             if not (access == "1" and email_auth == "1" and production_scheduler
                     and vars_["NORULO_JEV_SUGGESTIONS_ENABLED"] == "1"
                     and vars_["NORULO_JEV_SUGGESTIONS_EVALUATED"] == "1"
-                    and recurring == "1" and crons == HOURLY_CRONS):
-                raise ValueError("production recurrence requires its independent scheduler, D1, email and AI activation with one hourly cron")
+                    and recurring == "1" and crons == PRODUCTION_CRONS):
+                raise ValueError("production recurrence requires its independent scheduler, D1, email and AI activation with one daily cron")
         elif not (product_preview and access == "1" and recurring == "1"
                   and vars_.get("NORULO_PREVIEW_SCHEMA_V7_UPGRADE_ENABLED") == "1"
-                  and crons == HOURLY_CRONS):
+                  and crons == PREVIEW_CRONS):
             raise ValueError("only coordinated hourly preview recurrence is allowed")
     app_url = vars_.get("NORULO_APP_URL", "")
     allowed = vars_.get("NORULO_ALLOWED_ORIGINS", "")
@@ -321,7 +333,7 @@ def main() -> int:
     parser.add_argument("--activate-ai-suggestions", action="store_true",
                         help="Validate reviewed production AI activation with --activate-production and --activate-email-auth; no remote actions")
     parser.add_argument("--activate-recurring-expenses", action="store_true",
-                        help="Validate production hourly recurrence with D1, email and AI activation; no remote actions")
+                        help="Validate production daily recurrence with D1, email and AI activation; no remote actions")
     parser.add_argument("--write-deploy-config", type=Path,
                         help="Write the validated recurrence overlay to a fresh local Worker mktemp file")
     args = parser.parse_args()
