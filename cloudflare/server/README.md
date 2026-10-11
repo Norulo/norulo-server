@@ -6,8 +6,8 @@ wrangler.preview.jsonc remains an undeployed offline reference.
 wrangler.production.jsonc selects the initialized independent D1 database, with
 its default access switch paused and account, domain, GitHub App and email settings described
 below. All five checked-in feature defaults stay 0 and source has no cron;
-verified release A uses all activation overlays to set runtime D1/email/AI/
-recurrence flags to 1 with one hourly UTC cron. Preview and automatic schema
+verified daily release B uses all activation overlays to set runtime D1/email/AI/
+recurrence flags to 1 with one daily UTC cron. Preview and automatic schema
 upgrades remain disabled.
 The imported source's remote databases, providers, domain registrations and
 historic publication approval have not been transferred. The user now authorizes
@@ -61,6 +61,13 @@ flags stay 0, source has no cron, and Workers.dev/public previews are disabled.
 The [dated release record](../../docs/validation/production-release-2026-10-11.json)
 records Web version 26697b80-76dc-405b-a0c0-c2ea7c0735f7 and the finite readback;
 these IDs are not a guarantee of future latest versions.
+Verified daily release B at 2026-10-11 06:38:08 UTC is Server
+e2e4e02d-ac9a-4c20-852f-f6cbfe5b5ae4 from main ded49a46 and Web
+0c63c81e-1f91-4b72-bf3b-f949b7840ad8 from main bef23ee7. The
+[dated daily release record](../../docs/validation/production-daily-release-2026-10-11.json)
+verifies exactly one cron 10 16 * * * UTC, limits cpu_ms=300000/subrequests=9000,
+19 public variables with five flags 1 and retained DB, both DO namespaces, EMAIL
+and four Secrets. Release A above remains an immutable hourly checkpoint.
 Finite read-only checks confirmed homepage HTTP 200, API and Web proxy health
 HTTP 200, and their unauthenticated profile endpoints HTTP 401. No public check
 set a cookie. This proves publication/transport and access enforcement. The user
@@ -205,7 +212,7 @@ The static guard checks exact matching flags, D1/isolation and the declared Secr
 Source AI flags remain 0; verified release A has both runtime AI flags 1. Stored
 Owner Pro/Max entitlement/opt-in and UTC-month reservation/fallback fences passed
 local checks. The independent production scheduler passed local/native/final
-suite gates below, and verified release A has recurrence 1 and the exact hourly
+suite gates below, and verified release B has recurrence 1 and the exact daily
 cron. Live scheduled posting and native real-provider HTTPS remain untested.
 The fresh [quality execution record](../../docs/validation/ai-quality-2026-10-11-execution.json)
 pins results, request/source hashes and journal counts. The unchanged
@@ -256,8 +263,8 @@ application found no unapplied migrations. These checks made no remote D1 or
 provider requests. Source flags remain 0 and source has no cron.
 The verified release command, also required to preserve activation on subsequent
 uploads, creates a scoped temporary Worker-relative config and removes it after
-execution. The current prepared revision selects one daily UTC cron, 10 16 * * *
-(Beijing 00:10); it has not yet replaced release A's hourly live cron:
+execution. Verified release B selects one daily UTC cron, 10 16 * * *
+(Beijing 00:10), replacing the earlier release A hourly schedule:
 
 ```bash
 ./scripts/deploy-cloudflare.sh --environment production \
@@ -275,11 +282,11 @@ The checked-in DO tag definitions are retained. Installed cron does not prove
 actual scheduled financial/provider execution; do not add remote fixtures or
 repeated financial acceptance writes to claim it.
 
-The prepared daily capacity revision retains weekly/monthly/quarterly/yearly
+The published daily capacity revision retains weekly/monthly/quarterly/yearly
 rule frequencies. Each rule's timezone determines stored UTC next_run_at; the
 daily poll scans due values <= server time and preserves the original period
-date. Another timezone can be delayed by nearly 24 hours. Release A remains the
-verified hourly live checkpoint until daily publication/readback.
+date. Another timezone can be delayed by nearly 24 hours. Daily publication and
+configuration readback passed in dated release B; live financial behavior is untested.
 
 The existing binding/class/namespace now hosts Root coordination and permanent,
 validated hash scopes for Owner DOs. Legacy completed_hour units and active/
@@ -305,8 +312,8 @@ await siblings and retain the existing Root global permanent unknown stop. No
 unknown retry, quarantine or reset endpoint is added. Completed same-chunk
 replay is cached without D1; subsequent chunk identity is unique.
 
-The prepared production config strictly sets limits.cpu_ms=300000 and
-limits.subrequests=9000. Publication/readback must verify support; the account's
+The production config strictly sets limits.cpu_ms=300000 and
+limits.subrequests=9000. Release B publication/readback verified support; the account's
 Paid billing subscription remains unconfirmed. See
 [official limits provenance](../../docs/validation/cloudflare-scheduler-limits-2026-10-11.json)
 for the CPU/wall distinction and unresolved D1 statement/dispatch/per-Owner
@@ -335,8 +342,9 @@ injected loss of a real financial commit or an RPC transport response. Known
 minute-quota deferral is covered by reference tests, not these native profiles.
 Whole-profile costs include local fixtures, rule creation, setup and integrity
 probes; local CLI migrations and DO SQLite billing are excluded. The overlap
-profile demonstrates concurrency only. Daily publication/readback remains
-pending. The load is spread across independent Owners, not a same-Owner
+profile demonstrates concurrency only. Daily publication/readback passed in
+dated release B; live financial/provider behavior remains untested. The load is
+spread across independent Owners, not a same-Owner
 throughput promise or Cloudflare SLA. One separate
 user-requested production capacity SELECT found total/active/due rules all zero,
 read 1/write 0, no fixtures or retries. Development/load tests remain on isolated

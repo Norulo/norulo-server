@@ -188,11 +188,15 @@ customer suggestion acceptance remain untested.
 --activate-ai-suggestions requires production and both D1/email activation
 overlays; the static guard cannot prove quality. Preserve all four Worker Secrets.
 The reviewed --activate-recurring-expenses release requires production plus all
-D1/email/AI activation overlays. The prepared daily revision uses shared
+D1/email/AI activation overlays. The published daily revision uses shared
 PRODUCTION_RECURRING_CRON=10 16 * * * (UTC), Beijing 00:10, in a fresh temporary
-config while source defaults stay 0 and source has no cron. Release A above
-remains the last verified hourly deployment until daily release readback.
-The prepared capacity revision uses permanent, validated hash scopes for Owner
+config while source defaults stay 0 and source has no cron. Verified release B
+at 2026-10-11 06:38:08 UTC is Server e2e4e02d-ac9a-4c20-852f-f6cbfe5b5ae4
+from main ded49a46 and Web 0c63c81e-1f91-4b72-bf3b-f949b7840ad8 from main
+bef23ee7. The [dated daily record](docs/validation/production-daily-release-2026-10-11.json)
+verifies the daily cron, strict limits, all five flags 1 and preservation of
+DB, EMAIL, both DO namespaces and four Secrets; release A is historical.
+The published capacity revision uses permanent, validated hash scopes for Owner
 DOs in the existing namespace/class and a Root daily checkpoint. Preserve legacy
 completed_hour units and active/stopped state; do not reset/reinitialize storage
 or bypass an old permanent unknown stop. Root limits are 5,000 selected Owners,
@@ -220,7 +224,8 @@ took 33.985/107.635 seconds at peak parallelism 8; these are local observations,
 not a same-Owner throughput promise or production SLA. The
 [capacity proof](docs/validation/production-recurring-load-native-local-2026-10-11.json)
 separates actual daily-window costs from fixture/setup/integrity/replay costs.
-Daily publication/readback remains pending.
+Daily publication/readback passed in dated release B; live scheduled financial
+and provider behavior remain untested. Do not treat its version as permanently latest.
 Do not infer live scheduling/performance from
 the immutable earlier 16-request minimal proof. The capacity revision uses the same binding/class/namespace and needs no D1
 migration. Production limits must remain exactly cpu_ms=300000 and

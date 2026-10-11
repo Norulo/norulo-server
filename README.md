@@ -31,6 +31,14 @@ has exactly one hourly UTC cron (0 * * * *). Web release A is
 revision ec33db03-2fd4-49a4-8430-9e1cb13fc340 is historical. See the dated
 [release record](docs/validation/production-release-2026-10-11.json); it does not
 assert that these version IDs remain the latest after later uploads. The earlier bootstrap and D1 deferral are historical.
+Verified daily release B at 2026-10-11 06:38:08 UTC is Server
+e2e4e02d-ac9a-4c20-852f-f6cbfe5b5ae4 from main ded49a46 and Web
+0c63c81e-1f91-4b72-bf3b-f949b7840ad8 from main bef23ee7. Its dated
+[daily release record](docs/validation/production-daily-release-2026-10-11.json)
+verifies exactly one daily cron, 10 16 * * * UTC (Beijing 00:10), limits
+cpu_ms=300000/subrequests=9000, all five flags 1 and preservation of the original
+DB, both DO namespaces, EMAIL and four Secret names. Release A remains historical;
+these read-only checks do not prove a live scheduled financial posting.
 Finite read-only checks confirmed homepage HTTP 200, both API/Web proxy health
 endpoints HTTP 200 and unauthenticated profile endpoints HTTP 401, with no
 Set-Cookie. These checks verify publication and authenticated access enforcement;
@@ -101,9 +109,8 @@ The [Worker guide](cloudflare/server/README.md) explains local and remote setup.
 Preview remains paused and undeployed. The production config selects the initialized
 independent D1 database, keeps its default access switch at 0, and has no schedules.
 All five checked-in feature flags stay 0 and the source has no schedule. Verified
-release A uses explicit overlays to enable D1/email/AI/recurrence and one hourly
-cron. The requested daily revision is prepared locally, not yet published:
-10 16 * * * UTC is Beijing 00:10. Payments remain unconfigured.
+release B uses explicit overlays to enable D1/email/AI/recurrence and exactly one
+daily cron, 10 16 * * * UTC (Beijing 00:10). Payments remain unconfigured.
 Production has the prepared EMAIL
 send binding and independent admission namespace; email authentication is enabled
 in the published runtime through the explicit overlay. Production's public
@@ -142,9 +149,9 @@ The independent production RecurringScheduler is implemented and locally
 reviewed: native 16-request/three-incarnation acceptance and the post-packaging-fix
 full suite passed 2,942 tests in 106.73 seconds. Local D1 metadata totals were 234 statements, 805 rows read and 57
 written, including setup/application/probes and excluding the separate CLI
-migration setup. Verified release A has recurrence 1 and the exact hourly UTC
+migration setup. Verified daily release B has recurrence 1 and the exact daily UTC
 cron; this control-plane verification does not prove a live financial posting.
-The requested daily capacity revision is prepared, not yet published. It uses
+The daily capacity revision is published with verified configuration. It uses
 bounded parallel Owner chunks: 8 logical workers, at most 20 occurrences and
 800 SQL statements per chunk, with 120-second Owner deadlines. Root stops new
 launches after 600 seconds and awaits started work; daily engineering caps are
@@ -160,7 +167,7 @@ with no fixtures. Final local load acceptance passed: 1,000 occurrences across
 seconds, both at peak concurrency 8. These local measurements are not a production
 SLA. See the [compact capacity proof](docs/validation/production-recurring-load-native-local-2026-10-11.json)
 for separate daily-window and whole-profile costs. Daily publication/readback
-and live financial execution remain pending.
+passed in dated release B; live financial execution remains untested.
 The [earlier minimal daily proof](docs/validation/production-recurring-native-daily-local-2026-10-11.json)
 is an immutable historical checkpoint, not evidence of the new load capacity.
 The earlier 728-module release package omitted the

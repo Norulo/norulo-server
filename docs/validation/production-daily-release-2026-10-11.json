@@ -1,0 +1,225 @@
+{
+  "recorded_at_local_date": "2026-10-11",
+  "recording_timezone": "Asia/Shanghai",
+  "release_checkpoint": "B",
+  "scope": "Dated production daily publication, strict limits/resources and finite read-only transport verification; not future-latest or live financial/provider acceptance",
+  "passed": true,
+  "reported_by": "root agent; sanitized readback independently copied and checked locally",
+  "sanitized_readback_evidence_sha256": "a75f9b828cf69e7f691d1770cc39830af77044b31d8864d777284b43bad7a162",
+  "sanitized_readback_evidence_bytes": 4522,
+  "deployed_source_heads": {
+    "server": "ded49a46b06f5f79e2996f58d773d66acaddc0a0",
+    "web": "bef23ee7cca378614cdf1e7cdcc8494601c86648"
+  },
+  "packaging": {
+    "actual_module_count": 729,
+    "total_kib": 1675.1,
+    "gzip_kib": 348.25,
+    "helper_kib": 29.06,
+    "canonical_module_count": 64,
+    "all_canonical_module_bytes_and_entry_rechecked_against_deployed_server_head": true,
+    "separate_blank_initializer_verified": true,
+    "absolute_and_relative_import_closure_verified": true,
+    "packaging_evidence_sha256": "8d7d099c5879dae7146fccdd306ff3603db1c1ca219f0c29a119c225817930a5",
+    "entry_sha256": "f2c17488a74d7dca871f11af57dc59825f314978a6452a29b43ade3182c677c0",
+    "helper_sha256": "43f8298787758ab61ea1c76a67808fe3c8a09018a6415b3142ab1107290dcf5a",
+    "ledger_recurring_sha256": "706e8f316ba01c4e3e5b5e9b8982f4be04bc96fa13995f2372444ef058bed17c",
+    "canonical_module_manifest_sha256": "769668d845d35c4f55f2bd528a90e5edb07449d7fbee3736b21b2f3181d3b65d",
+    "manifest_hash_recipe": "SHA-256 of canonicalModulesSha256 map, JSON sort_keys=true and separators=(comma,colon)"
+  },
+  "local_validation": {
+    "server_full_suite": {
+      "passed": 3009,
+      "seconds": 115.01,
+      "exit_code": 0,
+      "reported_by": "root agent"
+    },
+    "prior_web_whole_suite": {
+      "passed": 1654,
+      "historical_checkpoint": true
+    },
+    "web_production_api_guide_change": {
+      "source_files": 3,
+      "focused_tests_passed": 15,
+      "seconds": 3.84,
+      "lint_passed": true,
+      "production_build_passed": true,
+      "reported_by": "root agent"
+    },
+    "final_native_capacity_evidence": "production-recurring-load-native-local-2026-10-11.json",
+    "final_native_capacity_evidence_sha256": "9e39f7ad2e13244c4f853fa70d67e974f8081cc7f9bb6e66f8aa647bf94a2622",
+    "direct_https_real_quality_evidence": "ai-quality-2026-10-11-execution.json",
+    "direct_https_real_quality_evidence_sha256": "46ce90d4cfece379adbf5febb1a9ecfc62a630de1a51e49fb587206fa128d83a",
+    "completed_real_quality_calls_replayed": false,
+    "overlapping_checks_not_additive": true
+  },
+  "verification": {
+    "checkedAtUtc": "2026-10-11T06:38:08.477224+00:00",
+    "recordingTimezone": "Asia/Shanghai",
+    "accountId": "84e421f26c708c0cf437e287eed11fa1",
+    "readOnlyCloudflareRequests": 7,
+    "remoteD1SqlOperations": 0,
+    "remoteApplicationMutations": 0,
+    "providerRequests": 0,
+    "manualCronInvocations": 0,
+    "realEmailsSentByAgent": 0,
+    "migrationReplay": 0,
+    "automaticRetries": 0,
+    "tlsVerification": true,
+    "server": {
+      "versionId": "e2e4e02d-ac9a-4c20-852f-f6cbfe5b5ae4",
+      "publicVars": {
+        "NORULO_ALLOWED_ORIGINS": "https://norulo.com",
+        "NORULO_APP_URL": "https://norulo.com",
+        "NORULO_COOKIE_SAME_SITE": "None",
+        "NORULO_CREEM_API_BASE_URL": "https://api.creem.io",
+        "NORULO_CREEM_PRODUCT_IDS_JSON": "{}",
+        "NORULO_D1_ACCESS_ENABLED": "1",
+        "NORULO_EMAIL_AUTH_ENABLED": "1",
+        "NORULO_EMAIL_FROM": "login@auth.norulo.com",
+        "NORULO_GITHUB_APP_SLUG": "norulo",
+        "NORULO_GITHUB_CALLBACK_URL": "https://norulo.com/api/auth/github/callback",
+        "NORULO_GITHUB_CLIENT_ID": "Iv23li78ZPeUgSxJkLUj",
+        "NORULO_JEV_SUGGESTIONS_ENABLED": "1",
+        "NORULO_JEV_SUGGESTIONS_EVALUATED": "1",
+        "NORULO_MODE": "production",
+        "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":100,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\"},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\"},\"max\":{\"projects\":100,\"records\":100000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"5.00\"}}",
+        "NORULO_PREVIEW_BUSINESS_CLEAR_ID": "",
+        "NORULO_PREVIEW_BUSINESS_CLEAR_MANIFEST": "",
+        "NORULO_PREVIEW_SCHEMA_V11_UPGRADE_ENABLED": "0",
+        "NORULO_RECURRING_EXPENSES_ENABLED": "1"
+      },
+      "secretNames": [
+        "NORULO_EMAIL_CODE_SECRET",
+        "NORULO_GITHUB_CLIENT_SECRET",
+        "NORULO_GITHUB_TOKEN_KEY",
+        "TYPESAFE_API_KEY"
+      ],
+      "resources": [
+        {
+          "database_id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+          "id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+          "name": "DB",
+          "type": "d1"
+        },
+        {
+          "allowed_sender_addresses": [
+            "login@auth.norulo.com"
+          ],
+          "name": "EMAIL",
+          "type": "send_email"
+        },
+        {
+          "class_name": "EmailAdmission",
+          "name": "EMAIL_ADMISSION",
+          "namespace_id": "6588312f00f74840a37463e72a2d75eb",
+          "type": "durable_object_namespace"
+        },
+        {
+          "class_name": "RecurringScheduler",
+          "name": "RECURRING_SCHEDULER",
+          "namespace_id": "b3f41def1906481e9c72662debf4b505",
+          "type": "durable_object_namespace"
+        }
+      ],
+      "subdomain": {
+        "enabled": false,
+        "previews_enabled": false
+      },
+      "compatibilityFlags": [
+        "python_workers"
+      ],
+      "limits": {
+        "cpu_ms": 300000,
+        "subrequests": 9000
+      },
+      "migrationTag": null,
+      "schedules": [
+        {
+          "cron": "10 16 * * *",
+          "created_on": "2026-10-11T06:37:31.428958Z",
+          "modified_on": "2026-10-11T06:37:31.428958Z"
+        }
+      ]
+    },
+    "web": {
+      "versionId": "0c63c81e-1f91-4b72-bf3b-f949b7840ad8",
+      "publicVars": {
+        "NORULO_API_ORIGIN": "https://api.norulo.com",
+        "NORULO_MODE": "production"
+      },
+      "secretNames": [],
+      "resources": [
+        {
+          "name": "ASSETS",
+          "type": "assets"
+        },
+        {
+          "environment": "production",
+          "name": "NORULO_SERVER",
+          "service": "norulo-server-production",
+          "type": "service"
+        }
+      ],
+      "subdomain": {
+        "enabled": false,
+        "previews_enabled": false
+      },
+      "compatibilityFlags": [],
+      "limits": null,
+      "migrationTag": null
+    },
+    "publicRequests": [
+      {
+        "url": "https://api.norulo.com/health",
+        "status": 200,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/api/health",
+        "status": 200,
+        "setCookie": false
+      },
+      {
+        "url": "https://api.norulo.com/api/v1/me",
+        "status": 401,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/api/api/v1/me",
+        "status": 401,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/",
+        "status": 200,
+        "setCookie": false
+      }
+    ],
+    "originalLogoSha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f",
+    "wwwRedirect": {
+      "status": 308,
+      "location": "https://norulo.com/login?source=release-check"
+    },
+    "passed": true
+  },
+  "acceptance_limits": {
+    "future_latest_version_guaranteed": false,
+    "native_worker_real_provider_https_tested": false,
+    "live_scheduled_financial_posting_tested": false,
+    "production_throughput_sla_established": false,
+    "paid_billing_subscription_confirmed": false,
+    "official_statement_vs_batch_dispatch_counting_established": false,
+    "official_per_owner_d1_counter_reset_established": false,
+    "remote_migration_tag_verified": false,
+    "remote_api_migration_tag_was_absent_null": true,
+    "user_reported_github_sign_in_accepted": true,
+    "user_reported_email_code_delivery_and_browser_login_accepted": true,
+    "repository_installation_credential_refresh_account_linking_signout_full_ledger_journey_not_claimed": true,
+    "secret_values_included": false,
+    "historical_native_records_and_release_a_unchanged": true,
+    "local_native_manual_unknown_markers_are_not_lostcommit_or_rpc_transport_injection": true
+  },
+  "finite_public_request_count": 7,
+  "finite_public_request_count_recipe": "Five endpoint entries plus original logo fetch and www path/query redirect fetch"
+}

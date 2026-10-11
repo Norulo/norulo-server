@@ -30,13 +30,17 @@ The production recurring scheduler has separately passed local/core/native gates
 and the post-packaging-fix 2,942-test suite. The earlier attempted release was
 rejected for an omitted scheduler module; repaired 729-module packaging is
 locally verified and subsequently published in release A with recurrence 1 and
-one hourly UTC cron. The later daily replacement is prepared locally for
-Beijing 00:10 with bounded parallel Owner chunks, not yet published. Final
+one hourly UTC cron. The later daily replacement is published with bounded
+parallel Owner chunks and Beijing 00:10 polling. Verified release B at
+2026-10-11 06:38:08 UTC retained both Jev flags 1, all four Secrets, D1 and email
+activation. The [dated daily record](production-daily-release-2026-10-11.json)
+preserves that checkpoint without claiming future-latest versions. Final
 full suite passed 3,009 tests; the
 [final local capacity proof](production-recurring-load-native-local-2026-10-11.json)
 passed 8-way overlap and 1,000/3,000 occurrences across 200/600 Owners. Natural
 daily passes took 33.985/107.635 seconds; these are local observations, not a
-production SLA. Daily publication/readback remains pending. The
+production SLA. Daily publication/readback passed; live financial execution and
+native Worker real-provider HTTPS remain untested. The
 completed real AI journal and
 its source hashes are unchanged and must not be repeated.
 Live financial scheduling remains untested. See [current recurring readiness](production-readiness-2026-10-10.md#production-recurring-implementation-and-local-acceptance). The

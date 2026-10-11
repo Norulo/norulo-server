@@ -290,7 +290,7 @@ the prior direct HTTPS quality capture and local native proof remain unchanged.
 After release A, the user requested once-daily polling and delegated the
 recommended Beijing 00:10 schedule, 10 16 * * * UTC. That minimal daily revision was locally
 prepared, not published; the capacity revision below supersedes it. Release A
-remains the verified hourly checkpoint.
+remains the dated earlier hourly checkpoint; release B below later replaced it.
 Weekly/monthly/quarterly/yearly rule frequencies and each rule's timezone/period
 date remain unchanged. Stored UTC due times are scanned once per day; other
 timezones can wait nearly 24 hours. Existing completed_hour journal semantics,
@@ -305,10 +305,11 @@ written 57, excluding distinct local CLI migration setup. Extra-hour ticks and
 manual unknown markers are local fixture seams; no remote cron/provider
 acceptance is claimed. All 83 current source/dependency/migration hashes and the
 64-module mirror plus separate blank initializer matched. Final daily suite/
-packaging and actual release/readback remain pending. The hourly proof, release
+packaging and actual release/readback were still pending at that minimal
+preparation checkpoint. The hourly proof, release
 A JSON and completed real AI journal/source hashes remain immutable.
 
-## Prepared daily capacity revision — not yet published
+## Verified daily capacity revision — release B
 
 The new source retains Beijing 00:10 (10 16 * * * UTC), per-rule timezone and
 original period date, but replaces the small global tick bound with validated
@@ -345,6 +346,22 @@ maximum Owner SQL 178. Actual daily-window totals were respectively
 27,606/73,063/24,000 and 82,812/228,201/72,000 SQL/read/write; whole-profile
 fixture/setup/integrity totals are recorded separately. Warm/cold manual unknown
 markers remained stopped without D1; no real lost-response injection or production
-SLA is claimed. Daily publication/readback and live financial execution remain
-pending. Earlier hourly/release A/minimal
+SLA is claimed. Daily publication/readback passed in dated release B; live
+financial execution remains untested. Earlier hourly/release A/minimal
 daily records and all completed real AI quality evidence remain unchanged.
+
+At 2026-10-11 06:38:08 UTC, daily release B was published and verified from
+Server main ded49a46b06f5f79e2996f58d773d66acaddc0a0, version
+e2e4e02d-ac9a-4c20-852f-f6cbfe5b5ae4, and Web main
+bef23ee7cca378614cdf1e7cdcc8494601c86648, version
+0c63c81e-1f91-4b72-bf3b-f949b7840ad8. Seven Cloudflare GETs and seven public
+checks verified exactly one daily cron, strict CPU/subrequest limits, all five
+flags 1, unchanged DB/two DO identities, EMAIL/four Secrets, disabled previews,
+health 200, protected profiles 401, homepage 200, original logo and www redirect.
+No D1 SQL, application mutation, manual cron, provider call or migration replay
+was performed by these checks. Web's later production-guide correction passed
+15 focused tests in 3.84 seconds, lint and production build; its prior 1,654-test
+whole-suite checkpoint remains historical. The
+[dated daily release record](production-daily-release-2026-10-11.json) preserves
+the exact readback/hash without claiming future latest versions or live
+financial/provider execution.

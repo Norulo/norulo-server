@@ -21,7 +21,15 @@ ec33db03-2fd4-49a4-8430-9e1cb13fc340 is an earlier checkpoint. Verified release 
 on 2026-10-11 at 05:38:43 UTC is Server b5642a63-1643-418a-b494-bb7bcf427050
 from main ebd11baf and Web 26697b80-76dc-405b-a0c0-c2ea7c0735f7 from main 3531f8a.
 All five runtime D1/email/AI/recurrence flags are 1 through explicit overlays,
-with one hourly UTC cron (0 * * * *); checked-in defaults remain 0/no cron. The user subsequently confirmed
+with one hourly UTC cron (0 * * * *) at that release A checkpoint.
+Verified daily release B at 2026-10-11 06:38:08 UTC is Server
+e2e4e02d-ac9a-4c20-852f-f6cbfe5b5ae4 from main ded49a46 and Web
+0c63c81e-1f91-4b72-bf3b-f949b7840ad8 from main bef23ee7. It has exactly one
+daily cron 10 16 * * * UTC (Beijing 00:10), strict cpu_ms=300000/subrequests=9000
+and all five flags 1, with original resources and four Secret names retained.
+See the [dated daily release record](production-daily-release-2026-10-11.json);
+neither checkpoint guarantees future latest versions. Checked-in defaults remain
+0/no cron. The user subsequently confirmed
 receipt of the verification code and successful email login. Account linking,
 sign-out and session refresh remain separately unverified. AI and recurrence
 are enabled in this dated release; native real-provider HTTPS and live scheduled
@@ -410,9 +418,9 @@ below are mandatory for the email-login feature explicitly requested by the user
 | Feature | Secrets | Public settings/bindings | Current production behavior |
 | --- | --- | --- | --- |
 | Creem subscriptions | NORULO_CREEM_API_KEY and NORULO_CREEM_WEBHOOK_SECRET | NORULO_CREEM_API_BASE_URL=https://api.creem.io; NORULO_CREEM_PRODUCT_IDS_JSON maps pro/max to explicit month/year live product IDs | Core free ledger does not require payments; checkout/changes fail closed, and an unconfigured public price catalog is unavailable |
-| Jev assistance | TYPESAFE_API_KEY is present as the fourth Worker Secret; runtime spec 11 has the network binding present | Both NORULO_JEV_SUGGESTIONS_ENABLED and NORULO_JEV_SUGGESTIONS_EVALUATED use the reviewed release overlay | Fresh 36-case direct HTTPS quality gates passed; release A runtime flags 1/1 verified; native real-provider HTTPS/user suggestions remain untested; manual entry remains available |
+| Jev assistance | TYPESAFE_API_KEY is present as the fourth Worker Secret; runtime spec 11 has the network binding present | Both NORULO_JEV_SUGGESTIONS_ENABLED and NORULO_JEV_SUGGESTIONS_EVALUATED use the reviewed release overlay | Fresh 36-case direct HTTPS quality gates passed; release B runtime flags 1/1 verified; native real-provider HTTPS/user suggestions remain untested; manual entry remains available |
 | Email verification | NORULO_EMAIL_CODE_SECRET, at least 32 characters; securely stored | Authenticated sender/domain/EMAIL and independent EMAIL_ADMISSION SQLite DO published with the dual D1/email overlay | Runtime flag 1; user-confirmed code receipt and successful email login; checked-in flag stays 0 |
-| Scheduled recurring execution | No extra provider Secret | Independent RECURRING_SCHEDULER / RecurringScheduler SQLite DO, scoped hourly journal and reviewed cron overlay | Implementation/core/native/final-suite gates passed; release A runtime flag 1 and exactly one hourly UTC cron verified; live financial/provider execution untested |
+| Scheduled recurring execution | No extra provider Secret | Independent RECURRING_SCHEDULER / RecurringScheduler SQLite DO, compatible legacy hourly journal plus daily Root/Owner checkpoint and reviewed cron overlay | Implementation/core/native/final-suite gates passed; release B runtime flag 1, exactly one daily UTC cron and strict limits verified; live financial/provider execution untested |
 
 Creem IDs are public configuration, not prices or secrets. The JSON must be a
 plain-text JSON string, for example
@@ -434,8 +442,8 @@ do not interpret sender preparation as acceptance of those notifications.
 
 The inherited preview path remains isolated under _recurring_enabled and
 ValidationBudget. A separate production RecurringScheduler is now implemented and
-locally verified; it never reuses that preview journal. Verified release A has
-recurrence 1 and exactly one hourly UTC cron. Control-plane publication/readback
+locally verified; it never reuses that preview journal. Verified daily release B has
+recurrence 1 and exactly one daily UTC cron. Control-plane publication/readback
 and local implementation/packaging do not prove live background financial posting
 or provider delivery; retain that distinction in later acceptance records.
 
@@ -449,7 +457,7 @@ confirms both network Secret bindings present, retaining the Cloudflare token.
 The existing single quality journal completed 36 real direct CPython HTTPS calls
 once; both quality gates passed and independent review accepted this bounded
 synthetic result. Native Worker real-provider HTTPS remains untested. Both
-production AI flags are 1 in verified release A; actual customer suggestions
+production AI flags are 1 in verified release B; actual customer suggestions
 remain separate from direct HTTPS quality capture and configuration readback.
 
 The local deployment helper now supports --activate-ai-suggestions. Its final
@@ -548,12 +556,12 @@ results and obsolete Max-only/daily-limit text; it is not Norulo acceptance.
 [RecurringScheduler](../../cloudflare/server/src/entry.py) and its
 [coordination/observed-D1 module](../../norulo_server/cloudflare_recurring_scheduler.py)
 retain the independent RECURRING_SCHEDULER SQLite namespace, class and migration
-tag. The prepared daily capacity revision uses a Root coordinator and validated
+tag. The published daily capacity revision uses a Root coordinator and validated
 permanent hash scopes for Owner DOs in that same namespace. Existing
 completed_hour units and active/stopped state remain compatible, with an
 additional daily epoch/checkpoint; no reset, namespace replacement, D1 migration
-or public reconciliation endpoint is introduced. Release A remains the last
-verified hourly live checkpoint until new publication/readback.
+or public reconciliation endpoint is introduced. Daily publication/readback
+passed in dated release B; release A remains the earlier hourly checkpoint.
 
 Shared PRODUCTION_RECURRING_CRON is 10 16 * * * UTC, Beijing 00:10. Scheduled
 entry uses server time. Existing weekly/monthly/quarterly/yearly frequencies,
@@ -628,9 +636,10 @@ The final reviewed publication command is:
 ```
 
 The recurring overlay requires all preceding production/D1/email/AI overlays,
-now materializes the prepared daily cron 10 16 * * * in a fresh Worker-relative
+now materializes the daily cron 10 16 * * * in a fresh Worker-relative
 temporary config and does not run D1 migrations. Release A publication/readback
-below used the earlier hourly cron; the daily replacement is not yet published.
+below used the earlier hourly cron; the daily replacement passed release B
+publication/readback recorded separately below.
 Preserve the same activation overlays and inherited Secrets on later uploads;
 do not create remote fixtures or make repeated financial acceptance writes to
 claim live schedule/provider acceptance.
@@ -671,13 +680,13 @@ sanitized proof hash, exact source heads, configuration/readback and these
 acceptance limits. Earlier ec33/no-cron and rejected-upload checkpoints above
 remain historical; the local/native and real-quality source hashes are unchanged.
 
-## Prepared daily capacity revision — not yet published
+## Verified daily capacity revision — release B
 
 The user requested support for thousands of same-day postings and bounded
 parallelism, superseding the earlier minimal daily plan. That earlier
 [16-request proof](production-recurring-native-daily-local-2026-10-11.json) remains
 an immutable historical checkpoint; it is not the new capacity acceptance. The
-verified live release A still has hourly polling until daily publication/readback.
+earlier release A used hourly polling. Release B verified the daily replacement.
 The recommended daily time stays Beijing 00:10, 10 16 * * * UTC. Per-rule timezones
 and original period dates remain intact; one daily scan can delay other
 timezones by nearly 24 hours. No daily rule frequency is added.
@@ -734,8 +743,9 @@ separate blank initializer and absolute/relative entry import closure match.
 The earlier capacity full-suite checkpoint passed 3,006 tests in 111.20 seconds
 before three failure cases were added; the definitive final whole suite passed
 **3,009 tests in 115.01 seconds**. The earlier Web whole-suite checkpoint passed
-1,654 tests; its subsequent production API-guide URL/text correction is being
-validated with focused checks and a production build separately.
+1,654 tests. The subsequent production API-guide URL/text correction across
+three source files passed 15 focused tests in 3.84 seconds, lint and the
+production build; these focused checks are not a replacement whole-suite run.
 
 Final native capacity acceptance passed. The
 [compact proof](production-recurring-load-native-local-2026-10-11.json) preserves
@@ -758,10 +768,42 @@ minute-quota deferral is covered by reference tests. Whole-profile totals
 include fixtures, rule creation, setup and integrity probes; local CLI migrations
 and DO SQLite billing are excluded. The overlap wait is diagnostic only. Natural
 timings describe local workloads spread across Owners, not a same-Owner limit,
-production SLA or a complete Cloudflare bill. Daily publication/readback and
-live scheduled financial/provider behavior are not yet claimed.
+production SLA or a complete Cloudflare bill. Daily publication/readback passed
+in dated release B; live scheduled financial/provider behavior remains untested.
 The completed 36-call real AI journal and its six accepted source hashes remain
 unchanged and must not be replayed.
+
+## Verified production daily release B — 2026-10-11
+
+At 06:38:08 UTC, seven read-only Cloudflare GETs and seven finite public checks
+verified Server main ded49a46b06f5f79e2996f58d773d66acaddc0a0 as version
+e2e4e02d-ac9a-4c20-852f-f6cbfe5b5ae4 and Web main
+bef23ee7cca378614cdf1e7cdcc8494601c86648 as version
+0c63c81e-1f91-4b72-bf3b-f949b7840ad8. This is dated release B, not a permanent
+claim about the latest version after future uploads.
+
+- Exactly one cron, 10 16 * * *, was created at 06:37:31 UTC. Limits read back
+  exactly cpu_ms=300000/subrequests=9000. This demonstrates accepted configuration,
+  not confirmed Paid billing, a production throughput SLA or official D1
+  statement/batch-counting semantics.
+- Nineteen public variables matched source with five activation flags 1. The
+  original DB UUID, EmailAdmission and RecurringScheduler namespace identities,
+  restricted EMAIL sender and all four Secret names were retained. Workers.dev
+  and public previews remained disabled for both services. Remote migration-tag
+  readback was absent/null; checked-in tag definitions were retained separately.
+- API and Web proxy health returned 200, both unauthenticated profile endpoints
+  returned 401 and homepage returned 200, without Set-Cookie. The original logo
+  hash matched; www returned 308 preserving path/query.
+- This verification used zero remote D1 SQL, application mutations, manual cron
+  invocations, provider requests, acceptance emails or migration replays. It
+  did not repeat completed quality calls or local financial fixtures. Live
+  scheduled financial/provider execution and native Worker real-provider HTTPS
+  remain untested; user-confirmed GitHub and email-code login are retained.
+
+The [durable daily release record](production-daily-release-2026-10-11.json)
+copies the sanitized readback with its SHA-256, exact deployed source heads,
+local test/package references and limits of acceptance. Earlier release A,
+minimal-daily and native-capacity records remain immutable dated evidence.
 
 ## Remaining release checklist
 
@@ -775,8 +817,8 @@ synthetic business writes.
 | Requested email login — published and user-confirmed | Preserve the independent admission, dual activation overlays, existing domain/EMAIL and all four now-configured Secrets | Code receipt and successful browser login are user-confirmed; account linking, sign-out/refresh and production abuse scenarios remain separate; local tests cover expiry/single use and bounded admission |
 | GitHub repository associations — optional | A user's App installation and chosen repository grants; no numeric App ID/private key required | Actual installation Setup callback with server-issued state and authorized repository discovery/synchronization; standalone projects do not need installation |
 | Paid plans — optional | Independent live Creem products for the available plan/cadence pairs, API/webhook Secrets and explicit inheritance, signed webhook registration | Accurate public prices and idempotent entitlement changes from verified webhooks; no charge or subscription mutation is part of core acceptance |
-| Jev AI assistance — published/enabled, quality reviewed | Preserve all four Secrets and all D1/email/AI/recurrence activation overlays | Fixed real quality suite and local Owner/monthly fences passed; release A runtime flags verified; actual customer suggestions and native real-provider HTTPS remain untested |
-| Recurring posting — release A hourly; daily capacity replacement locally accepted | Preserve Root/Owner journals, existing namespace, four Secrets, strict CPU/subrequest limits and all overlays; daily cron 10 16 * * * (Beijing 00:10) | Final whole suite 3,009 passed; 8-way overlap and natural 1,000/3,000-occurrence native profiles passed; actual daily publication/readback and live financial/provider behavior untested; bounded progress/backlog remains possible |
+| Jev AI assistance — published/enabled, quality reviewed | Preserve all four Secrets and all D1/email/AI/recurrence activation overlays | Fixed real quality suite and local Owner/monthly fences passed; release B runtime flags verified; actual customer suggestions and native real-provider HTTPS remain untested |
+| Recurring posting — daily release B published/verified | Preserve Root/Owner journals, existing namespace, four Secrets, strict CPU/subrequest limits and all overlays; daily cron 10 16 * * * (Beijing 00:10) | Final whole suite 3,009 passed; 8-way overlap and natural 1,000/3,000-occurrence native profiles passed; daily publication/readback verified; live financial/provider behavior untested; bounded progress/backlog remains possible |
 
 Production domains, frontend assets, the published API/Web transport, system sending
 domain/binding and the original three Secret names are already recorded above.
@@ -788,7 +830,7 @@ receiving mailbox is required by the Server for its system sender.
 Email publication and user-confirmed code/login acceptance are complete. The AI
 stage now has its Worker/network Secret bindings, independently reviewed fixed
 real quality evidence and locally verified Owner/monthly allowance fences.
-Verified release A has both runtime AI flags 1 and recurrence 1 with the hourly
+Verified release B has both runtime AI flags 1 and recurrence 1 with the daily
 UTC cron, preserving D1 and accepted email login. The distinct production
 scheduler/coordinator passed implementation, native/core review and the final
 full suite. Publication/configuration readback does not establish actual native
