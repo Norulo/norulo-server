@@ -66,10 +66,15 @@ handled/result counts and metrics completeness, with rows_read/rows_written
 where available. Missing/incomplete metrics are unknown, never successful zeros.
 Bounded progress/backlog may require another natural scan; it does not authorize
 retrying an uncertain posting.
-The Root emits its custom summary on completed execution/result paths, but
-disabled, busy, skipped and cancelled early paths can emit no summary. Use Cron
-Events and fixed-code exceptions as complementary observations. An absent
-summary is an unverified observation; it does not prove the schedule did not run.
+The production scheduled entry now emits a fixed STARTED receipt and a bounded
+terminal receipt around the existing single Root RPC. Partial Owner failures,
+incomplete metrics and malformed success shapes emit FAILED without changing
+the original return/exception or financial behavior. CANCELLED preserves the
+original cancellation. BUSY/DISABLED Root responses emit NOT_COMPLETED and retain
+the original rejected-result exception. A deduplicated skip emits COMPLETED with
+healthy=false; it does not claim new work. Top-level disabled flags remain silent.
+Use Cron Events and fixed-code receipts together. An absent receipt is an
+unverified observation; it does not prove the schedule did not run.
 
 The checked publication logging policy is limited:
 
@@ -83,20 +88,49 @@ expense text, raw provider responses or Secret values. Aggregate fields stay
 bounded and omit Owner identifiers. Verify configuration acceptance after
 publication before relying on log persistence.
 
-The existing Cloudflare billing alert is retained. The account offers two
-notification delivery types; this is not verified per-Worker alert eligibility:
+The existing Cloudflare billing alert is retained. Three Custom Alert definitions
+are prepared in [the alert validation record](validation/recurring-alert-rules-2026-10-11.json).
+All three exact SQL hashes returned HTTP 200 and one numeric value in this
+account; 43 UTC boundary scenarios passed independently offline. The queries
+scope logs.workersLogs to this account and norulo-server-production, match only
+fixed code keys and return COUNT results without GROUP BY, including empty input.
 
-- workers_observability_alert accepts only filters.status=[FIRING_FAILED]. It
-  delivers an upstream rule's firing failure; it does not accept direct Worker,
-  Cron, failed-Owner or backlog query filters.
-- workers_observability_real_time_issue has no filters and requires Issues source
-  enablement. That source has not been enabled as part of this preparation.
+| Rule | Signal | Query interval | Repeat notification |
+| --- | --- | --- | --- |
+| Execution failure | FAILED, CANCELLED or NOT_COMPLETED in the previous hour | 10 minutes | 1 hour |
+| Backlog or blocked rules | BACKLOG or BLOCKED in the previous day | 10 minutes | 24 hours |
+| Completion receipt missing | No COMPLETED/FAILED/CANCELLED receipt since the latest 16:10 UTC slot, after 30 minutes of grace | 10 minutes | 6 hours |
 
-Only a disabled, recipient-ready draft is prepared. No upstream detection rule
-or new notification policy was created and no test email sent. A concrete
-upstream detector, user-approved recipients and the actual scope/eligibility
-must be established before claiming automatic alerting. Manual inspection and
-sampled logs do not establish it.
+The initial missing-receipt check arms at 2026-10-11 16:40 UTC, assuming this
+logging release is live before that day's 16:10 slot. Later deployments must
+move the first expected slot before enabling a new detector. Each new daily slot
+resets its grace; previous-slot receipts do not resolve it. Busy/disabled receipts
+are failures but do not stand in for completion. Failure/cancellation does resolve
+the observation gap while its separate failure rule still reports the incident.
+The warning is a historical 24-hour signal, not a live remaining-work count.
+
+Cloudflare Custom Alerts use alert_type=custom_analytics, raw SQL in
+filters.selectors, source=[sql_api], execution_interval=[10m], threshold > 0 and
+top-level alert_interval for repeat delivery. Do not submit time_range_mode; it
+is a dashboard-only field. A conditional if in a timestamp lower bound was
+rejected by the actual API; the final query uses two bounded OR branches and a
+typed toDate constant for the initial UTC cutoff. Dashboard eligibility and
+offline SQLite semantics alone do not establish actual SQL acceptance.
+
+No new notification policy is enabled yet: the recipient is awaiting explicit
+user designation. Existing routing destinations and billing-alert recipients are
+not inferred as authorization for operational email. After designation, create
+these three policies with email=[{id:the-approved-address}], enabled=true; read
+back every query/filter/interval/destination and preserve existing policies.
+Do not send a test notification or manufacture a production failure for testing.
+Account Notifications Edit is only a requirement if the actual write is denied;
+the current successful metadata/query reads do not prove write permission.
+
+This monitor adds no business Cron, D1 heartbeat or financial retry. The 30-minute
+grace is operational buffering, not a log-delivery SLA. Adaptive sampling,
+ingestion delay and disabled logging can also cause missing observations. A
+missing alert must never authorize replaying an uncertain expense. Actual email
+delivery and the first natural financial event remain separate acceptance items.
 
 For the first natural tick, use this read-only checklist:
 
@@ -107,7 +141,7 @@ For the first natural tick, use this read-only checklist:
    authorized reads. Do not create production test rules or expenses.
 4. If no real rule was due, record idle acceptance only, without claiming financial
    posting or provider notification was exercised.
-5. Mark missing summaries as unverified and inspect the platform event/code path;
+5. Mark missing receipts as unverified and inspect the platform event/code path;
    do not infer that no execution occurred. Treat an unknown financial outcome
    or unresolved Root stop as an incident, preserving state as described below.
 
@@ -159,8 +193,8 @@ write retries are permitted. Do not invent a daily/monthly D1 writing allowance.
 Whole local fixture/setup costs, scheduler-window costs and successful-operation
 metadata are separate; missing metrics cannot form a claimed complete bill.
 
-Before operational readiness is complete, establish the reviewed upstream alert
-detector/recipients/scope and observe the natural event. Real scheduled financial posting,
+Before operational readiness is complete, enable the prepared detectors with
+explicit recipients and verify their readback, then observe the natural event. Real scheduled financial posting,
 provider notification, native Worker paid AI, shared-team flows and GitHub App
 installation remain separate acceptance items. None requires real charges or
 remote synthetic business writes to prepare safely.

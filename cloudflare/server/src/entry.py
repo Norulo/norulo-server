@@ -38,7 +38,7 @@ from norulo_server.cloudflare_recurring_scheduler import (
     verify_recurring_schema, DispatchJournal, require_role, owner_scope, rpc_integer,
     daily_epoch, execute_owner_chunk, drain_owners, server_now,
     MAX_OWNER_NATIVE_SQL,
-    OWNER_SOFT_SECONDS, validate_owner_state,
+    OWNER_SOFT_SECONDS, validate_owner_state, log_recurring_receipt,
 )
 from norulo_server.cloudflare_jev_gateway import WorkerJevGateway
 from norulo_server.cloudflare_ledger_reports import CsvExport
@@ -419,16 +419,31 @@ class Default(WorkerEntrypoint):
         production = production_recurring_enabled(self.env)
         if not production and not _recurring_enabled(self.env):
             return
-        scheduled = float(controller.scheduledTime)
-        expected_cron = PRODUCTION_RECURRING_CRON if production else "0 * * * *"
-        if (str(controller.cron) != expected_cron or not 0 <= scheduled <= 9007199254740991):
-            raise RuntimeError("RECURRING_TRIGGER_INVALID")
-        namespace = getattr(self.env, "RECURRING_SCHEDULER" if production else "VALIDATION_BUDGET", None)
-        if namespace is None:
-            raise RuntimeError("RECURRING_SCHEDULER_REQUIRED" if production else "VALIDATION_CONTROL_REQUIRED")
-        stub = namespace.get(namespace.idFromName(RECURRING_SCHEDULER_SCOPE if production else BUDGET_SCOPE))
-        result = await stub.runRecurring()
-        require_recurring_success(result)
+        result = scheduled = None
+        if production:
+            log_recurring_receipt("started")
+        try:
+            scheduled = float(controller.scheduledTime)
+            expected_cron = PRODUCTION_RECURRING_CRON if production else "0 * * * *"
+            if (str(controller.cron) != expected_cron or not 0 <= scheduled <= 9007199254740991):
+                raise RuntimeError("RECURRING_TRIGGER_INVALID")
+            namespace = getattr(self.env, "RECURRING_SCHEDULER" if production else "VALIDATION_BUDGET", None)
+            if namespace is None:
+                raise RuntimeError("RECURRING_SCHEDULER_REQUIRED" if production else "VALIDATION_CONTROL_REQUIRED")
+            stub = namespace.get(namespace.idFromName(RECURRING_SCHEDULER_SCOPE if production else BUDGET_SCOPE))
+            result = await stub.runRecurring()
+            require_recurring_success(result)
+        except asyncio.CancelledError:
+            if production:
+                log_recurring_receipt("cancelled", scheduled_time=scheduled)
+            raise
+        except BaseException:
+            if production:
+                log_recurring_receipt("exception", result=result, scheduled_time=scheduled)
+            raise
+        else:
+            if production:
+                log_recurring_receipt("returned", result=result, scheduled_time=scheduled)
 
     async def fetch(self, request):
         if str(getattr(self.env, "NORULO_D1_ACCESS_ENABLED", "0")) != "1":

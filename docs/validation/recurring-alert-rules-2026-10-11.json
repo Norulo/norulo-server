@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "preparedAtUtc": "2026-10-11T12:51:42.299126+00:00",
+  "scope": {
+    "dataset": "logs.workersLogs",
+    "accountTag": "84e421f26c708c0cf437e287eed11fa1",
+    "scriptName": "norulo-server-production",
+    "columnsUsed": {
+      "accountTag": "String",
+      "scriptName": "String",
+      "message": "String",
+      "timestamp": "DateTime64(3)"
+    },
+    "logTypeFilterUsed": false,
+    "logTypeValueAssumed": false
+  },
+  "dailySchedule": {
+    "cronUtc": "10 16 * * *",
+    "timezone": "UTC",
+    "firstDueUtc": "2026-10-11T16:10:00Z",
+    "firstEligibleMissingUtc": "2026-10-11T16:40:00Z",
+    "graceMinutes": 30,
+    "dailyDueOffsetMinutes": 970,
+    "dailyGraceEndOffsetMinutes": 1000,
+    "missingLatestSlotResetsDuringNewSlotGrace": true,
+    "cutoverAssumption": "New marker source and daily cron are enabled before the firstDueUtc. If deployment occurs later, shift firstDueUtc and its 30-minute eligibility guard to the first actual enabled daily slot before enabling this alert."
+  },
+  "rules": [
+    {
+      "key": "failure",
+      "severity": "critical",
+      "query": "SELECT COUNT(*) AS value\nFROM logs.workersLogs\nWHERE accountTag = '84e421f26c708c0cf437e287eed11fa1'\n  AND scriptName = 'norulo-server-production'\n  AND timestamp >= NOW() - INTERVAL '1' HOUR\n  AND timestamp <= NOW()\n  AND (position(message, '\"code\":\"NORULO_RECURRING_FAILED\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_CANCELLED\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_NOT_COMPLETED\"') > 0)",
+      "querySha256": "f2fe4faa351c3c9a6629c4c2afbde8b5c7f9bbe8e9151a872817cd3b45169d5f",
+      "markers": [
+        "NORULO_RECURRING_FAILED",
+        "NORULO_RECURRING_CANCELLED",
+        "NORULO_RECURRING_NOT_COMPLETED"
+      ],
+      "configurationCandidate": {
+        "name": "Norulo production recurring execution failure",
+        "description": "A failed, cancelled, busy or disabled scheduled invocation receipt was observed during the last hour. Inspect safe receipts and Cron Events before deciding recovery; never automatically retry an uncertain financial posting.",
+        "alert_type": "custom_analytics",
+        "enabled": false,
+        "alert_interval": "1h",
+        "filters": {
+          "selectors": [
+            "SELECT COUNT(*) AS value\nFROM logs.workersLogs\nWHERE accountTag = '84e421f26c708c0cf437e287eed11fa1'\n  AND scriptName = 'norulo-server-production'\n  AND timestamp >= NOW() - INTERVAL '1' HOUR\n  AND timestamp <= NOW()\n  AND (position(message, '\"code\":\"NORULO_RECURRING_FAILED\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_CANCELLED\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_NOT_COMPLETED\"') > 0)"
+          ],
+          "source": [
+            "sql_api"
+          ],
+          "execution_interval": [
+            "10m"
+          ],
+          "alert_trigger_preferences": [
+            "threshold"
+          ],
+          "alert_trigger_preferences_value": [
+            "0"
+          ],
+          "alert_trigger_preferences_operator": [
+            ">"
+          ],
+          "alert_trigger_preferences_short_window": [
+            "10m"
+          ]
+        }
+      },
+      "mechanismsNotConfigured": true,
+      "readyForSubmission": false
+    },
+    {
+      "key": "warning",
+      "severity": "warning",
+      "query": "SELECT COUNT(*) AS value\nFROM logs.workersLogs\nWHERE accountTag = '84e421f26c708c0cf437e287eed11fa1'\n  AND scriptName = 'norulo-server-production'\n  AND timestamp >= NOW() - INTERVAL '1' DAY\n  AND timestamp <= NOW()\n  AND (position(message, '\"code\":\"NORULO_RECURRING_BACKLOG\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_BLOCKED\"') > 0)",
+      "querySha256": "9c7e27e857ba1d45bd55354f7cae6ee0c8877e7237f6b0d3c93df4ea5137e572",
+      "markers": [
+        "NORULO_RECURRING_BACKLOG",
+        "NORULO_RECURRING_BLOCKED"
+      ],
+      "configurationCandidate": {
+        "name": "Norulo production recurring backlog or blocked rules",
+        "description": "A backlog or blocked-rule warning receipt was observed during the last day. This warning alone does not prove a failed financial execution.",
+        "alert_type": "custom_analytics",
+        "enabled": false,
+        "alert_interval": "24h",
+        "filters": {
+          "selectors": [
+            "SELECT COUNT(*) AS value\nFROM logs.workersLogs\nWHERE accountTag = '84e421f26c708c0cf437e287eed11fa1'\n  AND scriptName = 'norulo-server-production'\n  AND timestamp >= NOW() - INTERVAL '1' DAY\n  AND timestamp <= NOW()\n  AND (position(message, '\"code\":\"NORULO_RECURRING_BACKLOG\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_BLOCKED\"') > 0)"
+          ],
+          "source": [
+            "sql_api"
+          ],
+          "execution_interval": [
+            "10m"
+          ],
+          "alert_trigger_preferences": [
+            "threshold"
+          ],
+          "alert_trigger_preferences_value": [
+            "0"
+          ],
+          "alert_trigger_preferences_operator": [
+            ">"
+          ],
+          "alert_trigger_preferences_short_window": [
+            "10m"
+          ]
+        }
+      },
+      "mechanismsNotConfigured": true,
+      "readyForSubmission": false
+    },
+    {
+      "key": "missing",
+      "severity": "critical",
+      "query": "SELECT if(\n    NOW() >= toDate('2026-10-11') + INTERVAL '1000' MINUTE\n    AND (NOW() < TODAY() + INTERVAL '970' MINUTE\n         OR NOW() >= TODAY() + INTERVAL '1000' MINUTE),\n    if(COUNT(*) = 0, 1, 0),\n    0) AS value\nFROM logs.workersLogs\nWHERE accountTag = '84e421f26c708c0cf437e287eed11fa1'\n  AND scriptName = 'norulo-server-production'\n  AND timestamp >= NOW() - INTERVAL '1' DAY\n  AND ((NOW() >= TODAY() + INTERVAL '970' MINUTE\n        AND timestamp >= TODAY() + INTERVAL '970' MINUTE)\n       OR (NOW() < TODAY() + INTERVAL '970' MINUTE\n        AND timestamp >= TODAY() - INTERVAL '1' DAY + INTERVAL '970' MINUTE))\n  AND timestamp <= NOW()\n  AND (position(message, '\"code\":\"NORULO_RECURRING_COMPLETED\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_FAILED\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_CANCELLED\"') > 0)",
+      "querySha256": "21bfd3978576eafe8a70641d191be6e4f3404847c1c05f66f7c03eff6f86a11d",
+      "markers": [
+        "NORULO_RECURRING_COMPLETED",
+        "NORULO_RECURRING_FAILED",
+        "NORULO_RECURRING_CANCELLED"
+      ],
+      "configurationCandidate": {
+        "name": "Norulo production recurring completion receipt missing",
+        "description": "No COMPLETED, FAILED or CANCELLED daily receipt was observed after the latest 16:10 UTC slot and its 30-minute grace. This is an observation gap, not proof that financial execution did not occur.",
+        "alert_type": "custom_analytics",
+        "enabled": false,
+        "alert_interval": "6h",
+        "filters": {
+          "selectors": [
+            "SELECT if(\n    NOW() >= toDate('2026-10-11') + INTERVAL '1000' MINUTE\n    AND (NOW() < TODAY() + INTERVAL '970' MINUTE\n         OR NOW() >= TODAY() + INTERVAL '1000' MINUTE),\n    if(COUNT(*) = 0, 1, 0),\n    0) AS value\nFROM logs.workersLogs\nWHERE accountTag = '84e421f26c708c0cf437e287eed11fa1'\n  AND scriptName = 'norulo-server-production'\n  AND timestamp >= NOW() - INTERVAL '1' DAY\n  AND ((NOW() >= TODAY() + INTERVAL '970' MINUTE\n        AND timestamp >= TODAY() + INTERVAL '970' MINUTE)\n       OR (NOW() < TODAY() + INTERVAL '970' MINUTE\n        AND timestamp >= TODAY() - INTERVAL '1' DAY + INTERVAL '970' MINUTE))\n  AND timestamp <= NOW()\n  AND (position(message, '\"code\":\"NORULO_RECURRING_COMPLETED\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_FAILED\"') > 0\n       OR position(message, '\"code\":\"NORULO_RECURRING_CANCELLED\"') > 0)"
+          ],
+          "source": [
+            "sql_api"
+          ],
+          "execution_interval": [
+            "10m"
+          ],
+          "alert_trigger_preferences": [
+            "threshold"
+          ],
+          "alert_trigger_preferences_value": [
+            "0"
+          ],
+          "alert_trigger_preferences_operator": [
+            ">"
+          ],
+          "alert_trigger_preferences_short_window": [
+            "10m"
+          ]
+        }
+      },
+      "mechanismsNotConfigured": true,
+      "readyForSubmission": false
+    }
+  ],
+  "source": {
+    "entrySha256": "59a85f45eb79f555cc19c249664798cbfa2954ed362c0079b03d8c71ea895156",
+    "loggingHelperSha256": "4a8e94b146fe07d4cecfce026dd0f46682fc210b484137bd1b8be7db90f049d9",
+    "actualUploadCanonicalModuleCount": 64,
+    "actualUploadByteEquality": true,
+    "importClosureVerified": true,
+    "financialModuleAstUnchangedExceptLoggingHelpers": true,
+    "entryAstUnchangedExceptScheduledLoggingAndImport": true
+  },
+  "validation": {
+    "serverFullSuite": {
+      "passed": 3089,
+      "seconds": 123.32
+    },
+    "focusedSuite": {
+      "passed": 165,
+      "seconds": 4.39
+    },
+    "offlineUtcCases": 43,
+    "offlineSqlEvaluations": 129,
+    "nativeHelper": {
+      "passed": true,
+      "python": "3.14.2",
+      "wrangler": "4.136.3",
+      "workerd": "1.20260921.1",
+      "finalRequests": 4,
+      "finalResponses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "receiptCount": 6,
+      "levels": {
+        "log": 1,
+        "warn": 3,
+        "error": 2
+      },
+      "databaseBindings": 0,
+      "durableObjectBindings": 0,
+      "sql": 0,
+      "actualRowsRead": 0,
+      "actualRowsWritten": 0,
+      "syntheticPayloadNumbersAreNotSqlUsage": true,
+      "historicalHarnessFailuresPreserved": true,
+      "fixtureCorrection": "Consume the fixed POST body before generating a response; canonical application code was unchanged."
+    },
+    "liveSql": {
+      "passed": true,
+      "scope": "Read-only aggregates, no raw log values or business operations",
+      "queries": [
+        {
+          "key": "failure",
+          "status": 200,
+          "querySha256": "f2fe4faa351c3c9a6629c4c2afbde8b5c7f9bbe8e9151a872817cd3b45169d5f",
+          "response": {
+            "data": [
+              {
+                "value": 0
+              }
+            ],
+            "rows": 1,
+            "statistics": {
+              "elapsed_ms": 51,
+              "rows_read": 3973905,
+              "bytes_read": 32578305
+            }
+          }
+        },
+        {
+          "key": "warning",
+          "status": 200,
+          "querySha256": "9c7e27e857ba1d45bd55354f7cae6ee0c8877e7237f6b0d3c93df4ea5137e572",
+          "response": {
+            "data": [
+              {
+                "value": 0
+              }
+            ],
+            "rows": 1,
+            "statistics": {
+              "elapsed_ms": 150,
+              "rows_read": 8154104,
+              "bytes_read": 160545493
+            }
+          }
+        },
+        {
+          "key": "missing",
+          "status": 200,
+          "querySha256": "21bfd3978576eafe8a70641d191be6e4f3404847c1c05f66f7c03eff6f86a11d",
+          "response": {
+            "data": [
+              {
+                "value": 0
+              }
+            ],
+            "rows": 1,
+            "statistics": {
+              "elapsed_ms": 427,
+              "rows_read": 8160184,
+              "bytes_read": 161252137
+            }
+          }
+        }
+      ]
+    },
+    "earlierRejectedSql": [
+      {
+        "version": 1,
+        "status": 422,
+        "reason": "if is unsupported inside a timestamp range expression"
+      },
+      {
+        "version": 2,
+        "statuses": [
+          503,
+          422
+        ],
+        "reason": "Transient dataset-permission verification, then a scalar timestamp/string type error"
+      },
+      {
+        "version": 3,
+        "statuses": [
+          503,
+          200
+        ],
+        "reason": "Typed initial date, followed by successful finite read-only verification"
+      }
+    ]
+  },
+  "notification": {
+    "recipientCount": 0,
+    "policiesCreated": 0,
+    "policiesEnabled": 0,
+    "status": "Awaiting explicit recipient designation",
+    "testEmails": 0,
+    "realDeliveryVerified": false,
+    "existingBillingAlertMustBePreserved": true
+  },
+  "remoteD1Operations": 0,
+  "manualProductionCron": 0,
+  "additionalBusinessSchedules": 0,
+  "financialBehaviorChanged": false,
+  "limitations": [
+    "All three exact query hashes returned one numeric value with HTTP200 in the current Cloudflare account. No notification policy has been created and real delivery remains unverified pending explicit recipient designation.",
+    "Workers logs are adaptively sampled, and COUNT is automatically weighted. No sampleInterval multiplication is used. The offline fixtures use unsampled rows, so numeric event counts are not production exact counts.",
+    "Log absence may result from ingestion delay, sampling, platform outage, disabled logging or a missing invocation; it cannot prove no financial execution and must never trigger an automatic financial retry.",
+    "NOT_COMPLETED is counted as an invocation failure but intentionally does not satisfy missing terminal detection; a separate completed invocation can resolve missing while failure remains in its one-hour window.",
+    "COMPLETED, including healthy:false or skipped dedupe receipts, is observed terminal state, not proof of a newly posted expense or a healthy aggregate result.",
+    "The warning aggregates BACKLOG and BLOCKED in one numeric count; neither is silently converted into critical failure.",
+    "Top-level alert_interval is the repeat notification interval; execution_interval is separately fixed at the Log Explorer minimum of 10m. No time_range_mode UI-only field is submitted."
+  ]
+}

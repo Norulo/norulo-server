@@ -62,6 +62,109 @@ def require_recurring_success(result):
         raise RuntimeError("RECURRING_EXECUTION_UNAVAILABLE")
 
 
+def _log_number(value):
+    if (type(value) not in {int, float} or not 0 <= value <= 9007199254740991
+            or not math.isfinite(value) or int(value) != value):
+        return None
+    return int(value)
+
+
+def recurring_log_receipts(phase, *, result=None, scheduled_time=None):
+    """Project fixed diagnostics only; never serialize a result or exception."""
+    code, terminal = {
+        "started": ("NORULO_RECURRING_STARTED", "started"),
+        "returned": ("NORULO_RECURRING_COMPLETED", "completed"),
+        "exception": ("NORULO_RECURRING_FAILED", "failed"),
+        "cancelled": ("NORULO_RECURRING_CANCELLED", "cancelled"),
+    }[phase]
+    payload = {"code": code, "phase": terminal, "status": phase, "healthy": False}
+    scheduled = _log_number(scheduled_time)
+    if scheduled is not None:
+        payload["scheduledTime"] = scheduled  # UTC event milliseconds, not a business clock.
+    if phase in {"started", "cancelled"}:
+        return [("error" if phase == "cancelled" else "log", payload)]
+    counts = ("scanned", "created", "blocked", "replayed", "selectedOwners",
+              "failedOwners", "ownerRpcs")
+    try:
+        values = {key: _log_number(_field(result, key)) for key in counts}
+        payload.update({key: value for key, value in values.items() if value is not None})
+        metrics = _field(result, "metrics")
+        numeric_metrics = {key: _log_number(_field(metrics, key))
+                           for key in ("operations", "rowsRead", "rowsWritten")}
+        payload.update({key: value for key, value in numeric_metrics.items() if value is not None})
+        complete = _field(metrics, "complete")
+        if type(complete) is bool:
+            payload["metricsComplete"] = complete
+        ok, skipped, backlog = (_field(result, key) for key in ("ok", "skipped", "backlog"))
+        if type(backlog) is bool:
+            payload["backlog"] = backlog
+        error = _field(result, "error")
+        not_completed = ({"RECURRING_BUSY": "busy", "RECURRING_DISABLED": "disabled"}
+                         .get(error) if type(error) is str else None)
+        if phase == "exception" and result is None:
+            payload.update(code="NORULO_RECURRING_FAILED", status="exception")
+        elif ok is not True:
+            payload.update(code="NORULO_RECURRING_NOT_COMPLETED" if not_completed
+                           else "NORULO_RECURRING_FAILED",
+                           status=not_completed or "result_rejected")
+        elif phase == "exception":
+            payload.update(code="NORULO_RECURRING_FAILED", status="exception")
+        elif values["failedOwners"] is not None and values["failedOwners"] > 0:
+            payload.update(code="NORULO_RECURRING_FAILED", status="failed_owners")
+        elif complete is not True:
+            payload.update(code="NORULO_RECURRING_FAILED", status="metrics_incomplete")
+        elif skipped is True:
+            # Root's legacy skip receipt omits the fanout fields. Accept only
+            # the actual zero-work shape, never a forged skip hiding activity.
+            if (all(values[key] == 0 for key in counts[:4])
+                    and all(value == 0 for value in numeric_metrics.values())
+                    and all(_field(result, key) is None or values[key] == 0 for key in counts[4:])
+                    and (backlog is None or backlog is False)):
+                payload["status"] = "skipped"
+            else:
+                payload.update(code="NORULO_RECURRING_FAILED", status="invalid_result")
+        elif (skipped is not None and skipped is not False or type(backlog) is not bool
+                or any(value is None for value in values.values())
+                or any(value is None for value in numeric_metrics.values())):
+            payload.update(code="NORULO_RECURRING_FAILED", status="invalid_result")
+        else:
+            warning = backlog or values["blocked"] > 0
+            payload.update(status="warning" if warning else "healthy", healthy=not warning)
+    except BaseException:
+        payload.update(code="NORULO_RECURRING_FAILED", status="invalid_result")
+        return [("error", payload)]
+    severity = "error" if payload["code"] != "NORULO_RECURRING_COMPLETED" else (
+        "warn" if payload["status"] == "warning" else "log")
+    receipts = [(severity, payload)]
+    if phase == "returned":
+        for present, warning_code, status in (
+                (backlog is True, "NORULO_RECURRING_BACKLOG", "backlog"),
+                (values["blocked"] is not None and values["blocked"] > 0,
+                 "NORULO_RECURRING_BLOCKED", "blocked")):
+            if present:
+                receipts.append(("warn", {**payload, "code": warning_code,
+                    "phase": "warning", "status": status, "healthy": False}))
+    return receipts
+
+
+def log_recurring_receipt(phase, *, result=None, scheduled_time=None):
+    """Best-effort JS console levels; logging cannot alter finance or cancellation."""
+    try:
+        for severity, payload in recurring_log_receipts(phase, result=result,
+                scheduled_time=scheduled_time):
+            message = json.dumps(payload, separators=(",", ":"), allow_nan=False)
+            try:
+                from js import console
+                getattr(console, severity)(message)
+            except BaseException:
+                try:
+                    print(message)
+                except BaseException:
+                    pass
+    except BaseException:
+        pass
+
+
 def _integer(value):
     return type(value) is int and 0 <= value <= 9007199254740991
 

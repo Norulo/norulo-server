@@ -38,6 +38,14 @@ and financial recovery boundaries. User-confirmed GitHub/email login and ordinar
 expense recording do not prove every ledger/team/App/provider flow. Real payments
 are deferred; do not configure or exercise them as free-release preparation.
 
+The 2026-10-11 alert preparation adds only best-effort fixed-code receipts around
+the existing production scheduled RPC. All three exact SQL rule hashes passed
+live read-only validation; see docs/validation/recurring-alert-rules-2026-10-11.json.
+Recipients are still unconfigured. Do not infer authorization from existing
+Email Routing or billing recipients, send test emails, create production failure
+fixtures, add a D1 heartbeat or turn missing observations into financial retries.
+Keep the existing one daily Cron, resource scopes, unknown stops and Secrets.
+
 Use existing isolated cloud checkouts; do not create Git worktrees unless the
 user explicitly requests one. Preserve user changes. Subsequent environment
 onboarding must keep application source, dependency manifests, and lockfiles
