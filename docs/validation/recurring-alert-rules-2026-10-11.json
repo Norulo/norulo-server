@@ -67,7 +67,8 @@
         }
       },
       "mechanismsNotConfigured": true,
-      "readyForSubmission": false
+      "readyForSubmission": false,
+      "configurationCandidateRole": "Historical disabled preparation template with private delivery settings omitted; current enabled policy readback is recorded under notification.policyReadbacks."
     },
     {
       "key": "warning",
@@ -109,7 +110,8 @@
         }
       },
       "mechanismsNotConfigured": true,
-      "readyForSubmission": false
+      "readyForSubmission": false,
+      "configurationCandidateRole": "Historical disabled preparation template with private delivery settings omitted; current enabled policy readback is recorded under notification.policyReadbacks."
     },
     {
       "key": "missing",
@@ -152,7 +154,8 @@
         }
       },
       "mechanismsNotConfigured": true,
-      "readyForSubmission": false
+      "readyForSubmission": false,
+      "configurationCandidateRole": "Historical disabled preparation template with private delivery settings omitted; current enabled policy readback is recorded under notification.policyReadbacks."
     }
   ],
   "source": {
@@ -287,20 +290,72 @@
     ]
   },
   "notification": {
-    "recipientCount": 0,
-    "policiesCreated": 0,
-    "policiesEnabled": 0,
-    "status": "Awaiting explicit recipient designation",
+    "recipientCount": 1,
+    "policiesCreated": 3,
+    "policiesEnabled": 3,
+    "status": "Enabled; exact policy/filter/interval/destination readbacks matched",
     "testEmails": 0,
     "realDeliveryVerified": false,
-    "existingBillingAlertMustBePreserved": true
+    "existingBillingAlertMustBePreserved": true,
+    "recipientExplicitlyApproved": true,
+    "recipientAddressStoredOutsideGit": true,
+    "configurationCheckedAtUtc": "2026-10-11T14:23:43.778768+00:00",
+    "policyReadbacks": [
+      {
+        "id": "29f8da16421540adacfafeb5e4e51c48",
+        "name": "Norulo production recurring execution failure",
+        "enabled": true,
+        "type": "custom_analytics",
+        "repeatInterval": "1h",
+        "executionInterval": "10m",
+        "querySha256": "f2fe4faa351c3c9a6629c4c2afbde8b5c7f9bbe8e9151a872817cd3b45169d5f",
+        "readbackMatched": true
+      },
+      {
+        "id": "62e92465be254f74a2257f9b0d2787a7",
+        "name": "Norulo production recurring backlog or blocked rules",
+        "enabled": true,
+        "type": "custom_analytics",
+        "repeatInterval": "24h",
+        "executionInterval": "10m",
+        "querySha256": "9c7e27e857ba1d45bd55354f7cae6ee0c8877e7237f6b0d3c93df4ea5137e572",
+        "readbackMatched": true
+      },
+      {
+        "id": "ae7bb8bdaba04e2f9de6f7dec2347098",
+        "name": "Norulo production recurring completion receipt missing",
+        "enabled": true,
+        "type": "custom_analytics",
+        "repeatInterval": "6h",
+        "executionInterval": "10m",
+        "querySha256": "21bfd3978576eafe8a70641d191be6e4f3404847c1c05f66f7c03eff6f86a11d",
+        "readbackMatched": true
+      }
+    ],
+    "creationStatuses": [
+      201,
+      201,
+      201
+    ],
+    "existingPoliciesPreserved": 1,
+    "preservationVerification": "Whole-object configuration fingerprint matched before and after creation",
+    "initialDeniedCreation": {
+      "httpStatus": 403,
+      "errorCode": 10000,
+      "policiesCreated": 0,
+      "followupGetStatus": 200
+    },
+    "permissionResolution": "User added Account Notifications Edit to the existing token; subsequent creation succeeded",
+    "workerUploadRequired": false,
+    "additionalApplicationEnvironmentVariables": 0,
+    "realTriggerVerified": false
   },
   "remoteD1Operations": 0,
   "manualProductionCron": 0,
   "additionalBusinessSchedules": 0,
   "financialBehaviorChanged": false,
   "limitations": [
-    "All three exact query hashes returned one numeric value with HTTP200 in the current Cloudflare account. No notification policy has been created and real delivery remains unverified pending explicit recipient designation.",
+    "All three exact query hashes returned one numeric value with HTTP200 in the current Cloudflare account. Three account-level email policies were created with HTTP201 and enabled, with exact independent readbacks. Real triggering and email delivery remain unverified until a natural event.",
     "Workers logs are adaptively sampled, and COUNT is automatically weighted. No sampleInterval multiplication is used. The offline fixtures use unsampled rows, so numeric event counts are not production exact counts.",
     "Log absence may result from ingestion delay, sampling, platform outage, disabled logging or a missing invocation; it cannot prove no financial execution and must never trigger an automatic financial retry.",
     "NOT_COMPLETED is counted as an invocation failure but intentionally does not satisfy missing terminal detection; a separate completed invocation can resolve missing while failure remains in its one-hour window.",

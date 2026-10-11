@@ -88,8 +88,8 @@ expense text, raw provider responses or Secret values. Aggregate fields stay
 bounded and omit Owner identifiers. Verify configuration acceptance after
 publication before relying on log persistence.
 
-The existing Cloudflare billing alert is retained. Three Custom Alert definitions
-are prepared in [the alert validation record](validation/recurring-alert-rules-2026-10-11.json).
+The existing Cloudflare billing alert is retained. Three Custom Alert policies
+are enabled and read back in [the alert validation record](validation/recurring-alert-rules-2026-10-11.json).
 All three exact SQL hashes returned HTTP 200 and one numeric value in this
 account; 43 UTC boundary scenarios passed independently offline. The queries
 scope logs.workersLogs to this account and norulo-server-production, match only
@@ -117,14 +117,19 @@ rejected by the actual API; the final query uses two bounded OR branches and a
 typed toDate constant for the initial UTC cutoff. Dashboard eligibility and
 offline SQLite semantics alone do not establish actual SQL acceptance.
 
-No new notification policy is enabled yet: the recipient is awaiting explicit
-user designation. Existing routing destinations and billing-alert recipients are
-not inferred as authorization for operational email. After designation, create
-these three policies with email=[{id:the-approved-address}], enabled=true; read
-back every query/filter/interval/destination and preserve existing policies.
+On 2026-10-11 at 14:23 UTC, all three policies were created with HTTP 201 and
+enabled=true for the one explicitly approved operational email recipient. Each
+policy was independently read back with HTTP 200: exact query, filters, intervals
+and email mechanism matched the submitted configuration. The existing billing
+policy's complete configuration fingerprint was unchanged. Policy IDs are in the
+dated validation record; the recipient address is kept in Cloudflare settings.
+The initial POST was denied with HTTP 403/code 10000. After the user added Account
+Notifications Edit to the existing token, creation succeeded; no broad Account
+Settings permission was requested. Historical failure evidence is retained.
 Do not send a test notification or manufacture a production failure for testing.
-Account Notifications Edit is only a requirement if the actual write is denied;
-the current successful metadata/query reads do not prove write permission.
+Actual triggering and mailbox delivery remain unverified until a natural event.
+These account-level policies take effect without a new Worker upload, application
+environment variable, additional business Cron or D1 operation.
 
 This monitor adds no business Cron, D1 heartbeat or financial retry. The 30-minute
 grace is operational buffering, not a log-delivery SLA. Adaptive sampling,
@@ -193,8 +198,9 @@ write retries are permitted. Do not invent a daily/monthly D1 writing allowance.
 Whole local fixture/setup costs, scheduler-window costs and successful-operation
 metadata are separate; missing metrics cannot form a claimed complete bill.
 
-Before operational readiness is complete, enable the prepared detectors with
-explicit recipients and verify their readback, then observe the natural event. Real scheduled financial posting,
+The three operational detectors are enabled with the approved recipient and
+verified readback. Observe the next natural event without synthetic production
+writes or test notifications. Real scheduled financial posting,
 provider notification, native Worker paid AI, shared-team flows and GitHub App
 installation remain separate acceptance items. None requires real charges or
 remote synthetic business writes to prepare safely.

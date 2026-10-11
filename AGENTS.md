@@ -41,10 +41,15 @@ are deferred; do not configure or exercise them as free-release preparation.
 The 2026-10-11 alert preparation adds only best-effort fixed-code receipts around
 the existing production scheduled RPC. All three exact SQL rule hashes passed
 live read-only validation; see docs/validation/recurring-alert-rules-2026-10-11.json.
-Recipients are still unconfigured. Do not infer authorization from existing
-Email Routing or billing recipients, send test emails, create production failure
-fixtures, add a D1 heartbeat or turn missing observations into financial retries.
-Keep the existing one daily Cron, resource scopes, unknown stops and Secrets.
+All three account-level notification policies were enabled and independently
+read back on 2026-10-11 after explicit approval of one operational recipient and
+addition of Account Notifications Edit. Existing billing policy configuration was
+preserved. Exact policy IDs, query hashes and intervals are in the dated record;
+actual alert triggering and email delivery remain unverified. Do not infer new
+recipient authorization from routing/billing, send test emails, create production
+failure fixtures, add a D1 heartbeat or turn missing observations into financial
+retries. Keep the existing one daily Cron, resource scopes, unknown stops and
+Secrets. Account notification changes require no application upload or D1 write.
 
 Use existing isolated cloud checkouts; do not create Git worktrees unless the
 user explicitly requests one. Preserve user changes. Subsequent environment
