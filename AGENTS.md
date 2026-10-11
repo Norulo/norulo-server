@@ -32,6 +32,11 @@ logo is installed in norulo-web/public/norulo-logo.png, with derived assets
 replaced and audited; no further user asset upload is required. Read
 docs/validation/production-readiness-2026-10-10.md before publication for actual
 required credentials and inherited production feature limits.
+Read [production operations](docs/operations.md) for the current Free-only
+billing policy, truthful acceptance scope, natural daily monitoring, alert gaps
+and financial recovery boundaries. User-confirmed GitHub/email login and ordinary
+expense recording do not prove every ledger/team/App/provider flow. Real payments
+are deferred; do not configure or exercise them as free-release preparation.
 
 Use existing isolated cloud checkouts; do not create Git worktrees unless the
 user explicitly requests one. Preserve user changes. Subsequent environment

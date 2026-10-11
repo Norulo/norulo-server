@@ -899,3 +899,28 @@ subtests passed again. Cloudflare readback established the domain,
 DNS and binding state described above; no email was sent for acceptance at that
 stage. The later email-enabled release and actual user-confirmed code receipt /
 login are recorded in the production email admission section.
+
+## Subsequent Free public-use preparation, 2026-10-11
+
+Real payments are deferred by the user. Explicitly empty product configuration
+now returns a genuine Free catalog instead of a provider-price 503; paid prices
+remain null and checkout disabled. Authenticated usage/entitlement retain their
+actual authorization snapshot. Invalid product configuration still fails
+closed. The user separately confirmed ordinary real expense recording succeeds;
+live recurring financial posting and native paid-AI provider acceptance remain
+unverified.
+
+The subsequent local Server full suite passed 3,052 tests in 125.03 seconds. A
+fresh actual dry-run package verified all 64 canonical modules, blank initializer
+and absolute/relative import closure; it contains 729 uploaded modules. This
+does not replace the earlier capacity evidence or require repeating load/model
+acceptance calls. Mobile layout, Free billing and self-hosted-font privacy copy
+are corrected in Web and verified separately.
+
+The [production runbook](../operations.md) records the safe logging policy,
+natural daily-run checks, alert-delivery limitations, private recovery bookmark
+and coordinated D1/DO recovery boundaries. Metadata checks used no SQL, restore,
+manual Cron or remote business writes. The new
+[dated Free release](production-free-launch-2026-10-11.json) records exact checks
+and production versions after publication; earlier release snapshots remain
+historical.

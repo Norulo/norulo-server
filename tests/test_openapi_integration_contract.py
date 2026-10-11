@@ -6,7 +6,7 @@ import yaml
 from norulo_server.api_key_dto_rules import ALLOWED_SCOPES, DEFAULT_SCOPES
 from norulo_server.cloudflare_ledger_expenses import SUPPORTED
 from norulo_server.billing_projection import billing_account_dto, subscription_event_dto
-from norulo_server.billing_catalog_rules import catalog_payload
+from norulo_server.billing_catalog_rules import catalog_payload, disabled_catalog_payload
 from norulo_server.creem_public_catalog_rules import verified_public_catalog
 
 
@@ -130,6 +130,9 @@ def test_billing_reads_describe_actual_account_catalog_and_cookie_only_personali
     assert CONTRACT["paths"]["/billing/plan"]["get"]["security"] == []
     assert "ledgerUsage" in SCHEMAS["BillingPage"]["required"]
     assert not {"account", "ledgerUsage"}.intersection(SCHEMAS["BillingCatalog"]["required"])
+    disabled = disabled_catalog_payload()
+    assert disabled["enabled"] is False and disabled["page"]["checkoutAction"] is None
+    assert "null" in SCHEMAS["BillingCatalog"]["properties"]["page"]["properties"]["checkoutAction"]["type"]
 
 
 def test_owner_retention_policy_is_cookie_only_and_uses_its_independent_revision():

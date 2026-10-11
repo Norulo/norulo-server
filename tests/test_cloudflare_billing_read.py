@@ -10,6 +10,7 @@ from ledger_d1_fixture import TOKEN, seed_auth as legacy_seed_auth
 from ledger_d1_fixture import seed
 from state_record_fixtures import normalize_legacy_state
 
+CONFIGURED_PRODUCTS = {"pro": {"month": "prod-current"}, "max": {}}
 
 def _seed_auth(fixture):
     legacy_seed_auth(fixture)
@@ -87,7 +88,7 @@ def test_public_plan_uses_fresh_saved_catalog_and_cookie_account_snapshot(tmp_pa
     async def read(headers):
         return await handle_http_request(method="GET", path="/billing/plan",
             headers=headers, read_body=no_body, binding=binding,
-            creem_secret="", configured_products={}, now=fixture.now)
+            creem_secret="", configured_products=CONFIGURED_PRODUCTS, now=fixture.now)
 
     status, public = asyncio.run(read({}))
     assert status == 200 and public["provider"] == catalog["provider"]
@@ -111,7 +112,7 @@ def test_expired_public_plan_refuses_stale_provider_price_facts(tmp_path):
     status, payload = asyncio.run(handle_http_request(method="GET",
         path="/billing/plan", headers={}, read_body=no_body,
         binding=D1ShapedSQLite(fixture.store), creem_secret="",
-        configured_products={}, now=fixture.now))
+        configured_products=CONFIGURED_PRODUCTS, now=fixture.now))
     assert status == 503 and payload["error"]["code"] == "BILLING_CATALOG_UNAVAILABLE"
 
 
@@ -133,7 +134,7 @@ def test_public_plan_drops_account_if_cookie_revoked_before_combined_batch(tmp_p
     status, payload = asyncio.run(handle_http_request(method="GET",
         path="/billing/plan", headers={"Cookie": "nr_session=session-local"},
         read_body=no_body, binding=binding, creem_secret="",
-        configured_products={}, now=fixture.now))
+        configured_products=CONFIGURED_PRODUCTS, now=fixture.now))
     assert status == 200 and "account" not in payload
     assert payload["plans"][1]["entitlements"]["jev"]["eligible"] is True
     assert payload["plans"][1]["entitlements"]["jev"]["monthlyBudgetUsd"] == "3.00"

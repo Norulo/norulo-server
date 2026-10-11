@@ -1,0 +1,116 @@
+{
+  "recordedAtUtc": "2026-10-11T09:09:19.553168+00:00",
+  "recordingTimezone": "Asia/Shanghai",
+  "scope": "Free public-use preparation, mobile layout fixes and safe production operations; real payments deferred.",
+  "userConfirmed": [
+    "GitHub sign-in",
+    "Email code delivery and sign-in",
+    "Ordinary real expense recording"
+  ],
+  "localValidation": {
+    "serverFullSuite": {
+      "passed": 3052,
+      "seconds": 125.03,
+      "logSha256": "57a298d6a6edf9d4d217c9d238ad6b8322b71b79738073d9948f422ef11b8d26"
+    },
+    "webFullSuite": {
+      "passed": 1664,
+      "files": 84,
+      "seconds": 73.27,
+      "logSha256": "ee2c7db30c234ee80c64e20bdca5856d1c8039b90d861939782abe895e197499"
+    },
+    "webMobile": {
+      "passed": true,
+      "contexts": 44,
+      "states": 396,
+      "geometryChecks": 176,
+      "engines": [
+        "Chromium",
+        "WebKit"
+      ],
+      "phoneWidths": [
+        360,
+        393,
+        420
+      ],
+      "languages": [
+        "en",
+        "zh",
+        "ja",
+        "ko",
+        "fr",
+        "es"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "evidence": "norulo-web/docs/validation/mobile-account-onboarding-local-2026-10-11.json",
+      "sha256": "af75c9b4f538587fd041a75ede0001d7484b681792d897385943a0a1ed320cb2",
+      "physicalDeviceAcceptanceClaimed": false
+    },
+    "nativeFreeBillingCsv": {
+      "passed": true,
+      "httpRequests": 12,
+      "sqlStatements": 72,
+      "rowsRead": 68,
+      "rowsWritten": 35,
+      "migrationsIncludedInCosts": false,
+      "browserEndToEndClaimed": false,
+      "evidence": "docs/validation/free-billing-csv-native-local-2026-10-11.json",
+      "sha256": "72cd863123042fb44d523884a9a21ce7ea52126fa0ad81975c7917db3526c07a"
+    },
+    "actualPackage": {
+      "canonicalModules": 64,
+      "uploadModules": 729,
+      "blankInitializer": true,
+      "importClosureAndByteEquality": true,
+      "entrySha256": "96194b0fdda57a6f23bc1885deed7f5da005a6860bbca07808b3e5588e482064",
+      "proofSha256": "45af724cab9a69d2ea944fe899c00289dd457e99de4ae7de3e340435fe3533f8"
+    },
+    "sourceChecks": [
+      "Server mirror sync and check",
+      "S01 static guard",
+      "deploy shell syntax",
+      "Web lint",
+      "API contract checksum synchronization",
+      "Production build",
+      "Offline Worker check"
+    ],
+    "originalLogoSha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f",
+    "remoteD1SqlOperations": 0,
+    "remoteApplicationMutations": 0,
+    "manualCronInvocations": 0,
+    "realEmailsSent": 0,
+    "realProviderRequests": 0
+  },
+  "operationsPreparation": {
+    "initialReadOnlyMetadataRequests": 7,
+    "additionalAvailableAlertSchemaReads": 1,
+    "metadataProofSha256": "b59d1f7ffda6b0d16f9ac5f4c5dcf238e9544cc5c0db9b0c241cef3c28a0965d",
+    "productionDatabaseIdentityVerified": true,
+    "timeTravelBookmarkAvailable": true,
+    "exactBookmarkPubliclyRecorded": false,
+    "restorePerformed": false,
+    "retentionPolicy": "Plan conservatively around 7 days; 30 days requires confirmed Paid tier.",
+    "newAlertPolicyCreated": false,
+    "upstreamAlertDetectorConfigured": false,
+    "newAlertRecipientAuthorized": false,
+    "serverEmittedCustomLogSampling": 1,
+    "webCustomLogSampling": 0.01,
+    "invocationLogs": false,
+    "traces": false,
+    "queryStringRedaction": true,
+    "automaticAlertDeliveryClaimed": false,
+    "allHttpErrorsCapturedClaimed": false
+  },
+  "remainingAcceptance": [
+    "First natural recurring event and real due-plan financial posting",
+    "Native Worker real-provider AI and actual paid-customer suggestion journey",
+    "GitHub App installation, account linking and shared-team business journey",
+    "Concrete upstream alert detector and user-approved notification recipients"
+  ],
+  "publication": {
+    "status": "pending actual production version/settings readback"
+  }
+}

@@ -9,7 +9,7 @@ from .cloudflare_principal import (
     PrincipalAuthError, _cookie_sessions, _header, _principal,
     _resource_auth_snapshot,
 )
-from .billing_catalog_rules import catalog_payload as _catalog_payload
+from .billing_catalog_rules import catalog_payload as _catalog_payload, disabled_catalog_payload
 from .cloudflare_plan_limits import capacity_usage_payload, capacity_usage_statement
 
 
@@ -18,7 +18,9 @@ _CATALOG_SQL = """SELECT payload_json,expires_at,source_revision
 
 
 async def read_public_plan(*, binding: Any, headers: Mapping[str, object],
-                           now: int) -> tuple[int, dict]:
+                           now: int, payments_disabled: bool = False) -> tuple[int, dict]:
+    catalog = (disabled_catalog_payload(policy=getattr(binding, "plan_policy", None),
+        jev_available=getattr(binding, "jev_available", False)) if payments_disabled else None)
     public_only = bool(_header(headers, "Authorization")
         or _header(headers, "X-Norulo-Api-Key")
         or not _cookie_sessions(headers))
@@ -29,6 +31,8 @@ async def read_public_plan(*, binding: Any, headers: Mapping[str, object],
         except PrincipalAuthError:
             user = None
     if user is None:
+        if payments_disabled:
+            return 200, catalog
         result = await binding.batch([binding.prepare(_CATALOG_SQL)])
         catalog = _catalog_payload(result[0].results, now, policy=getattr(binding, "plan_policy", None),
                                    jev_available=getattr(binding, "jev_available", False))
@@ -36,17 +40,21 @@ async def read_public_plan(*, binding: Any, headers: Mapping[str, object],
                 (503, {"error": {"code": "BILLING_CATALOG_UNAVAILABLE"}}))
     auth, validate = _resource_auth_snapshot(binding, headers, user, {}, now,
         "profile:read")
-    result = await binding.batch([*auth,
-        binding.prepare(_CATALOG_SQL), capacity_usage_statement(binding, user["id"])])
-    catalog = _catalog_payload(result[len(auth)].results, now, policy=getattr(binding, "plan_policy", None),
-                               jev_available=getattr(binding, "jev_available", False))
+    catalog_reads = [] if payments_disabled else [binding.prepare(_CATALOG_SQL)]
+    result = await binding.batch([*auth, *catalog_reads,
+        capacity_usage_statement(binding, user["id"])])
+    if not payments_disabled:
+        catalog = _catalog_payload(result[len(auth)].results, now,
+            policy=getattr(binding, "plan_policy", None),
+            jev_available=getattr(binding, "jev_available", False))
     if catalog is None:
         return 503, {"error": {"code": "BILLING_CATALOG_UNAVAILABLE"}}
     try:
         validate([part.results for part in result[:len(auth)]])
     except PrincipalAuthError:
         return 200, catalog
-    catalog["account"] = billing_account_dto(user, effective_user_plan(user, timestamp=now))
+    catalog["account"] = billing_account_dto(user,
+        effective_user_plan(user, timestamp=now), timestamp=now)
     catalog["ledgerUsage"] = capacity_usage_payload(user, result[-1].results, now=now,
                                                    policy=getattr(binding, "plan_policy", None))
     return 200, catalog

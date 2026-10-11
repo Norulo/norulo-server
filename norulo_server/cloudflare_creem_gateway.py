@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import re
 from urllib.parse import quote
+from .json_input import validate_json_unicode
 
 MAX_RESPONSE_BYTES = 1024 * 1024
 
@@ -55,6 +56,33 @@ def product_bindings(raw: object) -> dict:
         result[plan] = entry
     values = [value for group in result.values() for value in group.values()]
     return result if len(values) == len(set(values)) else {}
+
+
+def catalog_product_bindings(raw_json: object) -> dict | None:
+    """Keep deliberately empty payment configuration distinct from malformed input."""
+    if raw_json is None or raw_json == "":
+        return {}
+    if not isinstance(raw_json, str):
+        return None
+
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate product configuration key")
+            result[key] = value
+        return result
+
+    try:
+        raw = json.loads(raw_json, object_pairs_hook=unique)
+        validate_json_unicode(raw)
+    except (TypeError, ValueError, UnicodeError):
+        return None
+    if raw == {}:
+        return {}
+    if not isinstance(raw, dict) or set(raw) != {"pro", "max"}:
+        return None
+    return product_bindings(raw) or None
 
 
 def webhook_product_ids(products: dict) -> dict:

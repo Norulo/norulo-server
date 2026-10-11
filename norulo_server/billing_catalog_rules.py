@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 from .ledger_plan_policy import plan_entitlements
+from .creem_public_catalog_rules import verified_public_catalog
 
 PLANS = frozenset({"free", "pro", "max"})
 
@@ -14,6 +15,18 @@ def catalog_payload(rows: list[dict], now: int, *, policy=None, jev_available=Fa
         saved = json.loads(rows[0]["payload_json"])
     except (TypeError, ValueError):
         return None
+    return _project_catalog(saved, policy=policy, jev_available=jev_available)
+
+
+def disabled_catalog_payload(*, policy=None, jev_available=False) -> dict:
+    """Show operator allowances without inventing provider prices or billing facts."""
+    saved = verified_public_catalog({"pro": {}, "max": {}}, {})
+    payload = _project_catalog(saved, policy=policy, jev_available=jev_available)
+    payload["page"]["checkoutAction"] = None
+    return payload
+
+
+def _project_catalog(saved, *, policy=None, jev_available=False) -> dict | None:
     if not isinstance(saved, dict) or not isinstance(saved.get("plans"), list):
         return None
     plans = []

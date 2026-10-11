@@ -26,7 +26,7 @@ from norulo_server.cloudflare_email_gateway import WorkerEmailGateway
 from norulo_server.cloudflare_github_gateway import GitHubFailure, WorkerGitHubGateway
 from norulo_server.cloudflare_billing_mutations import handle_billing_mutation
 from norulo_server.cloudflare_billing_catalog_refresh import read_or_refresh_catalog
-from norulo_server.cloudflare_creem_gateway import WorkerCreemGateway, product_bindings, webhook_product_ids
+from norulo_server.cloudflare_creem_gateway import WorkerCreemGateway, catalog_product_bindings, webhook_product_ids
 from norulo_server.cloudflare_ledger_profile import read_ledger_me
 from norulo_server.cloudflare_ledger_api import handle_ledger_request
 from norulo_server.cloudflare_ledger_recurring import run_due_recurring
@@ -122,10 +122,8 @@ class _Application:
             return invalid_target
         path, params = target
         raw_products = getattr(self.env, "NORULO_CREEM_PRODUCT_IDS_JSON", "")
-        try:
-            products = product_bindings(json.loads(raw_products)) if raw_products else {}
-        except (TypeError, ValueError):
-            products = {}
+        catalog_products = catalog_product_bindings(raw_products)
+        products = catalog_products or {}
 
         async def read_body():
             body = await request.bytes()
@@ -290,8 +288,10 @@ class _Application:
         if path == "/billing/plan" and request.method == "GET":
             try:
                 status, payload = await read_or_refresh_catalog(
-                    binding=self.binding, gateway=WorkerCreemGateway(self.env),
-                    headers=headers, products=products, now=now)
+                    binding=self.binding,
+                    gateway=(WorkerCreemGateway(self.env)
+                        if catalog_products and any(catalog_products.values()) else None),
+                    headers=headers, products=catalog_products, now=now)
             except Exception as error:
                 status, payload = 503, {"error": {"code": "BILLING_CATALOG_UNAVAILABLE"}}
                 if getattr(self.env, "NORULO_MODE", "") == "preview":
@@ -318,6 +318,9 @@ class _Application:
                 return Response.json({"error": {"code": "BILLING_UNAVAILABLE"}}, status=503,
                     headers={"Cache-Control": "no-store"})
             try:
+                if catalog_products is None:
+                    return Response.json({"error": {"code": "BILLING_UNAVAILABLE"}},
+                        status=503, headers={"Cache-Control": "no-store"})
                 status, payload = await handle_billing_mutation(
                     binding=self.binding, gateway=WorkerCreemGateway(self.env),
                     now=now, method=request.method, path=path, headers=headers, body=body,

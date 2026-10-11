@@ -1195,7 +1195,11 @@ components:
           required: [id, checkoutAction, billingRoute]
           properties:
             id: {const: pricing}
-            checkoutAction: {type: object, required: [method, href], properties: {method: {const: POST}, href: {const: /billing/checkout-sessions}}}
+            checkoutAction:
+              type: [object, 'null']
+              description: Null when provider billing is disabled; Free remains available without checkout.
+              required: [method, href]
+              properties: {method: {const: POST}, href: {const: /billing/checkout-sessions}}
             billingRoute: {const: /billing}
         account: {$ref: '#/components/schemas/BillingAccount'}
         ledgerUsage: {$ref: '#/components/schemas/LedgerUsage'}

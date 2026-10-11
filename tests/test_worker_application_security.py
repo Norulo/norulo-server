@@ -10,7 +10,7 @@ from urllib.parse import urlsplit, parse_qs, unquote
 import pytest
 
 from norulo_server.cloudflare_plan_limits import PlanLimitError
-from norulo_server.cloudflare_creem_gateway import CreemRequestRejected
+from norulo_server.cloudflare_creem_gateway import CreemRequestRejected, catalog_product_bindings
 from norulo_server.cloudflare_ledger_reports import CsvExport
 from norulo_server.json_input import validate_json_unicode
 
@@ -49,6 +49,7 @@ def application(*, same_site="Lax", catalog_failure=None, billing_failure=None,
         "parse_qs": parse_qs, "unquote": unquote, "json": json, "PlanLimitError": PlanLimitError,
         "handle_identity_request": identity, "handle_ledger_request": ledger,
         "read_or_refresh_catalog": catalog,
+        "catalog_product_bindings": catalog_product_bindings,
         "handle_billing_mutation": billing, "validate_json_unicode": validate_json_unicode,
         "CsvExport": CsvExport,
         "WorkerGitHubGateway": lambda _: None, "WorkerCreemGateway": creem_gateway}

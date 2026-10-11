@@ -44,6 +44,9 @@ endpoints HTTP 200 and unauthenticated profile endpoints HTTP 401, with no
 Set-Cookie. These checks verify publication and authenticated access enforcement;
 the user subsequently confirmed successful real GitHub sign-in. Repository
 installation, credential refresh and the complete ledger journey remain unverified.
+The user has also confirmed ordinary expense recording. See the
+[production operations runbook](docs/operations.md) for Free-only billing,
+natural daily checks, alert status and financial recovery boundaries.
 The user has registered [Norulo's GitHub App](https://github.com/apps/norulo);
 its public identity and Metadata-only permission were verified on 2026-10-10.
 The user has securely saved NORULO_GITHUB_CLIENT_SECRET, and
@@ -111,6 +114,10 @@ independent D1 database, keeps its default access switch at 0, and has no schedu
 All five checked-in feature flags stay 0 and the source has no schedule. Verified
 release B uses explicit overlays to enable D1/email/AI/recurrence and exactly one
 daily cron, 10 16 * * * UTC (Beijing 00:10). Payments remain unconfigured.
+The reviewed Free-only catalog supports public Free use without a payment
+provider: actual allowances and zero price, unavailable Pro/Max prices and disabled
+checkout. Malformed payment configuration still fails closed. Real payments
+remain deferred; deployment evidence records when this change is live.
 Production has the prepared EMAIL
 send binding and independent admission namespace; email authentication is enabled
 in the published runtime through the explicit overlay. Production's public

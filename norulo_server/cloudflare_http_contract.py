@@ -69,7 +69,8 @@ async def handle_http_request(*, method: str, path: str,
             return 503, {"error": {"code": "SERVER_UNAVAILABLE"}}
     if method == "GET" and path == "/billing/plan":
         try:
-            return await read_public_plan(binding=binding, headers=headers, now=now)
+            return await read_public_plan(binding=binding, headers=headers, now=now,
+                payments_disabled=configured_products == {})
         except Exception:
             return 503, {"error": {"code": "BILLING_CATALOG_UNAVAILABLE"}}
     if method == "POST" and path == "/api-keys":
