@@ -111,6 +111,173 @@
     "Concrete upstream alert detector and user-approved notification recipients"
   ],
   "publication": {
-    "status": "pending actual production version/settings readback"
+    "status": "published and verified; dated release A, later documentation-only uploads need their own readback",
+    "verifiedAtUtc": "2026-10-11T09:11:24.568646+00:00",
+    "sourceCommits": {
+      "server": "0a57bdd773724c43555a96369f9e6476453f0354",
+      "web": "17dfabdeb0b2ff9889b30f7b9045af0546c0cdbe"
+    },
+    "versions": {
+      "server": "aa16b9b0-6c0b-4e06-9152-49ae9080d36f",
+      "web": "e0af6e92-9af1-4767-9fad-6ae591371aca"
+    },
+    "trafficPercent": 100,
+    "cron": "10 16 * * *",
+    "recordingTimezone": "Asia/Shanghai",
+    "limits": {
+      "cpu_ms": 300000,
+      "subrequests": 9000
+    },
+    "activationFlags": {
+      "NORULO_D1_ACCESS_ENABLED": "1",
+      "NORULO_EMAIL_AUTH_ENABLED": "1",
+      "NORULO_JEV_SUGGESTIONS_ENABLED": "1",
+      "NORULO_JEV_SUGGESTIONS_EVALUATED": "1",
+      "NORULO_RECURRING_EXPENSES_ENABLED": "1"
+    },
+    "secretNamesRetained": [
+      "NORULO_EMAIL_CODE_SECRET",
+      "NORULO_GITHUB_CLIENT_SECRET",
+      "NORULO_GITHUB_TOKEN_KEY",
+      "TYPESAFE_API_KEY"
+    ],
+    "serverResources": [
+      {
+        "database_id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+        "id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+        "name": "DB",
+        "type": "d1"
+      },
+      {
+        "allowed_sender_addresses": [
+          "login@auth.norulo.com"
+        ],
+        "name": "EMAIL",
+        "type": "send_email"
+      },
+      {
+        "class_name": "EmailAdmission",
+        "name": "EMAIL_ADMISSION",
+        "namespace_id": "6588312f00f74840a37463e72a2d75eb",
+        "type": "durable_object_namespace"
+      },
+      {
+        "class_name": "RecurringScheduler",
+        "name": "RECURRING_SCHEDULER",
+        "namespace_id": "b3f41def1906481e9c72662debf4b505",
+        "type": "durable_object_namespace"
+      }
+    ],
+    "webResources": [
+      {
+        "name": "ASSETS",
+        "type": "assets"
+      },
+      {
+        "environment": "production",
+        "name": "NORULO_SERVER",
+        "service": "norulo-server-production",
+        "type": "service"
+      }
+    ],
+    "observability": {
+      "server": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "redact_query_string": true,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": false
+        },
+        "traces": {
+          "enabled": false,
+          "persist": true,
+          "head_sampling_rate": 1
+        }
+      },
+      "web": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "redact_query_string": true,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 0.01,
+          "persist": true,
+          "invocation_logs": false
+        },
+        "traces": {
+          "enabled": false,
+          "persist": true,
+          "head_sampling_rate": 1
+        }
+      }
+    },
+    "workersDevAndPreviewDisabled": true,
+    "tlsVerification": true,
+    "cloudflareMetadataGets": 7,
+    "publicGets": 9,
+    "freeCatalogChecks": [
+      {
+        "url": "https://api.norulo.com/billing/plan",
+        "status": 200,
+        "provider": "disabled",
+        "freeAvailable": true,
+        "paidCheckoutAvailable": false,
+        "privateAccountDisclosed": false,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/api/billing/plan",
+        "status": 200,
+        "provider": "disabled",
+        "freeAvailable": true,
+        "paidCheckoutAvailable": false,
+        "privateAccountDisclosed": false,
+        "setCookie": false
+      }
+    ],
+    "healthAndAccessChecks": [
+      {
+        "url": "https://api.norulo.com/health",
+        "status": 200,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/api/health",
+        "status": 200,
+        "setCookie": false
+      },
+      {
+        "url": "https://api.norulo.com/api/v1/me",
+        "status": 401,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/api/api/v1/me",
+        "status": 401,
+        "setCookie": false
+      },
+      {
+        "url": "https://norulo.com/",
+        "status": 200,
+        "setCookie": false
+      }
+    ],
+    "originalLogoSha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f",
+    "wwwRedirect": {
+      "status": 308,
+      "location": "https://norulo.com/login?source=release-check"
+    },
+    "remoteD1SqlOperations": 0,
+    "remoteApplicationMutations": 0,
+    "manualCronInvocations": 0,
+    "providerRequests": 0,
+    "realEmailsSentByAgent": 0,
+    "migrationReplay": 0,
+    "rawReadbackSha256": "5ec2c1c16f4bc71bded351253855e8b58a5aa59baa409a731e491c16fd8fb02d",
+    "financialScheduledPostingClaimed": false,
+    "nativeProviderAcceptanceClaimed": false
   }
 }
