@@ -27,7 +27,7 @@ def _provider_url(value: object) -> str:
         raise ValueError("invalid Creem redirect")
     parsed = urlsplit(value)
     if (parsed.scheme != "https"
-            or parsed.hostname not in {"checkout.creem.io", "test-checkout.creem.io"}
+            or parsed.hostname not in {"creem.io", "www.creem.io", "checkout.creem.io", "test-checkout.creem.io"}
             or parsed.username is not None or parsed.password is not None
             or parsed.port not in {None, 443}):
         raise ValueError("invalid Creem redirect")

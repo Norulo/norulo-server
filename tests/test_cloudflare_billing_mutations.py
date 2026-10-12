@@ -82,12 +82,44 @@ class BillingMutationTests(unittest.TestCase):
                          "https://app.example.test/billing?billing=success")
         self.assertEqual(payload["cancelUrl"], "https://app.example.test/billing?billing=cancel")
 
+    def test_provider_checkout_hosts_save_checkout_without_granting_subscription(self):
+        for url in ("https://creem.io/checkout/prod-pro-month/ch_1",
+                    "https://www.creem.io/checkout/prod-pro-month/ch_1",
+                    "https://checkout.creem.io/ch_1",
+                    "https://test-checkout.creem.io/ch_1"):
+            for plan in ("pro", "max"):
+                with self.subTest(url=url, plan=plan):
+                    self._save_user()
+                    self.gateway.calls.clear()
+
+                    async def provider_checkout(path, payload):
+                        self.gateway.calls.append((path, payload))
+                        return {"id": "ch_1", "checkout_url": url}
+
+                    self.gateway.post = provider_checkout
+                    status, payload = self.call("/billing/checkout-sessions",
+                        {"plan": plan, "interval": "month"})
+                    self.assertEqual(status, 200)
+                    self.assertEqual(payload["url"], url)
+                    self.assertEqual(len(self.gateway.calls), 1)
+                    with self.store.connect() as db:
+                        saved = json.loads(db.execute(
+                            "SELECT payload FROM app_state WHERE name='record:users:owner'").fetchone()[0])
+                    self.assertEqual(saved, {**self.user, "billingCheckout": {
+                        "provider": "creem", "id": "ch_1", "requestId": payload["requestId"],
+                        "plan": plan, "interval": "month", "createdAt": self.now}})
+
     def test_invalid_checkout_redirects_never_persist_provider_acknowledgement(self):
-        for url in ("https://checkout.creem.io.evil.example/ch_1",
-                    "https://user:password@checkout.creem.io/ch_1",
-                    "https://checkout.creem.io:444/ch_1",
-                    "https://checkout.creem.io/ch_1\r\n",
-                    " https://checkout.creem.io/ch_1"):
+        urls = []
+        for host in ("creem.io", "www.creem.io", "checkout.creem.io", "test-checkout.creem.io"):
+            urls.extend((f"https://{host}.evil.example/ch_1",
+                         f"https://user:password@{host}/ch_1",
+                         f"https://{host}:444/ch_1",
+                         f"http://{host}/ch_1",
+                         f"https://{host}/ch_1\r\n",
+                         f" https://{host}/ch_1",
+                         f"https://{host}/ch_1 "))
+        for url in urls:
             async def invalid_redirect(path, payload):
                 return {"id": "ch_1", "checkout_url": url}
             self.gateway.post = invalid_redirect
