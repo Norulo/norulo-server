@@ -58,4 +58,5 @@ IPv6 /64 修复降低同前缀轮换成本；分布式真实前缀攻击仍可�
 GitHub authorize 与 callback 必须经同一浏览器 host，当前生产采用
 `norulo.com/api`，与固定 callback 一致。并行开始的新登录会替换该浏览器的
 短期登录绑定，早先的回调会安全拒绝。未宣称真实浏览器/提供方/生产财务流程
-已经重新验收；生产发布及只读检查另记录在 dated release evidence 中。
+已经重新验收；生产发布及只读检查见
+[发布证据](server-review-production-release-2026-10-12.json)。

@@ -1,0 +1,587 @@
+{
+  "recordedAtUtc": "2026-10-12T09:45:54.176659+00:00",
+  "recordingTimezone": "Asia/Shanghai",
+  "serverSourceCommit": "04f13061cbdd2c5e8cc0bc66c175d14fd588a4ad",
+  "webSourceCommit": "0d773bea432864d616cd103d63cedb107e93d1ad",
+  "serverDeployment": {
+    "id": "573ab1c2-5568-4580-b904-e0f9ac50d53c",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "danuberiverferryman@gmail.com",
+    "annotations": {
+      "workers/message": "Fix reviewed server authentication, quota and export issues (04f13061cbdd2c5e8cc0bc66c175d14fd588a4ad)",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "2a1a1086-a0ce-40c1-8e83-5b5e7d6b3a9d",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-12T09:38:52.429812Z"
+  },
+  "webDeployment": {
+    "id": "c2f71409-142c-4d83-8230-f5c127d4f88d",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "danuberiverferryman@gmail.com",
+    "annotations": {
+      "workers/message": "Support bounded API key pages and accurate metadata (0d773bea432864d616cd103d63cedb107e93d1ad)",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "19746363-a68a-48d1-8fbb-a59381dd7786",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-12T09:40:35.353529Z"
+  },
+  "publicVariables": {
+    "NORULO_ALLOWED_ORIGINS": "https://norulo.com",
+    "NORULO_APP_URL": "https://norulo.com",
+    "NORULO_COOKIE_SAME_SITE": "None",
+    "NORULO_CREEM_API_BASE_URL": "https://api.creem.io",
+    "NORULO_CREEM_PRODUCT_IDS_JSON": "{\"pro\":{\"month\":\"prod_1epM6PhPRtYV9kBpdYW10O\",\"year\":\"prod_1sjSCiHtaGv7Ayv1gdC0G0\"},\"max\":{\"month\":\"prod_2HxOZvntzCz5nswEIv4L4K\",\"year\":\"prod_FjgOMROB94ZJDIopXdcRn\"}}",
+    "NORULO_D1_ACCESS_ENABLED": "1",
+    "NORULO_EMAIL_AUTH_ENABLED": "1",
+    "NORULO_EMAIL_FROM": "login@auth.norulo.com",
+    "NORULO_GITHUB_APP_SLUG": "norulo",
+    "NORULO_GITHUB_CALLBACK_URL": "https://norulo.com/api/auth/github/callback",
+    "NORULO_GITHUB_CLIENT_ID": "Iv23li78ZPeUgSxJkLUj",
+    "NORULO_JEV_SUGGESTIONS_ENABLED": "1",
+    "NORULO_JEV_SUGGESTIONS_EVALUATED": "1",
+    "NORULO_MODE": "production",
+    "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":100,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\"},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\"},\"max\":{\"projects\":100,\"records\":100000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"5.00\"}}",
+    "NORULO_PREVIEW_BUSINESS_CLEAR_ID": "",
+    "NORULO_PREVIEW_BUSINESS_CLEAR_MANIFEST": "",
+    "NORULO_PREVIEW_SCHEMA_V11_UPGRADE_ENABLED": "0",
+    "NORULO_RECURRING_EXPENSES_ENABLED": "1"
+  },
+  "secretNames": [
+    "NORULO_CREEM_API_KEY",
+    "NORULO_CREEM_WEBHOOK_SECRET",
+    "NORULO_EMAIL_CODE_SECRET",
+    "NORULO_GITHUB_CLIENT_SECRET",
+    "NORULO_GITHUB_TOKEN_KEY",
+    "TYPESAFE_API_KEY"
+  ],
+  "resourceBindings": [
+    {
+      "database_id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+      "id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+      "name": "DB",
+      "type": "d1"
+    },
+    {
+      "allowed_sender_addresses": [
+        "login@auth.norulo.com"
+      ],
+      "name": "EMAIL",
+      "type": "send_email"
+    },
+    {
+      "class_name": "EmailAdmission",
+      "name": "EMAIL_ADMISSION",
+      "namespace_id": "6588312f00f74840a37463e72a2d75eb",
+      "type": "durable_object_namespace"
+    },
+    {
+      "class_name": "RecurringScheduler",
+      "name": "RECURRING_SCHEDULER",
+      "namespace_id": "b3f41def1906481e9c72662debf4b505",
+      "type": "durable_object_namespace"
+    }
+  ],
+  "rateLimitBinding": [
+    {
+      "name": "AUTH_RATE_LIMIT",
+      "namespace_id": "1576996832",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      },
+      "type": "ratelimit"
+    }
+  ],
+  "limits": {
+    "cpu_ms": 300000,
+    "subrequests": 9000
+  },
+  "schedules": {
+    "schedules": [
+      {
+        "cron": "10 16 * * *",
+        "created_on": "2026-10-11T06:37:31.428958Z",
+        "modified_on": "2026-10-12T09:38:57.104682Z"
+      }
+    ]
+  },
+  "serverExposure": {
+    "enabled": false,
+    "previews_enabled": false
+  },
+  "webExposure": {
+    "enabled": false,
+    "previews_enabled": false
+  },
+  "serverObservability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true,
+      "invocation_logs": false
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "webObservability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "redact_query_string": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 0.01,
+      "persist": true,
+      "invocation_logs": false
+    },
+    "traces": {
+      "enabled": false,
+      "persist": true,
+      "head_sampling_rate": 1
+    },
+    "issues": {
+      "enabled": true
+    }
+  },
+  "publishedModuleBytesVerified": true,
+  "publishedModuleCount": 731,
+  "artifactManifestSha256": "098b03b0b698c00dbd38a5c9c5e5e13652b19d21cd7fecdb75dd72ca54fcb118",
+  "controlPlaneReads": [
+    {
+      "method": "GET",
+      "path": "/accounts/84e421f26c708c0cf437e287eed11fa1/workers/scripts/norulo-server-production/settings",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/84e421f26c708c0cf437e287eed11fa1/workers/scripts/norulo-server-production/deployments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/84e421f26c708c0cf437e287eed11fa1/workers/scripts/norulo-server-production/schedules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/84e421f26c708c0cf437e287eed11fa1/workers/scripts/norulo-server-production/subdomain",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/84e421f26c708c0cf437e287eed11fa1/workers/scripts/norulo-web/settings",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/84e421f26c708c0cf437e287eed11fa1/workers/scripts/norulo-web/deployments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/84e421f26c708c0cf437e287eed11fa1/workers/scripts/norulo-web/subdomain",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/accounts/84e421f26c708c0cf437e287eed11fa1/workers/scripts/norulo-server-production/content/v2",
+      "status": 200
+    }
+  ],
+  "smoke": [
+    {
+      "method": "GET",
+      "url": "https://api.norulo.com/health",
+      "status": 200,
+      "setCookie": false,
+      "bodySha256": "fb437ad47c6e9f3241477d292e451632361c8432ff389ca9313c4995fab7eaee"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.norulo.com/auth/session",
+      "status": 200,
+      "setCookie": false,
+      "bodySha256": "dea067a157577e98267ff543895167e2905203c47b8a8637855ffd426d6c8274"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.norulo.com/api/v1/me",
+      "status": 401,
+      "setCookie": false,
+      "bodySha256": "48220ecdf89ae5e130bd1bb8c1705c83a32388d380f556d02aab160247b16bdb"
+    },
+    {
+      "method": "GET",
+      "url": "https://norulo.com/api/health",
+      "status": 200,
+      "setCookie": false,
+      "bodySha256": "fb437ad47c6e9f3241477d292e451632361c8432ff389ca9313c4995fab7eaee"
+    },
+    {
+      "method": "GET",
+      "url": "https://norulo.com/api/auth/session",
+      "status": 200,
+      "setCookie": false,
+      "bodySha256": "dea067a157577e98267ff543895167e2905203c47b8a8637855ffd426d6c8274"
+    },
+    {
+      "method": "GET",
+      "url": "https://norulo.com/api/api/v1/me",
+      "status": 401,
+      "setCookie": false,
+      "bodySha256": "48220ecdf89ae5e130bd1bb8c1705c83a32388d380f556d02aab160247b16bdb"
+    },
+    {
+      "method": "GET",
+      "url": "https://norulo.com/",
+      "status": 200,
+      "setCookie": false,
+      "bodySha256": "f70ac6824b3c575b64d71414655374cf84e21cec75a36e33e37dd4013ee18afe"
+    }
+  ],
+  "remoteApplicationMutations": 0,
+  "realProviderRequests": 0,
+  "syntheticProductionDataWrites": 0,
+  "manualCronInvocations": 0,
+  "remoteSqlSmokeQueries": 0,
+  "publicRequestUserAgent": "Mozilla/5.0 (compatible; NoruloReleaseCheck/1.0)",
+  "initialDefaultUserAgentObservation": {
+    "status": 403,
+    "cloudflareCode": 1010,
+    "diagnosticRequests": 4,
+    "note": "Existing Browser Integrity Check rejected the default urllib agent. Explicit release-check agent succeeded; no security settings changed."
+  },
+  "scope": "Objective report review, main publication and production release; necessary index migration only",
+  "localEvidence": "server-review-local-2026-10-12.json",
+  "assessment": "server-review-remediation-2026-10-12.md",
+  "localTests": {
+    "serverPassed": 3219,
+    "serverSubtestsPassed": 107,
+    "serverSeconds": 128.93,
+    "webPassed": 1805,
+    "webTestFiles": 87,
+    "webVitest": "4.1.11",
+    "webLintBuildWorkerChecksPassed": true
+  },
+  "migration": {
+    "file": "0013_export_key_indexes.sql",
+    "sha256": "c413e43158ad0947b36062a24dc1037f81caa7867ffdda6e2196048e6e3ca20d",
+    "appliedOnce": true,
+    "wrangler": "4.136.3",
+    "consoleCommands": 3,
+    "consoleDurationMs": 0.81,
+    "rowsRead": null,
+    "rowsWritten": null,
+    "nativeRowAccounting": "Not exposed in retained Wrangler output/debug; no replay performed",
+    "changes": "Two partial indexes and one canonical migration journal record; business rows preserved",
+    "schemaVersion": 13,
+    "canonicalObjects": 79,
+    "schemaFingerprint": "35e6e70f1c3db6ec12ea95746f9fe7c03a757424df36979e11badf29023ec015",
+    "baseline12JournalEntriesPreserved": true,
+    "newJournalEntry": "0013_export_key_indexes.sql",
+    "postMigrationReadRows": 179,
+    "postMigrationWrittenRows": 0,
+    "completeInitialPreflightReadRows": 174,
+    "completeInitialPreflightWrittenRows": 0,
+    "initialRejectedPragmaReadAccounting": "Unavailable for first failed read-only metadata pass"
+  },
+  "githubCI": {
+    "serverSource": {
+      "status": "success",
+      "url": "https://github.com/Norulo/norulo-server/actions/runs/38230534990"
+    },
+    "webSource": {
+      "status": "success",
+      "url": "https://github.com/Norulo/norulo-web/actions/runs/38230544523"
+    },
+    "evidence": {
+      "recordedAtUtc": "2026-10-12 09:48:35 UTC",
+      "recordingTimezone": "Asia/Shanghai",
+      "readOnly": true,
+      "sourceCommitsOnly": true,
+      "runs": [
+        {
+          "repo": "Norulo/norulo-server",
+          "id": 38230534990,
+          "headSha": "04f13061cbdd2c5e8cc0bc66c175d14fd588a4ad",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/Norulo/norulo-server/actions/runs/38230534990",
+          "updatedAt": "2026-10-12T09:38:06Z",
+          "jobs": [
+            {
+              "id": 114748614775,
+              "name": "test",
+              "status": "completed",
+              "conclusion": "success",
+              "htmlUrl": "https://github.com/Norulo/norulo-server/actions/runs/38230534990/job/114748614775",
+              "startedAt": "2026-10-12T09:32:21Z",
+              "completedAt": "2026-10-12T09:38:05Z",
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:22Z",
+                  "completedAt": "2026-10-12T09:32:22Z"
+                },
+                {
+                  "name": "Run actions/checkout@v4",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:22Z",
+                  "completedAt": "2026-10-12T09:32:23Z"
+                },
+                {
+                  "name": "Run actions/setup-python@v5",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:23Z",
+                  "completedAt": "2026-10-12T09:32:30Z"
+                },
+                {
+                  "name": "Install test dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:30Z",
+                  "completedAt": "2026-10-12T09:32:39Z"
+                },
+                {
+                  "name": "Audit Python dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:39Z",
+                  "completedAt": "2026-10-12T09:32:45Z"
+                },
+                {
+                  "name": "Check Python dependency compatibility",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:45Z",
+                  "completedAt": "2026-10-12T09:32:46Z"
+                },
+                {
+                  "name": "Check shell scripts",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:46Z",
+                  "completedAt": "2026-10-12T09:32:47Z"
+                },
+                {
+                  "name": "Run tests",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:47Z",
+                  "completedAt": "2026-10-12T09:38:03Z"
+                },
+                {
+                  "name": "Post Run actions/setup-python@v5",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:38:03Z",
+                  "completedAt": "2026-10-12T09:38:03Z"
+                },
+                {
+                  "name": "Post Run actions/checkout@v4",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:38:03Z",
+                  "completedAt": "2026-10-12T09:38:03Z"
+                },
+                {
+                  "name": "Complete job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:38:03Z",
+                  "completedAt": "2026-10-12T09:38:03Z"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "repo": "Norulo/norulo-web",
+          "id": 38230544523,
+          "headSha": "0d773bea432864d616cd103d63cedb107e93d1ad",
+          "status": "completed",
+          "conclusion": "success",
+          "htmlUrl": "https://github.com/Norulo/norulo-web/actions/runs/38230544523",
+          "updatedAt": "2026-10-12T09:43:35Z",
+          "jobs": [
+            {
+              "id": 114748646682,
+              "name": "test",
+              "status": "completed",
+              "conclusion": "success",
+              "htmlUrl": "https://github.com/Norulo/norulo-web/actions/runs/38230544523/job/114748646682",
+              "startedAt": "2026-10-12T09:32:26Z",
+              "completedAt": "2026-10-12T09:43:34Z",
+              "steps": [
+                {
+                  "name": "Set up job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:27Z",
+                  "completedAt": "2026-10-12T09:32:28Z"
+                },
+                {
+                  "name": "Run actions/checkout@v4",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:28Z",
+                  "completedAt": "2026-10-12T09:32:29Z"
+                },
+                {
+                  "name": "Run actions/setup-node@v4",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:29Z",
+                  "completedAt": "2026-10-12T09:32:34Z"
+                },
+                {
+                  "name": "Install dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:34Z",
+                  "completedAt": "2026-10-12T09:32:38Z"
+                },
+                {
+                  "name": "Run checks",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:32:38Z",
+                  "completedAt": "2026-10-12T09:34:22Z"
+                },
+                {
+                  "name": "Build browser-check assets",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:34:22Z",
+                  "completedAt": "2026-10-12T09:34:23Z"
+                },
+                {
+                  "name": "Install browser engines",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:34:23Z",
+                  "completedAt": "2026-10-12T09:35:17Z"
+                },
+                {
+                  "name": "Check date-field layouts across browser engines",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:35:17Z",
+                  "completedAt": "2026-10-12T09:38:52Z"
+                },
+                {
+                  "name": "Check phone and tablet layouts in Chromium and WebKit",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:38:52Z",
+                  "completedAt": "2026-10-12T09:41:02Z"
+                },
+                {
+                  "name": "Check Billing usage layouts",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:41:02Z",
+                  "completedAt": "2026-10-12T09:41:12Z"
+                },
+                {
+                  "name": "Check spending overview composition layouts",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:41:12Z",
+                  "completedAt": "2026-10-12T09:41:35Z"
+                },
+                {
+                  "name": "Check currency picker interactions and layouts",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:41:35Z",
+                  "completedAt": "2026-10-12T09:41:49Z"
+                },
+                {
+                  "name": "Check Projects layout and accessibility",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:41:49Z",
+                  "completedAt": "2026-10-12T09:43:27Z"
+                },
+                {
+                  "name": "Upload browser validation evidence",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:43:27Z",
+                  "completedAt": "2026-10-12T09:43:28Z"
+                },
+                {
+                  "name": "Audit production dependencies",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:43:28Z",
+                  "completedAt": "2026-10-12T09:43:28Z"
+                },
+                {
+                  "name": "Check Cloudflare worker syntax",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:43:28Z",
+                  "completedAt": "2026-10-12T09:43:28Z"
+                },
+                {
+                  "name": "Post Run actions/setup-node@v4",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:43:28Z",
+                  "completedAt": "2026-10-12T09:43:28Z"
+                },
+                {
+                  "name": "Post Run actions/checkout@v4",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:43:28Z",
+                  "completedAt": "2026-10-12T09:43:29Z"
+                },
+                {
+                  "name": "Complete job",
+                  "status": "completed",
+                  "conclusion": "success",
+                  "startedAt": "2026-10-12T09:43:29Z",
+                  "completedAt": "2026-10-12T09:43:29Z"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "allSourceCiPassed": true,
+      "rawLogsRead": false,
+      "remoteMutationsPerformed": false
+    }
+  },
+  "limitations": [
+    "Native and SQLite tests used local fixtures/fake providers; no live login/email/AI/payment or scheduled financial execution acceptance claimed.",
+    "Old raw session records remain until their original expiry; no bulk migration or read-triggered rewrite.",
+    "IPv6 prefix and approximate per-location rate limits mitigate abuse without guaranteeing protection against distributed attackers.",
+    "Cloudflare default urllib User-Agent was blocked with 403/1010; explicit release-check HTTP client succeeded with no WAF/security configuration change.",
+    "Code release commits are recorded above; later documentation-only commits do not change published source bytes."
+  ]
+}

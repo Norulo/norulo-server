@@ -5,7 +5,14 @@ remain disabled. Dated records in [production readiness](validation/production-r
 identify what was actually published/read back; source configuration or a local
 test does not establish the deployed version.
 
-## Free public use and remaining acceptance
+## Catalog configuration and remaining acceptance
+
+The 2026-10-12 review release retains the live configured Creem products and
+six Secret names that were present before publication. See the
+[review release record](validation/server-review-production-release-2026-10-12.json).
+The empty-product Free catalog described below remains the supported deliberately
+disabled billing path. This review performed no payment/provider/email acceptance
+operation and made no changes to product IDs or provider identities.
 
 The user has confirmed successful real GitHub sign-in, email verification-code
 delivery/login and ordinary expense recording. Repository installation,
@@ -34,18 +41,22 @@ their deployed state in the subsequent dated release readback.
 
 | Resource or control | Required preservation |
 | --- | --- |
-| Production D1 | norulo-ledger-production, c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5; verified schema v12 |
+| Production D1 | norulo-ledger-production, c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5; verified schema v13 and sole added 0013 index migration |
 | Email admission | EMAIL_ADMISSION / EmailAdmission, namespace 6588312f00f74840a37463e72a2d75eb |
 | Recurrence | RECURRING_SCHEDULER / RecurringScheduler, namespace b3f41def1906481e9c72662debf4b505; existing Root/Owner scopes and journal state |
 | System sender | EMAIL restricted to login@auth.norulo.com; authenticated sending domain and existing contact Email Routing retained |
-| Worker Secrets | NORULO_GITHUB_CLIENT_SECRET, NORULO_GITHUB_TOKEN_KEY, NORULO_EMAIL_CODE_SECRET and TYPESAFE_API_KEY, inherited by name without reading values |
+| Worker Secrets | NORULO_GITHUB_CLIENT_SECRET, NORULO_GITHUB_TOKEN_KEY, NORULO_EMAIL_CODE_SECRET, TYPESAFE_API_KEY, NORULO_CREEM_API_KEY and NORULO_CREEM_WEBHOOK_SECRET, inherited by name without reading values |
+| OAuth admission | AUTH_RATE_LIMIT, isolated namespace 1576996832, 20/60 per location; preserve browser-bound single-use state |
 | Environment credential | Existing CLOUDFLARE_API_TOKEN network binding; never clear or duplicate its value |
 | Activation | Runtime D1, email, both AI flags and recurrence enabled through all four reviewed activation overlays; checked-in five flags remain 0 |
 | Limits and schedule | cpu_ms=300000, subrequests=9000; exactly one cron, 10 16 * * * UTC |
 | Exposure | Exact production domains, preview URLs/Workers.dev disabled; no preview release |
 
 Use the [deployment command](../cloudflare/server/README.md#production-recurring-release)
-and preserve every overlay/Secret. Never replay applied migrations as a release
+with an inspected effective configuration preserving current live public variables
+and every overlay/Secret. Source paused/empty-product defaults require this live
+configuration overlay. Keep a temporary config inside the Worker directory so
+the frozen Python dependencies are included. Never replay applied migrations as a release
 check. Verify actual bindings, limits, flags, schedules and versions through
 finite read-only control-plane requests. Supported limits do not confirm Paid
 billing subscription status.

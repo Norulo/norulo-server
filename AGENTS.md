@@ -1,5 +1,32 @@
 # Norulo Server
 
+## 2026-10-12 review release
+
+The current review release upgrades the independent production schema to v13
+with only 0013_export_key_indexes.sql. The dated review release record supersedes
+older v12/configuration snapshots below. Preserve the existing D1/DO identities,
+daily schedule and financial journals. New sessions use ses-v2. credentials and
+hashed sesh- storage IDs; old sessions remain read-only compatible until expiry.
+Keep transient credential IDs distinct from physical record IDs in SQL fences.
+GitHub login uses the host-only nr_github_oauth browser cookie, with authorize
+and callback both routed through norulo.com/api. Production AUTH_RATE_LIMIT has
+the isolated namespace 1576996832 and simple limit 20/60; this is approximate
+per-location admission before OAuth D1 writes, not a global billing ceiling.
+
+Read current production settings before each upload. The review release retained
+19 live public variables, configured Creem products and six Secret names,
+including NORULO_CREEM_API_KEY and NORULO_CREEM_WEBHOOK_SECRET. Build an inspected
+temporary effective config inside cloudflare/server so frozen python_modules are
+packaged, retaining all five activation flags and existing resources/schedule.
+Checked-in paused defaults and empty products describe offline safe defaults;
+deploying them directly would overwrite live public variables. Keep Secret values
+private and inherit every current name. No provider, email or payment acceptance
+operation is authorized by these release records.
+
+See docs/validation/server-review-remediation-2026-10-12.md for the objective
+finding assessment and docs/validation/server-review-production-release-2026-10-12.json
+for actual publication/readback and migration-accounting limitations.
+
 ## Current task and authority
 
 This checkout is Norulo's server. The current user authorized importing the
