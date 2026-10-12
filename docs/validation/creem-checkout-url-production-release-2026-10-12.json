@@ -1,0 +1,158 @@
+{
+  "recordedAtUtc": "2026-10-12T03:52:43.905731+00:00",
+  "recordingTimezone": "Asia/Shanghai",
+  "scope": "Creem checkout redirect compatibility fix; production Server only.",
+  "sourceCommit": "183aadf19225c4546ba47c2310df47f8ce080307",
+  "sourceUrl": "https://github.com/Norulo/norulo-server/commit/183aadf19225c4546ba47c2310df47f8ce080307",
+  "worker": "norulo-server-production",
+  "version": "6ce431bf-941b-4c29-80e8-1ddad786b888",
+  "trafficPercentage": 100,
+  "previousVersion": "dfc43147-b065-4a20-81e1-103f86db4af5",
+  "deploymentCreatedAtUtc": "2026-10-12T03:51:24.77197Z",
+  "change": "Accept exact creem.io and www.creem.io checkout hosts in addition to legacy checkout hosts; retain HTTPS, credentials, port and control-character checks.",
+  "localValidation": {
+    "checkoutRelatedTestsPassed": 221,
+    "checkoutRelatedSubtestsPassed": 42,
+    "fullSuitePassed": 3089,
+    "fullSuiteSubtestsPassed": 107,
+    "fullSuiteEnvironmentFailure": "One loopback test was initially blocked by sandbox socket permissions; the same test then passed with local network permission in 0.55 seconds.",
+    "fullSuiteOriginallyZeroFailures": false,
+    "offlineChecksPassed": [
+      "S01",
+      "Server mirror byte equality and import closure",
+      "Deploy shell syntax",
+      "Git diff check"
+    ],
+    "actualPackageCanonicalModules": 64,
+    "actualPackageByteEquality": true
+  },
+  "readbackVerification": {
+    "allPublicVariablesAndSecretNamesPreserved": true,
+    "resourceBindingsPreserved": true,
+    "schedulerPreserved": true,
+    "limitsAndObservabilityPreserved": true,
+    "exposurePreserved": true,
+    "webVersionUnchanged": true,
+    "deployedSourceMatchesCommit": true
+  },
+  "secretNames": [
+    "NORULO_CREEM_API_KEY",
+    "NORULO_CREEM_WEBHOOK_SECRET",
+    "NORULO_EMAIL_CODE_SECRET",
+    "NORULO_GITHUB_CLIENT_SECRET",
+    "NORULO_GITHUB_TOKEN_KEY",
+    "TYPESAFE_API_KEY"
+  ],
+  "publicVariables": {
+    "NORULO_ALLOWED_ORIGINS": "https://norulo.com",
+    "NORULO_APP_URL": "https://norulo.com",
+    "NORULO_COOKIE_SAME_SITE": "None",
+    "NORULO_CREEM_API_BASE_URL": "https://api.creem.io",
+    "NORULO_CREEM_PRODUCT_IDS_JSON": "{\"pro\":{\"month\":\"prod_1epM6PhPRtYV9kBpdYW10O\",\"year\":\"prod_1sjSCiHtaGv7Ayv1gdC0G0\"},\"max\":{\"month\":\"prod_2HxOZvntzCz5nswEIv4L4K\",\"year\":\"prod_FjgOMROB94ZJDIopXdcRn\"}}",
+    "NORULO_D1_ACCESS_ENABLED": "1",
+    "NORULO_EMAIL_AUTH_ENABLED": "1",
+    "NORULO_EMAIL_FROM": "login@auth.norulo.com",
+    "NORULO_GITHUB_APP_SLUG": "norulo",
+    "NORULO_GITHUB_CALLBACK_URL": "https://norulo.com/api/auth/github/callback",
+    "NORULO_GITHUB_CLIENT_ID": "Iv23li78ZPeUgSxJkLUj",
+    "NORULO_JEV_SUGGESTIONS_ENABLED": "1",
+    "NORULO_JEV_SUGGESTIONS_EVALUATED": "1",
+    "NORULO_MODE": "production",
+    "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":100,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\"},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\"},\"max\":{\"projects\":100,\"records\":100000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"5.00\"}}",
+    "NORULO_PREVIEW_BUSINESS_CLEAR_ID": "",
+    "NORULO_PREVIEW_BUSINESS_CLEAR_MANIFEST": "",
+    "NORULO_PREVIEW_SCHEMA_V11_UPGRADE_ENABLED": "0",
+    "NORULO_RECURRING_EXPENSES_ENABLED": "1"
+  },
+  "resourceBindings": [
+    {
+      "database_id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+      "id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+      "name": "DB",
+      "type": "d1"
+    },
+    {
+      "allowed_sender_addresses": [
+        "login@auth.norulo.com"
+      ],
+      "name": "EMAIL",
+      "type": "send_email"
+    },
+    {
+      "class_name": "EmailAdmission",
+      "name": "EMAIL_ADMISSION",
+      "namespace_id": "6588312f00f74840a37463e72a2d75eb",
+      "type": "durable_object_namespace"
+    },
+    {
+      "class_name": "RecurringScheduler",
+      "name": "RECURRING_SCHEDULER",
+      "namespace_id": "b3f41def1906481e9c72662debf4b505",
+      "type": "durable_object_namespace"
+    }
+  ],
+  "limits": {
+    "cpu_ms": 300000,
+    "subrequests": 9000
+  },
+  "cron": [
+    "10 16 * * *"
+  ],
+  "workersDevEnabled": false,
+  "previewUrlsEnabled": false,
+  "httpReadOnlyChecks": [
+    {
+      "url": "https://api.norulo.com/health",
+      "status": 200,
+      "hasSetCookie": false,
+      "errorCode": null,
+      "healthStatus": null,
+      "payloadKeys": [
+        "ok",
+        "service",
+        "database"
+      ]
+    },
+    {
+      "url": "https://norulo.com/api/health",
+      "status": 200,
+      "hasSetCookie": false,
+      "errorCode": null,
+      "healthStatus": null,
+      "payloadKeys": [
+        "ok",
+        "service",
+        "database"
+      ]
+    },
+    {
+      "url": "https://api.norulo.com/api/v1/me",
+      "status": 401,
+      "hasSetCookie": false,
+      "errorCode": "UNAUTHENTICATED"
+    },
+    {
+      "url": "https://norulo.com/api/api/v1/me",
+      "status": 401,
+      "hasSetCookie": false,
+      "errorCode": "UNAUTHENTICATED"
+    }
+  ],
+  "remoteDirectSqlQueries": 0,
+  "remoteApplicationMutations": 0,
+  "manualCronInvocations": 0,
+  "realCheckoutRequests": 0,
+  "limitsOfEvidence": [
+    "The captured user request had no retained detailed exception log; this release fixes a reproduced official checkout-host compatibility defect.",
+    "No real checkout or payment was created for verification; publication and health checks do not establish payment acceptance.",
+    "HTTP checks do not expose native D1 row accounting; no SQL row totals are claimed."
+  ],
+  "deploymentConfiguration": "A private S01-reviewed activation overlay copied all current production public variables and observability, inherited all six Secrets by name, and used --keep-vars. Checked-in production defaults were not changed.",
+  "githubCi": {
+    "sourceCommit": "183aadf19225c4546ba47c2310df47f8ce080307",
+    "status": "completed",
+    "conclusion": "success",
+    "runUrl": "https://github.com/Norulo/norulo-server/actions/runs/38201301886",
+    "updatedAtUtc": "2026-10-12T03:53:32Z"
+  }
+}
