@@ -72,11 +72,12 @@ def test_worker_link_send_reports_another_mailbox_owner_before_admission_and_pre
     assert options["headers"] == {"Cache-Control": "no-store", "Vary": "Cookie"}
     assert {kind: records(runtime, kind) for kind in before} == before
     assert runtime.admitted == admitted and runtime.gateway.sent == sent
-    assert runtime.binding.groups == groups and runtime.binding.reads == reads + 3
+    assert runtime.binding.groups == groups and runtime.binding.reads == reads + 4
 
 
 @pytest.mark.parametrize("raw,status", [(b"bad-json", 422), (b"\xff", 422),
-    (b'{"email":"\\ud800","purpose":"login"}', 422), (b"x" * 8193, 413)])
+    (b'{"email":"\\ud800","purpose":"login"}', 422), (b"x" * 8193, 413),
+    (b"[" * 4000 + b"]" * 4000, 422)])
 def test_email_body_rejected_before_mail_admission_or_state(runtime, raw, status):
     _, options = asyncio.run(runtime.app.fetch(incoming("/auth/email/request-code", raw=raw)))
     assert options["status"] == status
@@ -139,6 +140,15 @@ def test_email_ip_subject_ignores_forwarded_for_and_never_contains_raw_address()
     two = entry._email_ip_subject(SimpleNamespace(headers={"cf-connecting-ip": "192.0.2.1",
         "x-forwarded-for": "198.51.100.2"}))
     assert one == two and len(one) == 64 and "192.0.2.1" not in one
+
+
+def test_worker_email_ip_subject_groups_ipv6_host_rotation_into_one_prefix():
+    entry = load_entry()
+    def subject(address):
+        return entry._email_ip_subject(SimpleNamespace(headers={"cf-connecting-ip": address}))
+    assert subject("2001:db8:abcd:1234::1") == subject("2001:0DB8:ABCD:1234:ffff:ffff:ffff:ffff")
+    assert subject("2001:db8:abcd:1234::1") != subject("2001:db8:abcd:1235::1")
+    assert subject("::ffff:192.0.2.1") == subject("192.0.2.1")
 
 
 def test_paused_email_rate_rpc_does_not_touch_coordinator_sql():

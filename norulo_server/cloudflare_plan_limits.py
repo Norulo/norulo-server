@@ -97,6 +97,10 @@ _ERRORS = {"plan_project_limit": (403, "PROJECT_LIMIT"),
 _MUTATION = re.compile(r"^\s*(?:INSERT(?: OR \w+)? INTO|UPDATE|DELETE FROM)\s+"
     r"(ledger_projects|expense_categories|expenses|api_keys|expense_suggestion_budget|expense_suggestion_events|ledger_plan_usage|workspace_members|workspace_invites|workspace_events|workspace_join_requests|ledger_project_repositories|expense_recurring_rules|expense_recurring_occurrences|expense_recurring_pending|ledger_activity_events)\b", re.I)
 _USER_FENCE = re.compile(r"\bu\.name\s*=\s*\?\s+AND\s+u\.payload\s*=\s*\?", re.I)
+_PREFERENCE_UPDATE = re.compile(r"^\s*UPDATE\s+app_state\s+SET\s+payload\s*=\s*\?\s*,\s*"
+    r"updated_at\s*=\s*\?\s+WHERE\s+name\s*=\s*\?\s+AND\s+payload\s*=\s*\?\s*$", re.I)
+_PREFERENCE_FIELDS = (("jevEnabled", "jevPreferenceRevision", True),
+                      ("autoRemoveOldestExpense", "expenseRetentionRevision", False))
 
 
 def _fenced_user(statements):
@@ -115,6 +119,42 @@ def _fenced_user(statements):
             except (TypeError, ValueError, IndexError):
                 continue
     return None, None
+
+
+def _account_preference_mutations(statements):
+    """Recognize only account preference CAS updates with their exact owner fence.
+
+    Auth/session cleanup and provider/billing state use the same table. They do
+    not become commercial ledger writes merely because they touch app_state.
+    """
+    mutations = []
+    for item in statements:
+        if not _PREFERENCE_UPDATE.match(item.sql) or len(item.params) != 4:
+            continue
+        updated_payload, _, key, previous_payload = item.params
+        try:
+            previous, updated = json.loads(previous_payload), json.loads(updated_payload)
+        except (TypeError, ValueError):
+            continue
+        if not isinstance(previous, dict) or not isinstance(updated, dict):
+            continue
+        changed = {field for field in previous.keys() | updated.keys()
+                   if field not in previous or field not in updated or previous[field] != updated[field]}
+        for enabled, revision, default_enabled in _PREFERENCE_FIELDS:
+            if not changed or not changed <= {enabled, revision}:
+                continue
+            owner, user = _fenced_user(statements)
+            if (user != previous or not isinstance(owner, str)
+                    or key != record_name("users", owner) or updated.get("id") != owner
+                    or type(updated.get(enabled)) is not bool
+                    or updated[enabled] == previous.get(enabled, default_enabled)
+                    or type(previous.get(revision, 1)) is not int
+                    or type(updated.get(revision)) is not int
+                    or updated[revision] != previous.get(revision, 1) + 1):
+                raise PlanLimitError(503, "USAGE_GUARD_UNAVAILABLE")
+            mutations.append((item, "app_state"))
+            break
+    return mutations
 
 _USAGE_SQL = """INSERT INTO ledger_plan_usage(owner_id,projects,records,month,writes,minute,
     minute_writes,jev_reserved_microusd,project_cap,record_cap,minute_cap,month_cap,jev_cap,
@@ -155,7 +195,8 @@ class PlanLimitedD1:
 
     async def _batch(self, statements, *, reserve_jev):
         statements = list(statements)
-        if reserve_jev and any(_MUTATION.match(item.sql) for item in statements):
+        preference_mutations = _account_preference_mutations(statements)
+        if reserve_jev and (preference_mutations or any(_MUTATION.match(item.sql) for item in statements)):
             # Reservations are a separate guarded admission step before the
             # provider call, never a business mutation or an event append.
             raise PlanLimitError(503, "USAGE_GUARD_UNAVAILABLE")
@@ -170,6 +211,7 @@ class PlanLimitedD1:
             raise PlanLimitError(503, "USAGE_GUARD_UNAVAILABLE")
         mutations = [(item, _MUTATION.match(item.sql)) for item in statements]
         mutations = [(item, match.group(1).lower()) for item, match in mutations if match]
+        mutations.extend(preference_mutations)
         # Rolling activity is bookkeeping within the same fenced business batch.
         # Its append/expiry companions do not add a commercial write or disable
         # the original emergency pause/cancel exemptions. The native global
@@ -306,11 +348,11 @@ class _Prepared:
         return _Prepared(self.binding, self.sql, params)
 
     async def first(self):
-        if _MUTATION.match(self.sql):
+        if _MUTATION.match(self.sql) or _account_preference_mutations([self]):
             raise PlanLimitError(503, "USAGE_GUARD_UNAVAILABLE")
         return await self.binding.binding.prepare(self.sql).bind(*self.params).first()
 
     async def all(self):
-        if _MUTATION.match(self.sql):
+        if _MUTATION.match(self.sql) or _account_preference_mutations([self]):
             raise PlanLimitError(503, "USAGE_GUARD_UNAVAILABLE")
         return await self.binding.binding.prepare(self.sql).bind(*self.params).all()

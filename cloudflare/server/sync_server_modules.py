@@ -16,6 +16,7 @@ MODULES = (
     "cloudflare_account_adapter",
     "cloudflare_api_key_read",
     "cloudflare_api_key_write",
+    "cloudflare_auth_admission",
     "cloudflare_billing_catalog",
     "cloudflare_billing_catalog_refresh",
     "cloudflare_billing_catalog_write",

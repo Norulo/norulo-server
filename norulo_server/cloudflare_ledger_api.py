@@ -122,8 +122,8 @@ def _write_guard(binding: Any, proof: dict, owner_id: str, now: int):
     else:
         checks.append("""EXISTS(SELECT 1 FROM app_state WHERE name=?
           AND payload=? AND json_extract(payload, '$.userId') = ?
-          AND CAST(json_extract(payload, '$.expiresAt') AS INTEGER)>=?)""")
-        session_id = proof["session_id"]
+          AND CAST(json_extract(payload, '$.expiresAt') AS INTEGER)>?)""")
+        session_id = proof.get("session_record_id", proof["session_id"])
         values.extend([record_name("sessions", session_id), proof["sessions"], actor_id, now])
     sql = "INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN " + " AND ".join(checks) + " THEN 1 ELSE 0 END)"
     return binding.prepare(sql).bind(*values)

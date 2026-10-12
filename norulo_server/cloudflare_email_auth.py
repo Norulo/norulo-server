@@ -14,6 +14,9 @@ from .cloudflare_github_identity_http import (
     SESSION_AGE, _random_urlsafe, _session_cookie, _session_user, session_payload,
 )
 from .cloudflare_principal import _header, has_verified_email_identity
+from .cloudflare_session_adapter import (
+    HASHED_SESSION_PREFIX, read_session_snapshot, session_storage_id, session_binding_matches,
+)
 from .cloudflare_state_records import (
     changed_guard, encode_record, expired_record_commands, read_record_json, record_name,
     write_record_commands,
@@ -152,15 +155,14 @@ async def handle_email_request(*, binding, gateway, secret, admit, method, path,
         identity = json.loads(identity_snapshot) if identity_snapshot is not None else None
         if identity and identity["userId"] != user["id"]:
             return _error(409, "EMAIL_ALREADY_LINKED")
-    admitted = await admit("send" if request_code else "verify", key)
-    if admitted is False:
-        return _error(429, "EMAIL_RATE_LIMIT", retry_after=SEND_INTERVAL)
-    if admitted is not True:
-        return _error(503, "EMAIL_AUTH_UNAVAILABLE")
-    snapshot = await read_record_json(binding, "emailChallenges", key)
-    challenge = json.loads(snapshot) if snapshot is not None else None
-
     if request_code:
+        admitted = await admit("send", key)
+        if admitted is False:
+            return _error(429, "EMAIL_RATE_LIMIT", retry_after=SEND_INTERVAL)
+        if admitted is not True:
+            return _error(503, "EMAIL_AUTH_UNAVAILABLE")
+        snapshot = await read_record_json(binding, "emailChallenges", key)
+        challenge = json.loads(snapshot) if snapshot is not None else None
         purpose = body["purpose"]
         if challenge and challenge["createdAt"] + SEND_INTERVAL > now:
             return _error(429, "EMAIL_RATE_LIMIT", retry_after=challenge["createdAt"] + SEND_INTERVAL - now)
@@ -170,7 +172,7 @@ async def handle_email_request(*, binding, gateway, secret, admit, method, path,
             "browserHash": _digest(secret, "browser", key, challenge_id, browser_token),
             "attempts": 0, "createdAt": now, "expiresAt": now + CODE_AGE}
         if purpose == "link":
-            next_challenge.update(userId=user["id"], sessionId=session["id"])
+            next_challenge.update(userId=user["id"], sessionId=session_storage_id(session["id"]))
         cleanup = await expired_record_commands(binding, "emailChallenges", now=now)
         own_name = record_name("emailChallenges", key)
         cleanup = [command for index in range(0, len(cleanup), 2)
@@ -186,10 +188,17 @@ async def handle_email_request(*, binding, gateway, secret, admit, method, path,
         return 202, {"challengeId": challenge_id, "expiresIn": CODE_AGE, "retryAfter": SEND_INTERVAL}, {
             **_NO_STORE, "Set-Cookie": _challenge_cookie(browser_token, cookie_same_site)}
 
+    # Public verify requests must possess the issued browser capability before
+    # they can allocate scarce admission subjects. Challenge checks are reads;
+    # code comparison and attempt/identity writes still require admission.
+    browser_token = _browser_token(headers)
+    if not _TOKEN.fullmatch(browser_token):
+        return _error(400, "EMAIL_CODE_INVALID")
+    snapshot = await read_record_json(binding, "emailChallenges", key)
+    challenge = json.loads(snapshot) if snapshot is not None else None
     if not challenge or not hmac.compare_digest(challenge["challengeId"], body["challengeId"]):
         return _error(400, "EMAIL_CODE_INVALID")
-    browser_token = _browser_token(headers)
-    if (not _TOKEN.fullmatch(browser_token) or not hmac.compare_digest(challenge["browserHash"],
+    if (not hmac.compare_digest(challenge["browserHash"],
             _digest(secret, "browser", key, challenge["challengeId"], browser_token))):
         return _error(400, "EMAIL_CODE_INVALID")
     if challenge["expiresAt"] <= now:
@@ -197,9 +206,18 @@ async def handle_email_request(*, binding, gateway, secret, admit, method, path,
     if challenge["attempts"] >= MAX_ATTEMPTS:
         return _error(429, "EMAIL_ATTEMPTS_EXCEEDED", retry_after=challenge["expiresAt"] - now)
     session, actor = (await _session_user(binding, headers, now) if challenge["purpose"] == "link" else (None, None))
-    if challenge["purpose"] == "link" and (not session or session["id"] != challenge["sessionId"]
+    if challenge["purpose"] == "link" and (not session or not session_binding_matches(challenge["sessionId"], session["id"])
             or actor["id"] != challenge["userId"]):
         return _error(401, "UNAUTHENTICATED")
+    admitted = await admit("verify", key)
+    if admitted is False:
+        return _error(429, "EMAIL_RATE_LIMIT", retry_after=SEND_INTERVAL)
+    if admitted is not True:
+        return _error(503, "EMAIL_AUTH_UNAVAILABLE")
+    # Admission awaits another object. A replaced, consumed or newly locked
+    # challenge must not permit a guess against the earlier preflight snapshot.
+    if await read_record_json(binding, "emailChallenges", key) != snapshot:
+        return _error(400, "EMAIL_CODE_INVALID")
     if not hmac.compare_digest(challenge["codeHash"], _digest(secret, "code", key,
             challenge["challengeId"], challenge["purpose"], body["code"])):
         await execute_d1_batch(binding, [*_put("emailChallenges", key,
@@ -242,15 +260,16 @@ async def handle_email_request(*, binding, gateway, secret, admit, method, path,
         commands.extend(initialize_account(owner_id=user_id,
             account_snapshot=encode_record("users", user_id, user), now=now)[:-1])
     if linking:
-        session_snapshot = await read_record_json(binding, "sessions", session["id"])
+        session_identity, session_snapshot = await read_session_snapshot(binding, session["id"])
         if session_snapshot is None or {**json.loads(session_snapshot), "id": session["id"]} != session:
             return _error(401, "UNAUTHENTICATED")
-        commands.append(_exists("sessions", session["id"], session_snapshot))
+        commands.append(_exists("sessions", session_identity, session_snapshot))
         cookie = _challenge_cookie("", cookie_same_site, clear=True)
     else:
-        session_id = "ses-" + _random_urlsafe(32)
+        session_id = HASHED_SESSION_PREFIX + _random_urlsafe(32)
+        session_identity = session_storage_id(session_id)
         commands.extend(await expired_record_commands(binding, "sessions", now=now))
-        commands.extend(_put("sessions", session_id, {"id": session_id, "userId": user_id,
+        commands.extend(_put("sessions", session_identity, {"id": session_identity, "userId": user_id,
             "createdAt": now, "expiresAt": now + SESSION_AGE}, None, now))
         cookie = _session_cookie(session_id, same_site=cookie_same_site)
     commands.append(("DELETE FROM d1_command_guard", ()))

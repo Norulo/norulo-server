@@ -18,10 +18,16 @@ async def _bounded_response(reader, limit=MAX_RESPONSE_BYTES) -> bytes:
             if part.done:
                 return bytes(body)
             chunk = part.value
-            size = int(chunk.length) if hasattr(chunk, "length") else len(chunk)
+            native = isinstance(chunk, (bytes, bytearray, memoryview))
+            size = len(chunk) if native else int(chunk.byteLength)
             if len(body) + size > limit:
                 raise ValueError("JEV_RESPONSE_TOO_LARGE")
-            body.extend(int(chunk[index]) for index in range(size))
+            # Pyodide JsBuffer.to_bytes copies the typed-array view once,
+            # respecting byteOffset/byteLength without per-byte proxy access.
+            copied = bytes(chunk) if native else chunk.to_bytes()
+            if not isinstance(copied, bytes) or len(copied) != size:
+                raise ValueError("JEV_INVALID_RESPONSE_CHUNK")
+            body.extend(copied)
     except Exception:
         # Also close an interrupted/erroring body. Cancellation must not hide
         # the original provider/size error or retain an unbounded live stream.

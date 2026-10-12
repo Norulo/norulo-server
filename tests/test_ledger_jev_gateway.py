@@ -42,6 +42,29 @@ class BoundedResponseTests(unittest.TestCase):
             asyncio.run(_bounded_response(reader, 4))
         self.assertTrue(reader.cancelled)
 
+    def test_native_buffer_is_copied_once_without_indexing(self):
+        class Buffer:
+            byteLength = 4
+            copies = 0
+            def to_bytes(self):
+                self.copies += 1
+                return b"abcd"
+            def __getitem__(self, index):
+                raise AssertionError("native buffer must not be copied per byte")
+        chunk = Buffer()
+        self.assertEqual(asyncio.run(_bounded_response(Reader(chunk), 4)), b"abcd")
+        self.assertEqual(chunk.copies, 1)
+
+    def test_oversized_native_buffer_is_cancelled_before_copy(self):
+        class Buffer:
+            byteLength = 5
+            def to_bytes(self):
+                raise AssertionError("oversized buffer must not be copied")
+        reader = Reader(Buffer())
+        with self.assertRaisesRegex(ValueError, "JEV_RESPONSE_TOO_LARGE"):
+            asyncio.run(_bounded_response(reader, 4))
+        self.assertTrue(reader.cancelled)
+
     def test_gateway_refuses_redirect_without_forwarding_credential(self):
         calls = []
         async def fetch(url, options):

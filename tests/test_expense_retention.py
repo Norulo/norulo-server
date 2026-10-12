@@ -66,11 +66,14 @@ def test_all_plans_read_default_off_without_writes_and_toggle_with_raw_cas(app, 
         200, {"autoRemoveOldestExpense": True, "revision": 2})
     assert json.loads(user_record(app)["payload"]) == {
         **json.loads(before["payload"]), "autoRemoveOldestExpense": True, "expenseRetentionRevision": 2}
+    usage = app.rows("ledger_plan_usage")
+    assert len(usage) == 1 and usage[0]["writes"] == usage[0]["minute_writes"] == 1
     after = user_record(app)
     assert preference(app, enabled=True, revision=2)[0] == 200
-    assert user_record(app) == after and app.rows("ledger_plan_usage") == []
+    assert user_record(app) == after and app.rows("ledger_plan_usage") == usage
     assert preference(app, enabled=False, revision=1)[0] == 412
     assert preference(app, enabled=False, revision=2)[1]["revision"] == 3
+    assert app.rows("ledger_plan_usage")[0]["writes"] == 2
 
 
 def test_account_preference_ignores_selected_workspace_and_does_not_change_owner(app):

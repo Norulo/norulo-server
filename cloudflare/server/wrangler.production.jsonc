@@ -103,5 +103,15 @@
       "migrations_dir": "migrations"
     }
   ],
-  "account_id": "84e421f26c708c0cf437e287eed11fa1"
+  "account_id": "84e421f26c708c0cf437e287eed11fa1",
+  "ratelimits": [
+    {
+      "name": "AUTH_RATE_LIMIT",
+      "namespace_id": "1576996832",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
+    }
+  ]
 }

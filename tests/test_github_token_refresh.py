@@ -17,6 +17,7 @@ from norulo_server.cloudflare_github_gateway import (
 )
 from norulo_server.cloudflare_github_identity_http import handle_identity_request
 from norulo_server.cloudflare_state_records import encode_record, record_name
+from norulo_server.cloudflare_session_adapter import session_storage_id
 from test_cloudflare_github_identity_http import D1ShapedSQLite, GitHubStub, call, login, seed
 
 
@@ -323,7 +324,7 @@ def test_refresh_rotates_pair_once_and_preserves_session_repository_binding_and_
     user.update(githubRepositoryAccess=repository_binding,
                 billing={"plan": "pro", "customerId": "synthetic-customer"})
     replace_user(fixture.store, user, fixture.now + 2)
-    session_name = record_name("sessions", cookie.split("=", 1)[1])
+    session_name = record_name("sessions", session_storage_id(cookie.split("=", 1)[1]))
     with fixture.store.connect() as db:
         session_before = db.execute("SELECT payload,updated_at FROM app_state WHERE name=?", (session_name,)).fetchone()
         session_before = tuple(session_before)
@@ -494,7 +495,7 @@ def test_durable_claim_allows_only_one_provider_consumer_for_concurrent_requests
 def test_provider_await_fences_session_and_token_generation_but_preserves_current_billing(tmp_path, change):
     fixture, binding, gateway, cookie, expiry = setup_login(tmp_path)
     old_user = stored_user(fixture.store)
-    session_name = record_name("sessions", cookie.split("=", 1)[1])
+    session_name = record_name("sessions", session_storage_id(cookie.split("=", 1)[1]))
     async def journey():
         entered, release = asyncio.Event(), asyncio.Event()
         async def wait():

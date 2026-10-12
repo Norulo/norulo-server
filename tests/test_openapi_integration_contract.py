@@ -98,6 +98,18 @@ def test_account_credentials_use_cookie_bootstrap_and_error_bodies_are_described
                 assert response["content"]["application/json"]["schema"] == {"$ref": "#/components/schemas/Error"}
 
 
+def test_api_key_name_contract_rejects_control_characters_including_a_trailing_newline():
+    import re
+    from norulo_server.api_key_dto_rules import MAX_API_KEY_NAME_LENGTH
+
+    name = SCHEMAS["ApiKeyInput"]["properties"]["name"]
+    assert name["type"] == "string" and name["maxLength"] == MAX_API_KEY_NAME_LENGTH
+    forbidden = name["not"]["pattern"]
+    for value in ("bad\nname", "name\n", "name\r", "name\x00"):
+        assert re.search(forbidden, value)
+    assert re.search(forbidden, "有效 name") is None
+
+
 def test_money_full_expense_replacement_and_list_dtos_match_runtime():
     assert set(SCHEMAS["CurrencyCode"]["enum"]) == SUPPORTED
     assert set(SCHEMAS["ExpenseFields"]["required"]) == {"target", "occurredOn", "amount", "currency", "purpose"}

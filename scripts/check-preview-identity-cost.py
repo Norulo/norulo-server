@@ -95,11 +95,12 @@ def collect_trace(directory):
                 raise ValueError("unexpected synthetic identity response")
             return result
 
-        _, payload, _ = await call("login_authorize", "/auth/github/authorize")
+        _, payload, issued_headers = await call("login_authorize", "/auth/github/authorize")
         state = parse_qs(urlsplit(payload["url"]).query)["state"][0]
         _, _, headers = await call("login_callback", "/auth/github/callback",
-            params={"state": state, "code": "synthetic-code"}, expected=302)
-        cookie = {"Cookie": headers["Set-Cookie"].split(";", 1)[0]}
+            params={"state": state, "code": "synthetic-code"},
+            headers={"Cookie": issued_headers['Set-Cookie'].split(';', 1)[0]}, expected=302)
+        cookie = {"Cookie": headers["Set-Cookie"][0].split(";", 1)[0]}
         await call("session", "/auth/session", headers=cookie)
         await call("callback_replay", "/auth/github/callback",
             params={"state": state, "code": "synthetic-code"}, expected=400)

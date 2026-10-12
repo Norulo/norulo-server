@@ -28,6 +28,8 @@ PREVIEW_CRONS = ["0 * * * *"]
 PRODUCTION_CRONS = [PRODUCTION_RECURRING_CRON]
 PRODUCTION_CPU_MS = 300_000
 PRODUCTION_SUBREQUESTS = 9_000
+AUTH_RATE_LIMITS = [{"name": "AUTH_RATE_LIMIT", "namespace_id": "1576996832",
+                     "simple": {"limit": 20, "period": 60}}]
 EMAIL_BINDINGS = [{"name": "EMAIL_ADMISSION", "class_name": "EmailAdmission"}]
 EMAIL_MIGRATIONS = [{"tag": "norulo-email-admission-v1", "new_sqlite_classes": ["EmailAdmission"]}]
 PRODUCTION_BINDINGS = EMAIL_BINDINGS + [{"name": "RECURRING_SCHEDULER", "class_name": "RecurringScheduler"}]
@@ -57,6 +59,8 @@ def _validated_config(environment: str, allow_placeholders: bool,
     if config.get("workers_dev") is not False or config.get("preview_urls") is not False:
         raise ValueError("unreviewed public Worker URL")
     if environment == "production":
+        if config.get("ratelimits") != AUTH_RATE_LIMITS:
+            raise ValueError("production requires the isolated GitHub authorization rate limit")
         limits = config.get("limits")
         if (not isinstance(limits, dict) or set(limits) != {"cpu_ms", "subrequests"}
                 or type(limits.get("cpu_ms")) is not int or limits["cpu_ms"] != PRODUCTION_CPU_MS
@@ -302,7 +306,7 @@ def validate_contract() -> None:
         from norulo_server.cloudflare_preview_schema import (
             SCHEMA_VERSION, SCHEMA_SQL, SCHEMA_OBJECTS, SCHEMA_FINGERPRINT, MIGRATIONS,
         )
-        if SCHEMA_VERSION != 12 or len(SCHEMA_SQL) > 64:
+        if SCHEMA_VERSION != 13 or len(SCHEMA_SQL) > 64:
             raise ValueError("recurring recovery schema authority or fresh batch bound is invalid")
         def objects(connection):
             return tuple((kind, name, table, " ".join(sql.split()) if sql else None)

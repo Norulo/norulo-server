@@ -103,8 +103,8 @@ def test_product_settlement_preserves_write_reservations_and_rejects_replay():
 
 def test_point_mutations_include_indexes_and_guard_cleanup():
     from norulo_server.cloudflare_preview_budget import sql_write_bound
-    assert sql_write_bound("UPDATE expenses SET purpose=? WHERE id=? AND owner_id=?") == 9
-    assert sql_write_bound("INSERT INTO expenses(id) VALUES(?)") == 5
+    assert sql_write_bound("UPDATE expenses SET purpose=? WHERE id=? AND owner_id=?") == 11
+    assert sql_write_bound("INSERT INTO expenses(id) VALUES(?)") == 6
     with pytest.raises(ValueError):
         sql_write_bound("UPDATE expenses SET purpose=?")
     with pytest.raises(ValueError):
@@ -295,12 +295,13 @@ def test_product_meter_runs_login_installation_and_signout_with_one_cumulative_b
                 journal.finish(ticket, now=13)
                 return result
 
-            status, payload, _ = await request("/auth/github/authorize")
+            status, payload, issued_headers = await request("/auth/github/authorize")
             assert status == 200
             state = parse_qs(urlsplit(payload["url"]).query)["state"][0]
-            status, _, headers = await request("/auth/github/callback", {"state": state, "code": "synthetic-code"})
+            status, _, headers = await request("/auth/github/callback", {"state": state, "code": "synthetic-code"},
+                {"Cookie": issued_headers['Set-Cookie'].split(';', 1)[0]})
             assert status == 302
-            cookie = {"Cookie": headers["Set-Cookie"].split(";", 1)[0]}
+            cookie = {"Cookie": headers["Set-Cookie"][0].split(";", 1)[0]}
             status, payload, _ = await request("/auth/session", headers=cookie)
             assert status == 200 and payload["authenticated"] is True
             status, payload, _ = await request("/integrations/github/authorize", headers=cookie)

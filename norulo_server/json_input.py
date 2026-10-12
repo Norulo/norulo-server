@@ -1,6 +1,18 @@
 """Validate decoded request text before it reaches providers or SQL parameters."""
 from __future__ import annotations
 
+import json
+
+
+def decode_json_body(raw: bytes | str) -> object:
+    """Treat parser nesting limits as invalid input before business dispatch."""
+    try:
+        value = json.loads(raw)
+    except RecursionError:
+        raise ValueError("JSON nesting exceeds the parser limit") from None
+    validate_json_unicode(value)
+    return value
+
 
 def validate_json_unicode(value: object) -> None:
     """Reject unpaired surrogates and NUL in JSON strings and object keys.

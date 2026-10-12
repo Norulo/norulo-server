@@ -138,7 +138,7 @@ PROBE_SQL=(
     "SELECT owner_id,records,writes,minute_writes,month,record_cap,minute_cap,month_cap,jev_reserved_microusd FROM ledger_plan_usage LIMIT 2",
     "SELECT owner_id,plan,dirty FROM account_entitlement_authority LIMIT 2",
     "SELECT COUNT(*) total FROM billing_public_catalog",
-    "SELECT name FROM d1_migrations ORDER BY id LIMIT 13",
+    "SELECT name FROM d1_migrations ORDER BY id LIMIT 14",
     "SELECT COUNT(*) total FROM d1_command_guard",
 )
 class Default(canonical.Default):

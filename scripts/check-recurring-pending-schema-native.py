@@ -33,11 +33,11 @@ from norulo_server.cloudflare_native_d1 import NativeD1
 from norulo_server.cloudflare_validation_budget import BudgetJournal, BudgetError, _field
 from norulo_server.cloudflare_preview_budget import (
     ProductMeteredD1, _upgrade_v12_plan, upgrade_product_schema_v11,
-    upgrade_product_schema_v12, _COUNT_SQL, _RECORD_COUNT_SQL,
+    upgrade_product_schema_v12, upgrade_product_schema_v13, _COUNT_SQL, _RECORD_COUNT_SQL,
 )
 from norulo_server.cloudflare_preview_schema import (
     V11_SCHEMA_SQL,V11_SCHEMA_OBJECTS,V11_SCHEMA_FINGERPRINT,V11_INDEX_COUNTS,
-    SCHEMA_SQL,SCHEMA_OBJECTS,SCHEMA_FINGERPRINT,SCHEMA_VERSION,INDEX_COUNTS,UPGRADE_V12_SQL,
+    V12_SCHEMA_SQL as SCHEMA_SQL,V12_SCHEMA_OBJECTS as SCHEMA_OBJECTS,V12_SCHEMA_FINGERPRINT as SCHEMA_FINGERPRINT,V12_SCHEMA_VERSION as SCHEMA_VERSION,V12_INDEX_COUNTS as INDEX_COUNTS,UPGRADE_V12_SQL,
 )
 from norulo_server.cloudflare_state_records import STATE_KINDS, record_name, encode_record
 
@@ -254,14 +254,16 @@ class FixtureJournal(DurableObject):
                 "migrationWriteExecution":after["schema_upgrade_v12"]["write_execution"]})
         if path=="mutations":
             journal=BudgetJournal(self.ctx.storage.sql,preview_product=True,product_operations=True)
+            await upgrade_product_schema_v13(native,journal)
+            upgrade_groups=len(native.groups);upgrade_dispatches=native.dispatches
             before=journal.snapshot();ticket=journal.begin_product(now=100)
             meter=ProductMeteredD1(native,journal,ticket,clock=lambda:101)
-            await meter.ensure_cardinality();assert native.dispatches==0
+            await meter.ensure_cardinality();assert native.dispatches==upgrade_dispatches
             for n in range(10):await meter.batch([meter.prepare(INSERT).bind(*values(str(n)))])
             await meter.batch([meter.prepare(INSERT).bind(*values("other","rule_other","other"))])
             await meter.batch([meter.prepare("UPDATE expense_recurring_pending SET notification_state=? WHERE rule_id=? AND period_key=?").bind("inbox","rule_owner","0")])
             await meter.batch([meter.prepare("DELETE FROM expense_recurring_pending WHERE rule_id=? AND period_key=?").bind("rule_owner","9")])
-            journal.finish(ticket,now=102);after=journal.snapshot();groups=list(native.groups)
+            journal.finish(ticket,now=102);after=journal.snapshot();groups=list(native.groups[upgrade_groups:])
             assert after["product_data"]["rows"]["expense_recurring_pending"]==10
             assert after["reserved_written"]-before["reserved_written"]==11*3+5+3
             assert after["actual_read"]-before["actual_read"]==sum(group["rowsRead"] for group in groups)
@@ -277,9 +279,10 @@ class FixtureJournal(DurableObject):
             journal=BudgetJournal(self.ctx.storage.sql,preview_product=True,product_operations=True)
             saved=await load(self.ctx.storage,"afterMutations")
             await upgrade_product_schema_v11(native,journal);await upgrade_product_schema_v12(native,journal)
+            await upgrade_product_schema_v13(native,journal)
             assert native.dispatches==0 and journal.snapshot()==saved
             assert (await snapshot(native,current=True))["tables"]==await load(self.ctx.storage,"afterMutationTables")
-            return Response.json({"passed":True,"schemaVersion":12,"pendingRowsRetained":10,
+            return Response.json({"passed":True,"schemaVersion":13,"pendingRowsRetained":10,
                 "sameJournalRestart":True,"upgradeReplayDispatches":0})
         if path=="rollback":
             baseline=await snapshot(native);journal=historical(self.ctx.storage.sql,baseline)

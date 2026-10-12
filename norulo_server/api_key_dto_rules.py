@@ -12,12 +12,24 @@ ALLOWED_SCOPES = frozenset({"profile:read", "projects:read", "projects:write",
     "reports:read", "suggestions:use", "members:read", "members:write"})
 DEFAULT_SCOPES = ["profile:read", "projects:read", "categories:read",
                   "expenses:read", "reports:read"]
+MAX_API_KEY_NAME_LENGTH = 120
 
 
 def _text(value: object) -> str:
     if not isinstance(value, str) or any(char in value for char in "\r\n\x00"):
         return ""
     return value.strip()
+
+
+def requested_api_key_name(value: object, *, provided: bool) -> str:
+    """Validate display labels rather than silently replacing malformed input."""
+    if not provided:
+        return "API key"
+    if (not isinstance(value, str) or len(value) > MAX_API_KEY_NAME_LENGTH
+            or any(char in value for char in "\r\n\x00")):
+        raise ValueError("INVALID_REQUEST")
+    value.encode("utf-8")
+    return value.strip() or "API key"
 
 
 

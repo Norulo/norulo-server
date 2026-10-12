@@ -1,6 +1,5 @@
 """Server Worker with isolated production and preview expense scheduling."""
 import asyncio
-import hashlib
 import io
 import json
 import time
@@ -17,10 +16,11 @@ from norulo_server.cloudflare_validation_budget import (
 
 from norulo_server.cloudflare_http_contract import handle_http_request
 from norulo_server.cloudflare_github_identity_http import handle_identity_request
+from norulo_server.cloudflare_auth_admission import authorize_admission
 from norulo_server.cloudflare_email_auth import handle_email_request
 from norulo_server.cloudflare_email_admission import (
     EMAIL_ADMISSION_SCOPE, production_email_admission_enabled,
-    require_email_admission, validate_admission_subjects,
+    require_email_admission, validate_admission_subjects, email_ip_subject,
 )
 from norulo_server.cloudflare_email_gateway import WorkerEmailGateway
 from norulo_server.cloudflare_github_gateway import GitHubFailure, WorkerGitHubGateway
@@ -44,12 +44,12 @@ from norulo_server.cloudflare_jev_gateway import WorkerJevGateway
 from norulo_server.cloudflare_ledger_reports import CsvExport
 from norulo_server.cloudflare_plan_limits import PlanLimitedD1, PlanLimitError
 from norulo_server.ledger_plan_policy import parse_policy
-from norulo_server.cloudflare_preview_budget import ProductMeteredD1, initialize_product, reconcile_schema_reads, upgrade_product_schema, upgrade_product_schema_v6, upgrade_product_schema_v7, upgrade_product_schema_v8, upgrade_product_schema_v9, upgrade_product_schema_v10, upgrade_product_schema_v11, upgrade_product_schema_v12, migrate_product_state_records
+from norulo_server.cloudflare_preview_budget import ProductMeteredD1, initialize_product, reconcile_schema_reads, upgrade_product_schema, upgrade_product_schema_v6, upgrade_product_schema_v7, upgrade_product_schema_v8, upgrade_product_schema_v9, upgrade_product_schema_v10, upgrade_product_schema_v11, upgrade_product_schema_v12, upgrade_product_schema_v13, migrate_product_state_records
 from norulo_server.cloudflare_preview_schema import SCHEMA_VERSION
 from norulo_server.cloudflare_preview_business_clear import business_clear_pending, clear_preview_business, business_clear_receipt
 from norulo_server.cloudflare_preview_rate import PreviewRateLimiter, PreviewRateLimit, EmailRateLimiter, EmailRateLimit, request_channel
 from norulo_server.cloudflare_native_d1 import NativeD1
-from norulo_server.json_input import validate_json_unicode
+from norulo_server.json_input import validate_json_unicode, decode_json_body
 from norulo_server.preview_plan_grants import (
     PreviewPlanGrantError, apply_preview_plan_grant, parse_preview_plan_grant_request,
     preview_grants_enabled,
@@ -126,8 +126,33 @@ class _Application:
         products = catalog_products or {}
 
         async def read_body():
-            body = await request.bytes()
-            return body if isinstance(body, bytes) else body.to_bytes()
+            limit = 64 * 1024 if path == "/webhooks/creem" else 8192
+            stream = getattr(request, "body", None)
+            if stream is None:
+                body = await request.bytes()
+                return body if isinstance(body, bytes) else body.to_bytes()
+            reader, body = stream.getReader(), bytearray()
+            try:
+                while True:
+                    part = await reader.read()
+                    if part.done:
+                        return bytes(body)
+                    chunk = part.value
+                    native = isinstance(chunk, (bytes, bytearray, memoryview))
+                    size = len(chunk) if native else int(chunk.byteLength)
+                    if len(body) + size > limit:
+                        await reader.cancel()
+                        # Callers retain their existing public size responses.
+                        return b"x" * (limit + 1)
+                    body.extend(bytes(chunk) if native else chunk.to_bytes())
+            except BaseException:
+                try:
+                    await reader.cancel()
+                except Exception:
+                    pass
+                raise
+            finally:
+                reader.releaseLock()
 
         headers = {
             "Content-Length": request.headers.get("content-length") or "",
@@ -165,8 +190,7 @@ class _Application:
                     if len(raw) > 8192:
                         return Response.json({"error": {"code": "REQUEST_TOO_LARGE"}},
                             status=413, headers={"Cache-Control": "no-store"})
-                    body = json.loads(raw)
-                    validate_json_unicode(body)
+                    body = decode_json_body(raw)
                 result = await handle_email_request(
                     binding=self.binding, gateway=WorkerEmailGateway(self.env),
                     secret=getattr(self.env, "NORULO_EMAIL_CODE_SECRET", None),
@@ -185,6 +209,12 @@ class _Application:
             except Exception:
                 # No exception text, OTP, email or provider diagnostic is public.
                 return _unavailable("EMAIL_AUTH_UNAVAILABLE")
+        if request.method == "GET" and path in {
+                "/auth/github/authorize", "/integrations/github/authorize"}:
+            admission = await authorize_admission(self.env, request)
+            if admission is not None:
+                status, payload, response_headers = admission
+                return Response.json(payload, status=status, headers=response_headers)
         try:
             identity = None if path == "/api/v1/repositories" else await handle_identity_request(
                 method=request.method, path=path, params=params,
@@ -201,6 +231,11 @@ class _Application:
                                  headers={"Cache-Control": "no-store"})
         if identity is not None:
             identity_status, identity_payload, identity_headers = identity
+            cookies = identity_headers.get("Set-Cookie")
+            if isinstance(cookies, list):
+                identity_headers = [(name, value)
+                    for name, value in identity_headers.items() if name != "Set-Cookie"]
+                identity_headers.extend(("Set-Cookie", cookie) for cookie in cookies)
             if identity_status == 302:
                 return Response(None, status=302, headers=identity_headers)
             return Response.json(identity_payload, status=identity_status, headers=identity_headers)
@@ -236,8 +271,7 @@ class _Application:
                     if len(raw) > 8192:
                         return Response.json({"error": {"code": "REQUEST_TOO_LARGE"}},
                             status=413, headers={"Cache-Control": "no-store"})
-                    body = json.loads(raw)
-                    validate_json_unicode(body)
+                    body = decode_json_body(raw)
                 result = await handle_ledger_request(
                     binding=self.binding, gateway=WorkerGitHubGateway(self.env),
                     method=request.method, path=path,
@@ -309,8 +343,7 @@ class _Application:
                 raw = await read_body()
                 if len(raw) > 8192:
                     return Response.json({"error": {"code": "REQUEST_TOO_LARGE"}}, status=413)
-                body = json.loads(raw)
-                validate_json_unicode(body)
+                body = decode_json_body(raw)
             except (ValueError, UnicodeError):
                 return Response.json({"error": {"code": "INVALID_REQUEST"}}, status=422,
                     headers={"Cache-Control": "no-store"})
@@ -386,7 +419,7 @@ def _email_ip_subject(request):
     # or expose raw network addresses to the admission RPC or journal.
     request_headers = getattr(request, "headers", None)
     address = (request_headers.get("cf-connecting-ip") if request_headers is not None else None) or "unknown"
-    return hashlib.sha256(("norulo-email-ip:" + address).encode("utf-8")).hexdigest()
+    return email_ip_subject(address)
 
 
 def _remote_email_admission(env, request):
@@ -1019,6 +1052,9 @@ class ValidationBudget(DurableObject):
                         if (str(getattr(self.env, "NORULO_PREVIEW_SCHEMA_V12_UPGRADE_ENABLED", "0")) == "1"
                                 and journal.snapshot().get("schema_version") == 11):
                             await upgrade_product_schema_v12(native, journal)
+                        if (str(getattr(self.env, "NORULO_PREVIEW_SCHEMA_V13_UPGRADE_ENABLED", "0")) == "1"
+                                and journal.snapshot().get("schema_version") == 12):
+                            await upgrade_product_schema_v13(native, journal)
                         await initialize_product(native, journal)
                         await migrate_product_state_records(native, journal)
                         await clear_preview_business(native, journal, self.env)

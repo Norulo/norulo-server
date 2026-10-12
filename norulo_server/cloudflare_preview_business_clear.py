@@ -42,7 +42,7 @@ _POST_SQL = (*_PRE_SQL[:-1], _CAPACITY_POST_SQL)
 _INCOMING_FKS = {"expenses": 3, "expense_recurring_rules": 2, "ledger_projects": 3,
                  "expense_categories": 1}
 _UPGRADE_MARKERS = ("schema_upgrade", "schema_upgrade_v6", "schema_upgrade_v7",
-    "schema_upgrade_v8", "schema_upgrade_v9", "schema_upgrade_v10", "schema_upgrade_v11", "schema_upgrade_v12",
+    "schema_upgrade_v8", "schema_upgrade_v9", "schema_upgrade_v10", "schema_upgrade_v11", "schema_upgrade_v12", "schema_upgrade_v13",
     "state_record_migration")
 
 
@@ -76,7 +76,7 @@ def _armed(env, journal):
             or str(getattr(env, "NORULO_PREVIEW_PRODUCT_ENABLED", "0")) != "1"
             or getattr(env, "NORULO_PREVIEW_BUSINESS_CLEAR_MANIFEST", "") != EXPECTED_MANIFEST
             or journal.preview_product is not True or journal.snapshot().get("scope") != BUDGET_SCOPE
-            or SCHEMA_VERSION != 12):
+            or SCHEMA_VERSION != 13):
         raise BudgetError("PREVIEW_BUSINESS_CLEAR_UNREVIEWED")
     return True
 

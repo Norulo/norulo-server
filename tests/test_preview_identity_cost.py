@@ -43,8 +43,8 @@ def test_identity_trace_replays_fresh_schema_and_keeps_providers_synthetic(tmp_p
     assert {"schema", "login_authorize", "login_callback", "callback_replay",
             "session", "install_authorize", "install_callback", "repositories",
             "sign_out", "signed_out_session"} <= cases
-    assert manifest["tables"] == 23 and manifest["indexes"] == 52
-    assert manifest["migrations"][-1]["name"] == "0012_recurring_pending.sql"
+    assert manifest["tables"] == 23 and manifest["indexes"] == 54
+    assert manifest["migrations"][-1]["name"] == "0013_export_key_indexes.sql"
     assert manifest["http_cases"] == 9
     assert manifest["remote_admissible"] is False
     assert manifest["provider_mode"] == "synthetic"
@@ -53,4 +53,6 @@ def test_identity_trace_replays_fresh_schema_and_keeps_providers_synthetic(tmp_p
     # Current v12 adds bounded pending occurrences, their recipient index,
     # two enforcing triggers and the migration's atomic integrity guard.
     # This is an offline trace, explicitly not an admitted remote plan.
-    assert len(trace) == 134
+    # Browser-bound callback preflight adds one finite read. Versioned new
+    # session reads and collision checks bind only the storage fingerprint.
+    assert len(trace) == 137

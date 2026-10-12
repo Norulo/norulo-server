@@ -10,7 +10,7 @@ from test_worker_cost_pause import load_entry
 from test_cloudflare_email_auth import Binding, Store, Gateway, SECRET, NOW
 from test_worker_email_auth import incoming
 from norulo_server.cloudflare_email_admission import (
-    EMAIL_ADMISSION_SCOPE, require_email_admission,
+    EMAIL_ADMISSION_SCOPE, email_ip_subject, require_email_admission,
 )
 from norulo_server.cloudflare_preview_rate import EmailRateLimit
 
@@ -312,8 +312,64 @@ def test_production_ingress_signin_uses_independent_admission_and_one_use_code(a
     assert verified["headers"]["Set-Cookie"].startswith("nr_session=")
     replay, rejected = asyncio.run(application.worker.fetch(verification))
     assert rejected["status"] == 400 and replay["error"]["code"] == "EMAIL_CODE_INVALID"
-    assert application.namespace.names == [EMAIL_ADMISSION_SCOPE] * 3
-    assert [call[0] for call in application.namespace.calls] == ["send", "verify", "verify"]
+    assert application.namespace.names == [EMAIL_ADMISSION_SCOPE] * 2
+    assert [call[0] for call in application.namespace.calls] == ["send", "verify"]
+
+
+def test_random_no_challenge_verifications_cannot_fill_production_subject_table(application, runtime):
+    async def attack():
+        for index in range(10_200):
+            request = incoming("/auth/email/verify-code", origin="https://norulo.com",
+                cookie="nr_email_challenge=" + "A" * 43,
+                body={"email": f"random-{index}@example.test", "challengeId": "A" * 43, "code": "123456"})
+            request.headers["cf-connecting-ip"] = f"2001:db8:{index:x}::1"
+            payload, options = await application.worker.fetch(request)
+            assert options["status"] == 400 and payload["error"]["code"] == "EMAIL_CODE_INVALID"
+    asyncio.run(attack())
+    assert not application.namespace.calls and not application.namespace.names
+    assert not runtime.storage.queries and not application.binding.groups
+    assert not application.gateway.sent
+    # A legitimate new challenge still has room after the original attack size.
+    payload, options = asyncio.run(application.worker.fetch(incoming("/auth/email/request-code",
+        origin="https://norulo.com", body={"email": "alice@example.test", "purpose": "login"})))
+    assert options["status"] == 202 and len(application.gateway.sent) == 1
+    assert len(snapshot(runtime)[1]) == 3
+
+
+def test_rotating_ipv6_hosts_share_send_cap_without_exhausting_global_admission(runtime):
+    prefix_subject = email_ip_subject("2001:db8:1234:5678::1")
+    accepted = 0
+    for index in range(600):
+        ip = email_ip_subject(f"2001:db8:1234:5678::{index + 1:x}")
+        assert ip == prefix_subject
+        result = admit(runtime, email=subject(f"synthetic-{index}@example.test"), ip=ip)
+        if result == {"ok": True}:
+            accepted += 1
+        else:
+            assert result == {"ok": False, "retryAfter": 3480}
+    assert accepted == 30 and len(snapshot(runtime)[1]) == 32
+    assert admit(runtime, email=subject("legitimate@example.test"),
+        ip=email_ip_subject("2001:db8:1234:5679::1")) == {"ok": True}
+
+
+@pytest.mark.parametrize("one,two", [
+    ("2001:db8:1234:5678::1", "2001:0DB8:1234:5678:ffff:ffff:ffff:ffff"),
+    ("192.0.2.1", "::ffff:192.0.2.1"),
+    (None, "bad ingress value"),
+    ("bad ingress value", "2001:db8::1%client-selected-zone"),
+])
+def test_email_ip_subject_normalizes_equivalent_addresses_and_invalid_fallback(one, two):
+    assert email_ip_subject(one) == email_ip_subject(two)
+    assert len(email_ip_subject(one)) == 64
+
+
+@pytest.mark.parametrize("one,two", [
+    ("192.0.2.1", "192.0.2.2"),
+    ("2001:db8:1234:5678::1", "2001:db8:1234:5679::1"),
+    ("192.0.2.1", "not an IP"),
+])
+def test_distinct_ipv4_addresses_and_ipv6_prefixes_keep_independent_admission(one, two):
+    assert email_ip_subject(one) != email_ip_subject(two)
 
 
 @pytest.mark.parametrize("failure", [RuntimeError, ValueError, "malformed"])

@@ -137,8 +137,14 @@ async def handle_report_request(*, binding, method, path, headers, params, now):
             return _error(403, "TARGET_FORBIDDEN")
         restricted, restricted_values = restriction_filter(restrictions)
         if is_export:
-            base_sql = ("SELECT * FROM expenses WHERE owner_id=? AND deleted_at IS NULL " + where +
-                        " " + restricted)
+            # Keep every page on the owner/date/id index. More selective filter
+            # indexes can require a full sort again for every page, whereas this
+            # traversal visits each remaining owner row at most once in an
+            # unchanged ledger, including restricted and filtered exports.
+            export_sql = ("SELECT " + ",".join(EXPORT_COLUMNS) +
+                          " FROM expenses INDEXED BY expenses_owner_export_date "
+                          "WHERE owner_id=? AND deleted_at IS NULL ")
+            base_sql = export_sql + where + " " + restricted
             sql = base_sql + f" ORDER BY occurred_on,id LIMIT {EXPORT_PAGE_SIZE}"
         else:
             bucket_sql = "substr(occurred_on,1,7)" if bucket == "month" else "occurred_on"
@@ -161,10 +167,14 @@ async def handle_report_request(*, binding, method, path, headers, params, now):
         return _error(exc.status, exc.code)
     if is_export:
         async def next_page(after_date, after_id):
-            page_sql = (base_sql + " AND (occurred_on>? OR (occurred_on=? AND id>?))" +
+            # A tuple comparison seeks directly past the previous index key;
+            # the equivalent OR predicate can rescan its prefix on every page.
+            # Place the cursor before any optional date lower bound so SQLite
+            # chooses the cursor as its seek bound even for a dated export.
+            page_sql = (export_sql + " AND (occurred_on,id)>(?,?) " + where + " " + restricted +
                         f" ORDER BY occurred_on,id LIMIT {EXPORT_PAGE_SIZE}")
-            commands = [*auth, binding.prepare(page_sql).bind(user["id"], *values,
-                *restricted_values, after_date, after_date, after_id)]
+            commands = [*auth, binding.prepare(page_sql).bind(user["id"], after_date,
+                after_id, *values, *restricted_values)]
             page = await binding.batch(commands)
             validate([part.results for part in page[:len(auth)]])
             return page[-1].results

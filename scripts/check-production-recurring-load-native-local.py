@@ -147,7 +147,7 @@ PROBE_SQL=(
     "SELECT COUNT(*) total FROM expense_recurring_rules WHERE status='active' AND revision=2 AND next_occurrence_on='2026-11-12'",
     "SELECT COUNT(*) total FROM expense_recurring_pending",
     "SELECT COUNT(*) total FROM d1_command_guard",
-    "SELECT name FROM d1_migrations ORDER BY id LIMIT 13",
+    "SELECT name FROM d1_migrations ORDER BY id LIMIT 14",
     """SELECT COUNT(*) total FROM expense_events a JOIN expenses e ON e.id=a.expense_id
         JOIN expense_recurring_occurrences o ON o.expense_id=e.id
         WHERE a.owner_id=e.owner_id AND o.owner_id=e.owner_id AND a.actor_kind='schedule'

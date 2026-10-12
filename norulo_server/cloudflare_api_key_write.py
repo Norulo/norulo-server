@@ -12,7 +12,7 @@ from typing import Any, Mapping
 
 from .api_key_dto_rules import (
     api_key_public_payload, parse_api_key_restrictions,
-    requested_api_key_scopes, _text,
+    requested_api_key_scopes, requested_api_key_name,
 )
 
 from .cloudflare_principal import (
@@ -62,9 +62,10 @@ async def revoke_api_key(*, binding: Any, key_id: str,
             AND EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)
             AND EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?
                 AND json_extract(payload,'$.userId')=?
-                AND CAST(json_extract(payload,'$.expiresAt') AS INTEGER)>=?)""").bind(
+                AND CAST(json_extract(payload,'$.expiresAt') AS INTEGER)>?)""").bind(
                 now, key_id, user["id"], record_name("users", user["id"]), proof["user"],
-                record_name("sessions", proof["session_id"]), proof["sessions"], user["id"], now),
+                record_name("sessions", proof.get("session_record_id", proof["session_id"])),
+                proof["sessions"], user["id"], now),
         binding.prepare("""INSERT INTO d1_command_guard(ok)
             VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)"""),
         binding.prepare("DELETE FROM d1_command_guard"),
@@ -85,6 +86,10 @@ async def create_api_key(*, binding: Any, headers: Mapping[str, object],
             or not _cookie_sessions(headers)):
         return 401, {"error": {"code": "UNAUTHENTICATED"}}
     if not isinstance(body, dict):
+        return 400, {"error": {"code": "INVALID_REQUEST"}}
+    try:
+        name = requested_api_key_name(body.get("name"), provided="name" in body)
+    except (ValueError, UnicodeError):
         return 400, {"error": {"code": "INVALID_REQUEST"}}
     scopes, scope_error = requested_api_key_scopes(body.get("scopes"),
         provided="scopes" in body)
@@ -135,7 +140,7 @@ async def create_api_key(*, binding: Any, headers: Mapping[str, object],
     token = _new_api_token()
     key_id = f"ak_{uuid.uuid4().hex}"
     record = {"id": key_id, "user_id": user["_actor"]["id"],
-        "name": _text(body.get("name")) or "API key", "key_prefix": token[:16],
+        "name": name, "key_prefix": token[:16],
         "key_hash": hashlib.sha256(token.encode()).hexdigest(),
         "scopes": json.dumps(scopes, separators=(",", ":")),
         "restrictions": json.dumps(restrictions, separators=(",", ":")),

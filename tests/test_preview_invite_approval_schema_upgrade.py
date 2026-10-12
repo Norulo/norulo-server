@@ -18,7 +18,7 @@ from norulo_server.cloudflare_preview_schema import (
 from norulo_server.cloudflare_preview_budget import (
     upgrade_product_schema, upgrade_product_schema_v6, upgrade_product_schema_v7,
     upgrade_product_schema_v8, upgrade_product_schema_v9, upgrade_product_schema_v10,
-    upgrade_product_schema_v11, upgrade_product_schema_v12,
+    upgrade_product_schema_v11, upgrade_product_schema_v12, upgrade_product_schema_v13,
     migrate_product_state_records, ProductMeteredD1,
     _upgrade_v8_plan, begin_product_schema_upgrade_v8, _V7_COUNT_SQL,
     _RECORD_COUNT_SQL, _STRICT_RECORD_SQL, STATE_RECORD_INTEGRITY_VERSION,
@@ -150,10 +150,11 @@ def test_email_records_upgrade_reuses_strict_proof_and_never_replays_old_migrati
     asyncio.run(upgrade_product_schema_v10(raw, restarted, clock=lambda: 12))
     asyncio.run(upgrade_product_schema_v11(raw, restarted, clock=lambda: 12))
     asyncio.run(upgrade_product_schema_v12(raw, restarted, clock=lambda: 12))
+    asyncio.run(upgrade_product_schema_v13(raw, restarted, clock=lambda: 12))
     ticket = restarted.begin_product(now=13)
     meter = ProductMeteredD1(raw, restarted, ticket, clock=lambda: 14)
     asyncio.run(meter.ensure_cardinality())
-    assert raw.calls == 20 and meter.records_integrity_verified is True
+    assert raw.calls == 24 and meter.records_integrity_verified is True
     restarted.finish(ticket, now=15)
     assert restarted.snapshot()['state_record_integrity_request'] == expected_request
 

@@ -200,7 +200,8 @@ def test_same_batch_erasure_fences_roll_back_business_children_and_usage(ledger,
                 self.raced = True
                 with self.store.connect() as db:
                     if race == "session":
-                        db.execute("DELETE FROM app_state WHERE name=?", (record_name("sessions", session_id),))
+                        from norulo_server.cloudflare_session_adapter import session_storage_id
+                        db.execute("DELETE FROM app_state WHERE name=?", (record_name("sessions", session_storage_id(session_id)),))
                     elif race == "user":
                         key = record_name("users", OWNER)
                         user = json.loads(db.execute("SELECT payload FROM app_state WHERE name=?", (key,)).fetchone()[0])

@@ -212,7 +212,8 @@ def test_credentials_are_rechecked_after_provider_before_any_result_is_published
                 db.execute("UPDATE api_keys SET revoked_at=? WHERE name='Local inspection key'", (ledger.now + 3,))
             elif changed == "session":
                 session_id = headers["Cookie"].split("=", 1)[1]
-                db.execute("DELETE FROM app_state WHERE name=?", (record_name("sessions", session_id),))
+                from norulo_server.cloudflare_session_adapter import session_storage_id
+                db.execute("DELETE FROM app_state WHERE name=?", (record_name("sessions", session_storage_id(session_id)),))
             else:
                 db.execute("UPDATE workspace_members SET role='viewer',revision=revision+1 WHERE workspace_id=? AND user_id=?",
                            (OWNER, actor_id))

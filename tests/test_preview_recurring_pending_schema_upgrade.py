@@ -14,12 +14,12 @@ import pytest
 from norulo_server.cloudflare_preview_budget import (
     ProductMeteredD1, STATE_RECORD_INTEGRITY_VERSION, _RECORD_COUNT_SQL,
     _V11_COUNT_SQL, _upgrade_v12_plan, begin_product_schema_upgrade_v12,
-    upgrade_product_schema_v11, upgrade_product_schema_v12, _input_bound,
+    upgrade_product_schema_v11, upgrade_product_schema_v12, upgrade_product_schema_v13, _input_bound,
     sql_write_bound,
 )
 from norulo_server.cloudflare_preview_schema import (
-    INDEX_COUNTS, MIGRATIONS, PRIMARY_KEYS, SCHEMA_FINGERPRINT, SCHEMA_OBJECTS,
-    SCHEMA_SQL, SCHEMA_VERSION, UPGRADE_V12_SQL, V11_INDEX_COUNTS,
+    V12_INDEX_COUNTS as INDEX_COUNTS, V12_MIGRATIONS as MIGRATIONS, V12_PRIMARY_KEYS as PRIMARY_KEYS, V12_SCHEMA_FINGERPRINT as SCHEMA_FINGERPRINT, V12_SCHEMA_OBJECTS as SCHEMA_OBJECTS,
+    V12_SCHEMA_SQL as SCHEMA_SQL, V12_SCHEMA_VERSION as SCHEMA_VERSION, UPGRADE_V12_SQL, V11_INDEX_COUNTS,
     V11_SCHEMA_FINGERPRINT, V11_SCHEMA_OBJECTS, V11_SCHEMA_SQL,
 )
 from norulo_server.cloudflare_validation_budget import BudgetError, BudgetJournal
@@ -200,10 +200,11 @@ def test_product_meter_accepts_pending_scalar_mutations_and_tracks_rows_indexes(
     db,_,journal=old
     raw=SQLiteD1(db,journal)
     upgrade(raw,journal)
+    asyncio.run(upgrade_product_schema_v13(raw,journal,clock=lambda:12))
     ticket=journal.begin_product(now=13)
     meter=ProductMeteredD1(raw,journal,ticket,clock=lambda:14)
     asyncio.run(meter.ensure_cardinality())
-    assert raw.calls==4
+    assert raw.calls==8
     before=journal.snapshot()["reserved_written"]
     asyncio.run(meter.batch([meter.prepare(INSERT).bind(*pending())]))
     assert journal.snapshot()["product_data"]["rows"]["expense_recurring_pending"]==1
@@ -230,7 +231,7 @@ def test_pending_input_bound_and_unique_fences_include_both_indexes():
 
 
 def test_fresh_v12_canonical_migrations_fingerprint_and_historical_v11_agree():
-    paths=sorted((ROOT/"cloudflare/server/migrations").glob("*.sql"))
+    paths=sorted((ROOT/"cloudflare/server/migrations").glob("*.sql"))[:-1]
     assert paths[-1].name=="0012_recurring_pending.sql" and SCHEMA_VERSION==12
     assert len(SCHEMA_SQL)==54<=64 and len(UPGRADE_V12_SQL)==6
     assert {item["name"]:item["sha256"] for item in MIGRATIONS}=={path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}

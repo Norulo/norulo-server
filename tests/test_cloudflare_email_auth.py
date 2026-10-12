@@ -260,7 +260,8 @@ def test_link_request_rejects_another_owner_before_send_admission_and_preserves_
     assert headers == {"Cache-Control": "no-store", "Vary": "Cookie"}
     assert {kind: records(runtime, kind) for kind in kinds} == before
     assert runtime.admit.calls == admitted and runtime.gateway.sent == sent
-    assert runtime.binding.groups == groups and runtime.binding.reads == reads + 3
+    # A pre-cutover session adds a read-only hashed-key miss before the legacy lookup.
+    assert runtime.binding.groups == groups and runtime.binding.reads == reads + 4
 
 
 def test_link_can_request_and_verify_an_email_already_owned_by_the_same_account(runtime):
@@ -355,9 +356,39 @@ def test_link_send_preflight_requires_cookie_only_even_with_a_current_cookie(run
 @pytest.mark.parametrize("browser", ["", BROWSER_COOKIE + "=" + "A" * 43, BROWSER_COOKIE + "=short"])
 def test_a_code_cannot_be_verified_from_another_or_unbound_browser(runtime, browser):
     challenge, code, _ = request(runtime)
+    admitted = list(runtime.admit.calls)
     status, _, _ = call(runtime, VERIFY, {"email": EMAIL, "challengeId": challenge, "code": code}, cookie=browser)
     assert status == 400 and not records(runtime, "users")
     assert records(runtime, "emailChallenges")[0]["attempts"] == 0
+    assert runtime.admit.calls == admitted
+
+
+@pytest.mark.parametrize("case", ["absent", "wrong-challenge", "wrong-browser", "expired", "locked"])
+def test_invalid_or_unusable_challenge_cannot_allocate_verification_subjects(runtime, case):
+    issued = request(runtime)
+    challenge, code, browser = issued
+    now = NOW + 1
+    email = EMAIL
+    if case == "absent":
+        email = "unknown@example.test"
+    elif case == "wrong-challenge":
+        challenge = "A" * 43 if challenge != "A" * 43 else "B" * 43
+    elif case == "wrong-browser":
+        browser = BROWSER_COOKIE + "=" + "A" * 43
+    elif case == "expired":
+        now = NOW + CODE_AGE
+    else:
+        with runtime.binding.store.connect() as db:
+            value = records(runtime, "emailChallenges")[0]
+            value["attempts"] = email_auth.MAX_ATTEMPTS
+            db.execute("UPDATE app_state SET payload=? WHERE name=?", (
+                encode_record("emailChallenges", email_key(EMAIL), value),
+                record_name("emailChallenges", email_key(EMAIL))))
+    admitted, groups = list(runtime.admit.calls), list(runtime.binding.groups)
+    result = call(runtime, VERIFY, {"email": email, "challengeId": challenge, "code": code},
+                  cookie=browser, now=now)
+    assert result[0] == (429 if case == "locked" else 400)
+    assert runtime.admit.calls == admitted and runtime.binding.groups == groups
 
 
 def test_success_consumes_the_code_and_replay_does_not_issue_another_session(runtime):
@@ -397,7 +428,9 @@ def test_five_wrong_codes_lock_the_challenge_and_resend_invalidates_old_code(run
         assert call(runtime, VERIFY, {"email": EMAIL, "challengeId": challenge, "code": wrong},
                     cookie=browser, now=NOW + index + 1)[0] == 400
     assert records(runtime, "emailChallenges")[0]["attempts"] == 5
+    assert [kind for kind, _ in runtime.admit.calls] == ["send", *(["verify"] * 5)]
     assert verify(runtime, (challenge, code, browser), now=NOW + 6)[0] == 429
+    assert [kind for kind, _ in runtime.admit.calls] == ["send", *(["verify"] * 5)]
     next_issue = request(runtime, now=NOW + 60)
     assert len(records(runtime, "emailChallenges")) == 1
     assert verify(runtime, (challenge, code, next_issue[2]), now=NOW + 61)[0] == 400
@@ -470,6 +503,43 @@ def test_delivery_and_verification_require_rate_admission(runtime):
     assert verify(runtime, issued)[0] == 429
     assert not records(runtime, "users") and records(runtime, "emailChallenges")[0]["attempts"] == 0
     assert runtime.admit.calls[-1] == ("verify", email_key(EMAIL))
+
+
+@pytest.mark.parametrize("result", [None, 0, 1, {}, "true"])
+def test_ambiguous_verify_admission_preserves_challenge_and_identity(runtime, result):
+    issued = request(runtime)
+    challenge_before = records(runtime, "emailChallenges")
+    groups_before = list(runtime.binding.groups)
+    async def ambiguous(_kind, _subject):
+        return result
+    challenge, code, browser = issued
+    status, payload, _ = call(runtime, VERIFY,
+        {"email": EMAIL, "challengeId": challenge, "code": code}, cookie=browser, admit=ambiguous)
+    assert status == 503 and payload["error"]["code"] == "EMAIL_AUTH_UNAVAILABLE"
+    assert records(runtime, "emailChallenges") == challenge_before
+    assert not records(runtime, "users") and not records(runtime, "emailIdentities")
+    assert runtime.binding.groups == groups_before
+
+
+def test_changed_challenge_during_admission_is_rejected_before_code_check(runtime):
+    challenge, code, browser = request(runtime)
+    groups_before = list(runtime.binding.groups)
+    async def concurrent_lock(kind, subject):
+        assert kind == "verify" and subject == email_key(EMAIL)
+        value = records(runtime, "emailChallenges")[0]
+        value["attempts"] = email_auth.MAX_ATTEMPTS
+        with runtime.binding.store.connect() as db:
+            db.execute("UPDATE app_state SET payload=? WHERE name=?", (
+                encode_record("emailChallenges", email_key(EMAIL), value),
+                record_name("emailChallenges", email_key(EMAIL))))
+        return True
+    status, payload, _ = call(runtime, VERIFY,
+        {"email": EMAIL, "challengeId": challenge, "code": code},
+        cookie=browser, admit=concurrent_lock)
+    assert status == 400 and payload["error"]["code"] == "EMAIL_CODE_INVALID"
+    assert records(runtime, "emailChallenges")[0]["attempts"] == email_auth.MAX_ATTEMPTS
+    assert not records(runtime, "users") and not records(runtime, "emailIdentities")
+    assert runtime.binding.groups == groups_before
 
 
 @pytest.mark.parametrize("result", [None, 0, 1, {}, "true"])

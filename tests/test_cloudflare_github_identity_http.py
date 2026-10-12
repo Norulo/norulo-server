@@ -113,13 +113,22 @@ def call(binding, gateway, now, method, path, params=None, headers=None):
 
 
 def login(binding, gateway, now):
-    status, payload, _ = call(binding, gateway, now, "GET", "/auth/github/authorize",
+    status, payload, issued_headers = call(binding, gateway, now, "GET", "/auth/github/authorize",
         {"redirectTo": "/projects"})
     assert status == 200
     from urllib.parse import urlsplit, parse_qs
     state = parse_qs(urlsplit(payload["url"]).query)["state"][0]
-    return call(binding, gateway, now + 1, "GET", "/auth/github/callback",
-        {"state": state, "code": "synthetic-code"})
+    status, payload, headers = call(binding, gateway, now + 1, "GET", "/auth/github/callback",
+        {"state": state, "code": "synthetic-code"},
+        {"Cookie": issued_headers["Set-Cookie"].split(";", 1)[0]})
+    # Shared synthetic ledger fixtures consume the session cookie; validate
+    # that the real response also clears the short-lived OAuth browser binding.
+    cookies = headers.get("Set-Cookie")
+    if isinstance(cookies, list):
+        assert len(cookies) == 2 and cookies[1].startswith('nr_github_oauth=;')
+        assert 'Max-Age=0' in cookies[1]
+        headers = {**headers, 'Set-Cookie': cookies[0]}
+    return status, payload, headers
 
 
 def test_login_state_cookie_and_callback_replay(tmp_path):
@@ -158,15 +167,16 @@ def test_oauth_failure_query_preserves_workspace_invitation_fragment(tmp_path, w
     gateway = NoExchange()
     fragment = "invite=nri_" + "Q" * 43
     destination = "/members" + ("?tab=invites" if with_query else "") + "#" + fragment
-    status, payload, _ = call(binding, gateway, fixture.now, "GET", "/auth/github/authorize",
+    status, payload, issued_headers = call(binding, gateway, fixture.now, "GET", "/auth/github/authorize",
                               {"redirectTo": destination})
     assert status == 200
     state = parse_qs(urlsplit(payload["url"]).query)["state"][0]
     params = {"state": state}
     if oauth_error:
         params["error"] = oauth_error
-    status, payload, headers = call(binding, gateway, fixture.now + 1, "GET", "/auth/github/callback", params)
-    assert status == 302 and "Set-Cookie" not in headers
+    status, payload, headers = call(binding, gateway, fixture.now + 1, "GET", "/auth/github/callback", params,
+                                   {"Cookie": issued_headers['Set-Cookie'].split(';', 1)[0]})
+    assert status == 302 and headers['Set-Cookie'].startswith('nr_github_oauth=;')
     location = urlsplit(payload["location"])
     assert location.scheme == "https" and location.netloc == "app.example.test" and location.path == "/members"
     assert location.fragment == fragment

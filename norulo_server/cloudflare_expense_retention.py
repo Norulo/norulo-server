@@ -65,11 +65,15 @@ async def handle_expense_retention_preference(*, binding, method, headers, body,
         return _error(409, "PREFERENCE_REVISION_EXHAUSTED")
     updated = {**json.loads(proof["user"]), "autoRemoveOldestExpense": body["autoRemoveOldestExpense"],
         "expenseRetentionRevision": expected + 1}
-    await binding.batch([_write_guard(binding, proof, user["id"], now),
+    commands = [_write_guard(binding, proof, user["id"], now),
         binding.prepare("UPDATE app_state SET payload=?,updated_at=? WHERE name=? AND payload=?").bind(
             encode_record("users", user["id"], updated), now, record_name("users", user["id"]), proof["user"]),
         binding.prepare("INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)"),
-        binding.prepare("DELETE FROM d1_command_guard")])
+        binding.prepare("DELETE FROM d1_command_guard")]
+    try:
+        await binding.batch(commands)
+    except PlanLimitError as error:
+        return error.response()
     return 200, expense_retention_preference(updated)
 
 

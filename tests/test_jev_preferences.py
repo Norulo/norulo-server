@@ -55,7 +55,7 @@ def test_legacy_get_is_read_only_and_expresses_stored_preference_separately(ledg
 
 
 @pytest.mark.parametrize("plan", ["pro", "max"])
-def test_preference_cas_merges_full_raw_user_and_preserves_all_usage_and_authority(ledger, plan):
+def test_preference_cas_merges_full_raw_user_preserves_model_usage_and_counts_write(ledger, plan):
     set_plan(ledger, plan)
     patch_user(ledger, {"opaquePreserved": {"nested": [1, False, "retained"]}})
     _, saved, _ = setup_expense(ledger)
@@ -67,7 +67,14 @@ def test_preference_cas_merges_full_raw_user_and_preserves_all_usage_and_authori
     saved_user = json.loads(user_record(ledger)["payload"])
     assert saved_user == {**before, "jevEnabled": False, "jevPreferenceRevision": 2}
     assert "_actor" not in saved_user and "_workspace" not in saved_user
-    assert suggestion_rows(ledger) == models and financial_rows(ledger) == financial
+    after_models = suggestion_rows(ledger)
+    before_usage, after_usage = models.pop("ledger_plan_usage")[0], after_models.pop("ledger_plan_usage")[0]
+    assert after_models == models and financial_rows(ledger) == financial
+    for key in ("projects", "records", "month", "minute", "jev_reserved_microusd"):
+        assert after_usage[key] == before_usage[key]
+    for key in ("writes", "minute_writes"):
+        assert after_usage[key] == before_usage[key] + 1
+    models = suggestion_rows(ledger)
     confirmed = user_record(ledger)
     assert account(ledger, method="PATCH", body={"enabled": False}, revision='"2"')[1]["revision"] == 2
     assert user_record(ledger) == confirmed and suggestion_rows(ledger) == models
@@ -161,8 +168,10 @@ def test_off_during_provider_rejects_old_authority_without_financial_or_suggesti
         assert db.execute("SELECT count(*) FROM expense_suggestion_budget").fetchone()[0] == 0
         assert db.execute("SELECT count(*) FROM d1_command_guard").fetchone()[0] == 0
     after_usage = usage(ledger)
-    for key in ("projects", "records", "writes", "minute_writes"):
+    for key in ("projects", "records"):
         assert after_usage[key] == before_usage[key]
+    for key in ("writes", "minute_writes"):
+        assert after_usage[key] == before_usage[key] + 1
     assert after_usage["jev_reserved_microusd"] - before_usage["jev_reserved_microusd"] == JEV_RESERVATION_MICROUSD
 
 

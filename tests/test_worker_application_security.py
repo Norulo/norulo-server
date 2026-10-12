@@ -12,7 +12,8 @@ import pytest
 from norulo_server.cloudflare_plan_limits import PlanLimitError
 from norulo_server.cloudflare_creem_gateway import CreemRequestRejected, catalog_product_bindings
 from norulo_server.cloudflare_ledger_reports import CsvExport
-from norulo_server.json_input import validate_json_unicode
+from norulo_server.json_input import validate_json_unicode, decode_json_body
+from norulo_server.cloudflare_auth_admission import authorize_admission
 
 
 class Response:
@@ -51,6 +52,8 @@ def application(*, same_site="Lax", catalog_failure=None, billing_failure=None,
         "read_or_refresh_catalog": catalog,
         "catalog_product_bindings": catalog_product_bindings,
         "handle_billing_mutation": billing, "validate_json_unicode": validate_json_unicode,
+        "decode_json_body": decode_json_body,
+        "authorize_admission": authorize_admission,
         "CsvExport": CsvExport,
         "WorkerGitHubGateway": lambda _: None, "WorkerCreemGateway": creem_gateway}
     target = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_request_target")
@@ -133,6 +136,7 @@ def test_account_preference_cookie_write_rejects_too_many_sessions_before_body_o
     (b'\xff', 422, "INVALID_INPUT"),
     (b'{"purpose":"\\ud800"}', 422, "INVALID_INPUT"),
     (b'{"schedule":{"\\udfff":true}}', 422, "INVALID_INPUT"),
+    (b"[" * 4000 + b"]" * 4000, 422, "INVALID_INPUT"),
     (b"x" * 8193, 413, "REQUEST_TOO_LARGE"),
 ])
 def test_recurring_body_safety_fails_before_business_dispatch(path, method, raw, status, code):
@@ -184,7 +188,8 @@ def test_billing_gateway_configuration_failure_is_a_service_error():
     assert calls == []
 
 
-@pytest.mark.parametrize("raw", [b'{"plan":', b'\xff', b'{"plan":"\\ud800"}'])
+@pytest.mark.parametrize("raw", [b'{"plan":', b'\xff', b'{"plan":"\\ud800"}',
+    b"[" * 4000 + b"]" * 4000])
 def test_malformed_billing_input_remains_a_request_error_before_provider_dispatch(raw):
     app, calls = application(billing_failure=AssertionError("provider must not be called"))
     response = asyncio.run(app.fetch(request("/billing/checkout-sessions", raw=raw)))
@@ -212,6 +217,83 @@ def test_valid_encoded_emoji_query_reaches_application():
     app, calls = application()
     response = asyncio.run(app.fetch(request("/api/v1/expenses?cursor=%F0%9F%98%80", method="GET")))
     assert response.status == 204 and calls == ["ledger"]
+
+
+@pytest.mark.parametrize("path", ["/api/v1/expenses", "/billing/checkout-sessions"])
+def test_chunked_oversized_body_stops_before_copy_or_business_dispatch(path):
+    app, calls = application()
+    class OversizedChunk:
+        byteLength = 100_000_000
+        def to_bytes(self):
+            raise AssertionError("Oversized body was copied")
+    class Reader:
+        cancelled = released = False
+        async def read(self):
+            return SimpleNamespace(done=False, value=OversizedChunk())
+        async def cancel(self):
+            self.cancelled = True
+        def releaseLock(self):
+            self.released = True
+    reader = Reader()
+    incoming = request(path, headers={"origin": "https://app.example.test"})
+    incoming.body = SimpleNamespace(getReader=lambda: reader)
+    async def forbidden_buffer():
+        raise AssertionError("Chunked body used an unbounded buffer")
+    incoming.bytes = forbidden_buffer
+    response = asyncio.run(app.fetch(incoming))
+    assert response.status == 413 and calls == []
+    assert reader.cancelled and reader.released
+
+
+def test_chunked_json_body_preserves_valid_input_and_releases_reader():
+    app, calls = application()
+    class Reader:
+        released = False
+        chunks = iter((b'{"a":', b'1}'))
+        async def read(self):
+            chunk = next(self.chunks, None)
+            return SimpleNamespace(done=chunk is None, value=chunk)
+        async def cancel(self):
+            raise AssertionError("Valid body was cancelled")
+        def releaseLock(self):
+            self.released = True
+    reader = Reader()
+    incoming = request()
+    incoming.body = SimpleNamespace(getReader=lambda: reader)
+    response = asyncio.run(app.fetch(incoming))
+    assert response.status == 204 and calls == ["ledger"] and reader.released
+
+
+@pytest.mark.parametrize("path", ["/auth/github/authorize", "/integrations/github/authorize"])
+def test_production_github_rate_denial_precedes_identity_and_state_work(path):
+    app, calls = application()
+    app.env.NORULO_MODE = "production"
+    admitted = []
+    async def limit(options):
+        admitted.append(options["key"])
+        return {"success": False}
+    app.env.AUTH_RATE_LIMIT = SimpleNamespace(limit=limit)
+    async def forbidden_identity(**_):
+        raise AssertionError("Rate-denied request reached state/provider work")
+    app.fetch.__func__.__globals__["handle_identity_request"] = forbidden_identity
+    response = asyncio.run(app.fetch(request(path, method="GET",
+        headers={"cf-connecting-ip": "2001:db8:1234::1"})))
+    assert response.status == 429 and calls == []
+    assert response.headers["Retry-After"] == "60"
+    assert len(admitted) == 1 and len(admitted[0]) == 64
+
+
+def test_github_callback_preserves_both_session_and_browser_clear_cookies():
+    app, _ = application()
+    cookies = ["nr_session=ses-v2.synthetic; Secure; HttpOnly",
+               "nr_github_oauth=; Secure; HttpOnly; Max-Age=0"]
+    async def identity(**_):
+        return 302, None, {"Location": "https://app.example.test/projects",
+                           "Set-Cookie": cookies, "Cache-Control": "no-store"}
+    app.fetch.__func__.__globals__["handle_identity_request"] = identity
+    response = asyncio.run(app.fetch(request("/auth/github/callback", method="GET")))
+    assert response.status == 302
+    assert [value for name, value in response.headers if name == "Set-Cookie"] == cookies
 
 
 @pytest.mark.parametrize("path,headers", [

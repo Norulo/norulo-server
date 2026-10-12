@@ -124,10 +124,14 @@ paths:
       x-norulo-scope: account:keys
       tags: [API Keys]
       security: [{cookieSession: []}]
-      description: List the signed-in actor's unrevoked key metadata. Bearer keys cannot manage credentials. An optional workspace selector filters keys to that accessible ledger; without a selector the actor's keys across ledgers are listed. Reads never return tokens or hashes.
-      parameters: [{$ref: '#/components/parameters/WorkspaceHeader'}, {$ref: '#/components/parameters/WorkspaceQuery'}]
+      description: List a bounded page of the signed-in actor's unrevoked key metadata, newest first by creation time and ID. Bearer keys cannot manage credentials. An optional workspace selector filters keys to that accessible ledger before pagination; without a selector the actor's keys across ledgers are listed. Follow nextCursor with the same selector until it is null. Reads never return tokens or hashes or record usage timestamps.
+      parameters:
+        - {$ref: '#/components/parameters/WorkspaceHeader'}
+        - {$ref: '#/components/parameters/WorkspaceQuery'}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 100}}
+        - {name: cursor, in: query, schema: {type: string, maxLength: 256, pattern: '^[A-Za-z0-9_-]+$'}, description: Opaque nextCursor returned by this endpoint}
       responses:
-        '200': {description: Key metadata; apiKeys is a compatibility alias of items, content: {application/json: {schema: {type: object, required: [items, apiKeys], properties: {items: {type: array, items: {$ref: '#/components/schemas/ApiKey'}}, apiKeys: {type: array, items: {$ref: '#/components/schemas/ApiKey'}}}}}}}
+        '200': {description: Key metadata; apiKeys is a compatibility alias of items, content: {application/json: {schema: {type: object, required: [items, apiKeys, nextCursor], properties: {items: {type: array, maxItems: 100, items: {$ref: '#/components/schemas/ApiKey'}}, apiKeys: {type: array, maxItems: 100, items: {$ref: '#/components/schemas/ApiKey'}}, nextCursor: {type: [string, 'null'], maxLength: 256}}}}}}
         '401': {$ref: '#/components/responses/Unauthorized'}
         '422': {$ref: '#/components/responses/InvalidInput'}
     post:
@@ -146,6 +150,8 @@ paths:
         Server; role or membership changes invalidate its existing keys.
         The response displays key once. Store it in your application's secret
         storage; the Server stores only its hash and cannot recover the token.
+        Content-Length is optional. The JSON body is limited to 8192 bytes;
+        when a length is supplied it must match the received bytes.
       parameters: [{$ref: '#/components/parameters/WorkspaceHeader'}, {$ref: '#/components/parameters/AuthOrigin'}]
       requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ApiKeyInput'}}}}
       responses:
@@ -153,6 +159,7 @@ paths:
         '400': {description: INVALID_SCOPE or INVALID_RESTRICTION; malformed input or expiry, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
         '401': {$ref: '#/components/responses/Unauthorized'}
         '403': {$ref: '#/components/responses/Forbidden'}
+        '413': {description: REQUEST_TOO_LARGE, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
         '429': {$ref: '#/components/responses/RateLimited'}
   /api-keys/{id}:
     parameters: [{$ref: '#/components/parameters/Id'}]
@@ -494,6 +501,7 @@ paths:
       operationId: removeWorkspaceMember
       x-norulo-scope: members:write
       security: [{cookieSession: []}, {bearerKey: []}]
+      description: Owner removes Admin/Editor/Viewer; Admin removes only Editor/Viewer. This governance endpoint does not support self-service leaving. A member asks the Owner, or an Admin for an Editor/Viewer membership, to remove them. The Owner is immutable; removal retains financial history and invalidates membership-bound keys.
       parameters: [{$ref: '#/components/parameters/IfMatch'}]
       responses:
         '204': {description: Removed; subsequent resource and key requests fail current membership checks}
@@ -1324,7 +1332,7 @@ components:
     ApiKeyInput:
       type: object
       properties:
-        name: {type: string, description: Optional display label; omission or blank uses API key}
+        name: {type: string, maxLength: 120, not: {pattern: '[\r\n\x00]'}, description: Optional display label of at most 120 characters before trimming; omission or blank uses API key. CR/LF and NUL are rejected.}
         scopes:
           oneOf:
             - {$ref: '#/components/schemas/ApiKeyScope'}
@@ -1345,7 +1353,7 @@ components:
         scopes: {type: array, maxItems: 11, items: {$ref: '#/components/schemas/ApiKeyScope'}}
         createdAt: {type: integer, minimum: 0, description: UTC epoch seconds}
         expiresAt: {type: [integer, 'null'], minimum: 0}
-        lastUsedAt: {type: [integer, 'null'], minimum: 0}
+        lastUsedAt: {type: [integer, 'null'], minimum: 0, description: Reserved compatibility metadata. Usage tracking is currently disabled and this field is null for newly issued keys; null does not mean the key has never been used. Reads do not write usage timestamps.}
         revokedAt: {type: [integer, 'null'], minimum: 0}
         restrictions: {$ref: '#/components/schemas/ApiKeyRestrictions'}
     AccountSession:

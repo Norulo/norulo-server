@@ -37,7 +37,7 @@ import sys
 from types import SimpleNamespace
 from workers import WorkerEntrypoint, Response
 import js as original_js
-from norulo_server.cloudflare_jev_gateway import WorkerJevGateway, JEV_URL
+from norulo_server.cloudflare_jev_gateway import WorkerJevGateway, JEV_URL, _bounded_response
 from norulo_server.typesafe_client import build_request, DEFAULT_JEV_MODEL, validate_response
 
 current_case = ""
@@ -71,6 +71,17 @@ class Default(WorkerEntrypoint):
         assert set(data) == {"case"} and data["case"] in {
             "valid", "redirect", "oversized-header", "oversized-stream", "deadline"}
         current_case = data["case"]
+        class ViewReader:
+            finished = False
+            async def read(self):
+                if self.finished:
+                    return SimpleNamespace(done=True)
+                self.finished = True
+                full = original_js.Uint8Array.new([255, 97, 98, 254])
+                return SimpleNamespace(done=False, value=full.subarray(1, 3))
+            async def cancel(self):
+                raise AssertionError("bounded typed-array view should be accepted")
+        assert await _bounded_response(ViewReader(), 2) == b"ab"
         before = len(calls)
         gateway = WorkerJevGateway(SimpleNamespace(TYPESAFE_API_KEY="synthetic-local-only-key",
             NORULO_JEV_SUGGESTIONS_ENABLED="1", NORULO_JEV_SUGGESTIONS_EVALUATED="1"))

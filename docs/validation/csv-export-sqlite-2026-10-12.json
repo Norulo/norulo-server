@@ -1,0 +1,292 @@
+{
+  "source": "local in-memory SQLite synthetic fixtures",
+  "sqliteVersion": "3.42.0",
+  "scope": "Complete CSV expense SELECT traversal including project visibility; principal batches and Worker FFI excluded",
+  "limitations": "VM instructions and wall times are local observations, not native D1 rows_read or a production SLA; concurrent changes retain existing live-page behavior",
+  "fixtures": [
+    {
+      "records": 2000,
+      "identicalSequence": true,
+      "measurements": [
+        {
+          "mode": "v12_original",
+          "records": 2000,
+          "pages": 9,
+          "seconds": 0.013295,
+          "sqliteVmStepsLowerBound": 246000,
+          "stepResolution": 1000,
+          "sequenceSha256": "9e743e8e008a1579fd846fd5e2258ae7d5412bde4a412224ed190a945d0ab64c",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_target_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)",
+              "USE TEMP B-TREE FOR ORDER BY"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_target_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)",
+              "USE TEMP B-TREE FOR ORDER BY"
+            ]
+          }
+        },
+        {
+          "mode": "v13_or_cursor",
+          "records": 2000,
+          "pages": 9,
+          "seconds": 0.007087,
+          "sqliteVmStepsLowerBound": 108000,
+          "stepResolution": 1000,
+          "sequenceSha256": "9e743e8e008a1579fd846fd5e2258ae7d5412bde4a412224ed190a945d0ab64c",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ]
+          }
+        },
+        {
+          "mode": "v13_tuple_seek",
+          "records": 2000,
+          "pages": 9,
+          "seconds": 0.006239,
+          "sqliteVmStepsLowerBound": 45000,
+          "stepResolution": 1000,
+          "sequenceSha256": "9e743e8e008a1579fd846fd5e2258ae7d5412bde4a412224ed190a945d0ab64c",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=? AND (occurred_on,id)>(?,?))",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "records": 5000,
+      "identicalSequence": true,
+      "measurements": [
+        {
+          "mode": "v12_original",
+          "records": 5000,
+          "pages": 21,
+          "seconds": 0.056496,
+          "sqliteVmStepsLowerBound": 1242000,
+          "stepResolution": 1000,
+          "sequenceSha256": "c167c913874306804909b0b370507462ab86597cd97e5a1370eee70b2d41e408",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_target_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)",
+              "USE TEMP B-TREE FOR ORDER BY"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_target_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)",
+              "USE TEMP B-TREE FOR ORDER BY"
+            ]
+          }
+        },
+        {
+          "mode": "v13_or_cursor",
+          "records": 5000,
+          "pages": 21,
+          "seconds": 0.024817,
+          "sqliteVmStepsLowerBound": 497000,
+          "stepResolution": 1000,
+          "sequenceSha256": "c167c913874306804909b0b370507462ab86597cd97e5a1370eee70b2d41e408",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ]
+          }
+        },
+        {
+          "mode": "v13_tuple_seek",
+          "records": 5000,
+          "pages": 21,
+          "seconds": 0.013311,
+          "sqliteVmStepsLowerBound": 121000,
+          "stepResolution": 1000,
+          "sequenceSha256": "c167c913874306804909b0b370507462ab86597cd97e5a1370eee70b2d41e408",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=? AND (occurred_on,id)>(?,?))",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "records": 20000,
+      "identicalSequence": true,
+      "measurements": [
+        {
+          "mode": "v12_original",
+          "records": 20000,
+          "pages": 81,
+          "seconds": 0.534734,
+          "sqliteVmStepsLowerBound": 17484000,
+          "stepResolution": 1000,
+          "sequenceSha256": "189a53b05640e7c900f9c3d7ed5085a334dc10b1390ada02c1a63acb7cddf188",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_target_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)",
+              "USE TEMP B-TREE FOR ORDER BY"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_target_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)",
+              "USE TEMP B-TREE FOR ORDER BY"
+            ]
+          }
+        },
+        {
+          "mode": "v13_or_cursor",
+          "records": 20000,
+          "pages": 81,
+          "seconds": 0.237887,
+          "sqliteVmStepsLowerBound": 6377000,
+          "stepResolution": 1000,
+          "sequenceSha256": "189a53b05640e7c900f9c3d7ed5085a334dc10b1390ada02c1a63acb7cddf188",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ]
+          }
+        },
+        {
+          "mode": "v13_tuple_seek",
+          "records": 20000,
+          "pages": 81,
+          "seconds": 0.059197,
+          "sqliteVmStepsLowerBound": 497000,
+          "stepResolution": 1000,
+          "sequenceSha256": "189a53b05640e7c900f9c3d7ed5085a334dc10b1390ada02c1a63acb7cddf188",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=? AND (occurred_on,id)>(?,?))",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "records": 100000,
+      "identicalSequence": true,
+      "measurements": [
+        {
+          "mode": "v12_original",
+          "records": 100000,
+          "pages": 401,
+          "seconds": 11.728196,
+          "sqliteVmStepsLowerBound": 421135000,
+          "stepResolution": 1000,
+          "sequenceSha256": "2dc689ae1cea8e2f6c770fadd8e44d94fb3d83821ad784a6b07172d36696b314",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_target_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)",
+              "USE TEMP B-TREE FOR ORDER BY"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_target_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)",
+              "USE TEMP B-TREE FOR ORDER BY"
+            ]
+          }
+        },
+        {
+          "mode": "v13_or_cursor",
+          "records": 100000,
+          "pages": 401,
+          "seconds": 4.47409,
+          "sqliteVmStepsLowerBound": 148479000,
+          "stepResolution": 1000,
+          "sequenceSha256": "2dc689ae1cea8e2f6c770fadd8e44d94fb3d83821ad784a6b07172d36696b314",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ]
+          }
+        },
+        {
+          "mode": "v13_tuple_seek",
+          "records": 100000,
+          "pages": 401,
+          "seconds": 0.298925,
+          "sqliteVmStepsLowerBound": 2507000,
+          "stepResolution": 1000,
+          "sequenceSha256": "2dc689ae1cea8e2f6c770fadd8e44d94fb3d83821ad784a6b07172d36696b314",
+          "queryPlans": {
+            "first": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=?)",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ],
+            "cursor": [
+              "SEARCH expenses USING INDEX expenses_owner_export_date (owner_id=? AND (occurred_on,id)>(?,?))",
+              "CORRELATED SCALAR SUBQUERY 1",
+              "SEARCH visible_project USING INDEX sqlite_autoindex_ledger_projects_3 (owner_id=? AND id=?)"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

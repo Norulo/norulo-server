@@ -5,6 +5,7 @@ import json
 import math
 from typing import Any, Mapping
 from .cloudflare_state_records import read_record, record_name
+from .cloudflare_session_adapter import read_session, session_record_ids
 
 SESSION_COOKIE = "nr_session"
 API_KEY_PREFIX = "nrk_"
@@ -135,15 +136,14 @@ async def _principal(binding: Any, headers: Mapping[str, object],
     if session_ids:
         for session_id in session_ids:
             try:
-                record_name("sessions", session_id)
+                session = await read_session(binding, session_id)
             except (ValueError, UnicodeError):
                 continue
-            session = await read_record(binding, "sessions", session_id)
             if not isinstance(session, dict):
                 continue
             expires_at = _timestamp(session.get("expiresAt"))
             owner_id = session.get("userId")
-            if expires_at is None or expires_at < now or not isinstance(owner_id, str):
+            if expires_at is None or expires_at <= now or not isinstance(owner_id, str):
                 continue
             user = await _user(binding, owner_id)
             if user is not None and session_identity_usable(user):
@@ -164,7 +164,7 @@ def _resource_auth_snapshot(binding: Any, headers: Mapping[str, object],
     named_sessions = []
     for candidate in sessions:
         try:
-            named_sessions.append(record_name("sessions", candidate))
+            named_sessions.extend(record_name("sessions", identity) for identity in session_record_ids(candidate))
         except (ValueError, UnicodeError):
             continue
     if not named_sessions:
@@ -209,17 +209,20 @@ def _resource_auth_snapshot(binding: Any, headers: Mapping[str, object],
         if saved_sessions:
             for session_id in sessions:
                 try:
-                    payload = saved_sessions.get(record_name("sessions", session_id))
+                    identities = session_record_ids(session_id)
                 except (ValueError, UnicodeError):
                     continue
+                identity = next((value for value in identities
+                                 if record_name("sessions", value) in saved_sessions), None)
+                payload = saved_sessions.get(record_name("sessions", identity)) if identity is not None else None
                 session = json.loads(payload) if payload is not None else None
                 if (isinstance(session, dict) and session.get("userId") == owner_id
                         and (expiry := _timestamp(session.get("expiresAt"))) is not None
-                        and expiry >= now):
+                        and expiry > now):
                     if proof is not None:
                         proof.update(key=None, sessions=payload,
                                      user=user_rows[0]["snapshot"], token=None,
-                                     session_id=session_id)
+                                     session_id=session_id, session_record_id=identity)
                     return
         raise PrincipalAuthError(401, "UNAUTHENTICATED", "A session or API key is required.")
 

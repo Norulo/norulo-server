@@ -7,13 +7,17 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import json
 import secrets
 from typing import Any, Mapping
 from urllib.parse import urlencode, urlsplit, urlunsplit
 
 from .cloudflare_oauth_state_adapter import D1OAuthStates
-from .cloudflare_session_adapter import D1SessionTransactions
+from .cloudflare_session_adapter import (
+    D1SessionTransactions, HASHED_SESSION_PREFIX, read_session, read_session_snapshot,
+    session_binding_matches, session_storage_id,
+)
 from .cloudflare_account_adapter import D1AccountTransactions
 from .cloudflare_principal import (
     _cookie_sessions, _header, _observe_authenticated_actor,
@@ -24,6 +28,8 @@ from .cloudflare_principal import PrincipalAuthError
 from .cloudflare_state_records import encode_record, read_record, read_record_json, record_name
 
 SESSION_AGE = 7 * 86400
+OAUTH_COOKIE = 'nr_github_oauth'
+OAUTH_AGE = 600
 
 
 def _param(params: Mapping[str, object], name: str) -> str:
@@ -74,6 +80,24 @@ def _session_cookie(session_id: str, *, clear: bool = False, same_site: str = "L
     return f"nr_session={value}; Path=/; HttpOnly; Secure; SameSite={same_site}; Max-Age={age}"
 
 
+def _oauth_cookie(state: str = '', *, clear: bool = False) -> str:
+    value = '' if clear else hashlib.sha256(state.encode('ascii')).hexdigest()
+    return (f'{OAUTH_COOKIE}={value}; Path=/; HttpOnly; Secure; '
+            f'SameSite=Lax; Max-Age={0 if clear else OAUTH_AGE}')
+
+
+def _oauth_browser_matches(headers: Mapping[str, object], state: str) -> bool:
+    values = []
+    for item in _header(headers, 'Cookie').split(';'):
+        name, separator, value = item.partition('=')
+        if separator and name.strip() == OAUTH_COOKIE:
+            values.append(value.strip().strip('"'))
+    if (len(values) != 1 or not state.isascii() or not 1 <= len(state) <= 128
+            or len(values[0]) != 64 or not values[0].isascii()):
+        return False
+    return hmac.compare_digest(values[0], hashlib.sha256(state.encode('ascii')).hexdigest())
+
+
 async def _user(binding: Any, owner_id: str) -> dict | None:
     if not isinstance(owner_id, str) or not owner_id:
         return None
@@ -86,10 +110,9 @@ async def _session_user(binding: Any, headers: Mapping[str, object], now: int):
         return None, None
     for session_id in _cookie_sessions(headers):
         try:
-            record_name("sessions", session_id)
+            session = await read_session(binding, session_id)
         except (ValueError, UnicodeError):
             continue
-        session = await read_record(binding, "sessions", session_id)
         if (isinstance(session, dict) and type(session.get("expiresAt")) is int
                 and session["expiresAt"] > now):
             user = await _user(binding, str(session.get("userId") or ""))
@@ -149,7 +172,7 @@ async def _write_linked_user(binding: Any, *, user: dict, expected_user: dict,
     user_snapshot = await read_record_json(binding, "users", owner_id)
     if user_snapshot is None or json.loads(user_snapshot) != expected_user:
         raise ValueError("ACCOUNT_CHANGED")
-    session_snapshot = await read_record_json(binding, "sessions", session["id"])
+    session_identity, session_snapshot = await read_session_snapshot(binding, session["id"])
     saved_session = json.loads(session_snapshot) if session_snapshot is not None else None
     if (saved_session is None or {**saved_session, "id": session["id"]} != session
             or session.get("expiresAt", 0) <= now):
@@ -165,7 +188,7 @@ async def _write_linked_user(binding: Any, *, user: dict, expected_user: dict,
     legacy = await _user(binding, legacy_id) if legacy_id != owner_id else None
     if legacy is not None:
         raise ValueError("GITHUB_IDENTITY_CONFLICT")
-    user_name, session_name = record_name("users", owner_id), record_name("sessions", session["id"])
+    user_name, session_name = record_name("users", owner_id), record_name("sessions", session_identity)
     mapping_name = record_name("githubIdentities", github_id)
     checks = ["EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)",
               "EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)"]
@@ -392,14 +415,20 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
         state_record = {"kind": "login", "redirectTo": destination, "codeVerifier": verifier,
                         "expiresAt": now + 600}
         if intent == "link":
-            state_record.update(intent="link", userId=link_user["id"], sessionId=link_session["id"])
+            state_record.update(intent="link", userId=link_user["id"],
+                                sessionId=session_storage_id(link_session["id"]))
         await D1OAuthStates(binding).issue(state_id=state, record=state_record, now=now)
         url = _oauth_url(gateway.client_id, callback_url, state, verifier)
-        return (_redirect_result(url) if _param(params, "response") == "redirect"
-                else (200, {"url": url, "mode": "github"}, no_store))
+        cookie = None if intent == 'link' else _oauth_cookie(state)
+        return (_redirect_result(url, cookie) if _param(params, "response") == "redirect"
+                else (200, {"url": url, "mode": "github"},
+                      {**no_store, **({'Set-Cookie': cookie} if cookie else {})}))
     if method == "GET" and path == "/auth/github/callback":
         state = _param(params, "state")
         try:
+            pending = await read_record(binding, 'githubStates', state)
+            if pending is None or (pending.get('intent') != 'link' and not _oauth_browser_matches(headers, state)):
+                return 400, {"error": {"code": "OAUTH_STATE_INVALID"}}, no_store
             record = await D1OAuthStates(binding).consume(
                 state_id=state, expected_kind="login", now=now)
         except ValueError:
@@ -407,14 +436,15 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
         linking = record.get("intent") == "link"
         if linking:
             session, linked_user = await _session_user(binding, headers, now)
-            if not session or session["id"] != record.get("sessionId") or linked_user["id"] != record.get("userId"):
+            if not session or not session_binding_matches(record.get("sessionId"), session["id"]) or linked_user["id"] != record.get("userId"):
                 return 401, {"error": {"code": "UNAUTHENTICATED"}}, no_store
         destination = _redirect(record.get("redirectTo", ""), app_url, "/projects")
         if _param(params, "error") or not _param(params, "code"):
             parsed = urlsplit(destination)
             error_query = urlencode({"github_error": _param(params, "error") or "missing_oauth_code"})
             query = parsed.query + ("&" if parsed.query else "") + error_query
-            return _redirect_result(urlunsplit((parsed.scheme, parsed.netloc, parsed.path, query, parsed.fragment)))
+            return _redirect_result(urlunsplit((parsed.scheme, parsed.netloc, parsed.path, query, parsed.fragment)),
+                                    None if linking else _oauth_cookie(clear=True))
         bundle = await gateway.exchange(_param(params, "code"), callback_url, record["codeVerifier"])
         profile = await gateway.profile(bundle.access_token)
         github_id, login = profile.get("id"), profile.get("login")
@@ -422,7 +452,7 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
             return 502, {"error": {"code": "GITHUB_PROFILE_INVALID"}}, no_store
         if linking:
             session, existing = await _session_user(binding, headers, now)
-            if not session or session["id"] != record.get("sessionId") or existing["id"] != record.get("userId"):
+            if not session or not session_binding_matches(record.get("sessionId"), session["id"]) or existing["id"] != record.get("userId"):
                 return 401, {"error": {"code": "UNAUTHENTICATED"}}, no_store
             owner_id = existing["id"]
         else:
@@ -467,10 +497,13 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
                 authority = await binding.prepare("SELECT owner_id FROM account_entitlement_authority WHERE owner_id=?").bind(owner_id).first()
                 if authority is None:
                     raise
-        session_id = "ses-" + _random_urlsafe(32)
+        session_id = HASHED_SESSION_PREFIX + _random_urlsafe(32)
         await D1SessionTransactions(binding).issue_session(
             owner_id=owner_id, session_id=session_id, now=now, expires_at=now + SESSION_AGE)
-        return _redirect_result(destination, _session_cookie(session_id, same_site=cookie_same_site))
+        status, payload, response_headers = _redirect_result(destination)
+        response_headers['Set-Cookie'] = [_session_cookie(session_id, same_site=cookie_same_site),
+                                          _oauth_cookie(clear=True)]
+        return status, payload, response_headers
     if method == "GET" and path == "/integrations/github/authorize":
         session, user = await _session_user(binding, headers, now)
         if not session:
@@ -482,7 +515,7 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
         destination = _redirect(_param(params, "redirectTo"), app_url, "/projects")
         state = _random_urlsafe(32)
         await D1OAuthStates(binding).issue(state_id=state,
-            record={"kind": "install", "userId": user["id"], "sessionId": session["id"],
+            record={"kind": "install", "userId": user["id"], "sessionId": session_storage_id(session["id"]),
                     "redirectTo": destination, "expiresAt": now + 600}, now=now)
         url = f"https://github.com/apps/{gateway.app_slug}/installations/new?" + urlencode({"state": state})
         return 200, {"url": url, "mode": "github-app"}, no_store
@@ -493,7 +526,7 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
         except ValueError:
             return 400, {"error": {"code": "OAUTH_STATE_INVALID"}}, no_store
         session, user = await _session_user(binding, headers, now)
-        if not session or session["id"] != record.get("sessionId") or user["id"] != record.get("userId"):
+        if not session or not session_binding_matches(record.get("sessionId"), session["id"]) or user["id"] != record.get("userId"):
             return 401, {"error": {"code": "UNAUTHENTICATED"}}, no_store
         if not user.get("githubId") or not user.get("githubAccessToken"):
             return 409, {"error": {"code": "GITHUB_IDENTITY_REQUIRED"}}, no_store

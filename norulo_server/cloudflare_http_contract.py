@@ -11,7 +11,7 @@ from .cloudflare_creem_handler import (
 )
 from .creem_signature import verify_creem_signature
 from .cloudflare_principal import _cookie_sessions
-from .cloudflare_api_key_read import list_api_keys
+from .cloudflare_api_key_read import list_api_keys, api_key_page_inputs
 from .cloudflare_api_key_write import revoke_api_key, create_api_key
 from .cloudflare_billing_read import read_billing
 from .cloudflare_billing_catalog import read_public_plan
@@ -52,6 +52,7 @@ async def handle_http_request(*, method: str, path: str,
         return 503, {"ok": False, "service": "norulo-server"}
     if method == "GET" and path == "/api-keys":
         try:
+            limit, cursor = api_key_page_inputs(params or {})
             workspace_values = (params or {}).get("workspaceId")
             if isinstance(workspace_values, list):
                 if len(workspace_values) != 1:
@@ -59,7 +60,10 @@ async def handle_http_request(*, method: str, path: str,
                 workspace_values = workspace_values[0]
             if workspace_values is not None and (not isinstance(workspace_values, str) or not workspace_values):
                 return 422, {"error": {"code": "INVALID_INPUT"}}
-            return await list_api_keys(binding=binding, headers=headers, now=now, workspace_id=workspace_values)
+            return await list_api_keys(binding=binding, headers=headers, now=now,
+                workspace_id=workspace_values, limit=limit, cursor=cursor)
+        except ValueError:
+            return 422, {"error": {"code": "INVALID_INPUT"}}
         except Exception:
             return 503, {"error": {"code": "SERVER_UNAVAILABLE"}}
     if method == "GET" and path == "/billing":
@@ -81,11 +85,18 @@ async def handle_http_request(*, method: str, path: str,
             if origin not in (trusted_origins or set()):
                 return 403, {"error": {"code": "UNTRUSTED_ORIGIN"}}
         length_text = _header(headers, "Content-Length")
-        if not length_text.isdigit() or int(length_text) > 8192:
+        if length_text and (len(length_text) > 4 or not length_text.isascii()
+                or not length_text.isdigit()):
             return 400, {"error": {"code": "INVALID_REQUEST"}}
+        if length_text and int(length_text) > 8192:
+            return 413, {"error": {"code": "REQUEST_TOO_LARGE"}}
         try:
             raw = await read_body()
-            if not isinstance(raw, bytes) or len(raw) != int(length_text):
+            if not isinstance(raw, bytes):
+                raise ValueError("invalid body length")
+            if len(raw) > 8192:
+                return 413, {"error": {"code": "REQUEST_TOO_LARGE"}}
+            if length_text and len(raw) != int(length_text):
                 raise ValueError("invalid body length")
             body = json.loads(raw)
             validate_json_unicode(body)

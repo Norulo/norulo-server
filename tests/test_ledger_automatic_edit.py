@@ -187,7 +187,8 @@ def test_automatic_edit_retains_credential_and_owner_snapshot_fences_during_prov
                     db.execute("UPDATE api_keys SET revoked_at=? WHERE id=?", (ledger.now+3, key_id))
                 else:
                     session_id = ledger.headers["Cookie"].split("=", 1)[1]
-                    db.execute("DELETE FROM app_state WHERE name=?", (record_name("sessions", session_id),))
+                    from norulo_server.cloudflare_session_adapter import session_storage_id
+                    db.execute("DELETE FROM app_state WHERE name=?", (record_name("sessions", session_storage_id(session_id)),))
     draft = {key: value for key, value in body.items() if key != "categoryId"}
     provider = automatic.Provider(on_call=invalidate)
     status, failure = edit(ledger, saved, draft, provider, headers=headers)

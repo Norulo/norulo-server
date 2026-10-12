@@ -9,7 +9,8 @@ import json
 from typing import Any
 
 from .cloudflare_github_gateway import GitHubFailure, GitHubTokenBundle, token_bundle
-from .cloudflare_state_records import encode_record, read_record_json, record_name
+from .cloudflare_state_records import decode_record, encode_record, read_record_json, record_name
+from .cloudflare_session_adapter import read_session_snapshot, session_record_ids
 from .cloudflare_validation_budget import _field
 
 REFRESH_MARGIN = 60
@@ -52,13 +53,22 @@ async def sealed_token_fields(bundle: GitHubTokenBundle, gateway: Any, now: int)
 async def _publish_user(binding: Any, *, user: dict, expected_json: str,
                         session: dict, session_json: str, now: int) -> bool:
     """One bounded CAS; a losing consumer cannot call the provider."""
+    saved_session = json.loads(session_json)
+    identity = saved_session.get('id', session['id']) if isinstance(saved_session, dict) else None
+    if (identity not in session_record_ids(session['id'])
+            or {**saved_session, 'id': session['id']} != session):
+        return False
+    # The validated snapshot identifies either the new fingerprint key or its
+    # original legacy key. The SQL EXISTS below rechecks that exact snapshot
+    # atomically; no redundant D1 read or enlarged refresh budget is needed.
+    decode_record('sessions', identity, session_json)
     statement = binding.prepare("""UPDATE app_state SET payload=?,updated_at=?
         WHERE name=? AND payload=? AND EXISTS(SELECT 1 FROM app_state
           WHERE name=? AND payload=? AND json_extract(payload,'$.userId')=?
             AND json_extract(payload,'$.expiresAt')>?) RETURNING name""").bind(
                 encode_record("users", user["id"], user), now,
                 record_name("users", user["id"]), expected_json,
-                record_name("sessions", session["id"]), session_json, user["id"], now)
+                record_name("sessions", identity), session_json, user["id"], now)
     result = await binding.batch([statement])
     rows = list(_field(result[0], "results", []))
     return len(rows) == 1
@@ -103,7 +113,7 @@ async def handle_github_refresh(*, binding: Any, gateway: Any, session: dict, us
     if validate is not None:
         await validate()
     user_json = await read_record_json(binding, "users", user["id"])
-    session_json = await read_record_json(binding, "sessions", session["id"])
+    _, session_json = await read_session_snapshot(binding, session["id"])
     if (user_json is None or json.loads(user_json) != user or session_json is None
             or {**json.loads(session_json), "id": session["id"]} != session):
         return _error(409, "ACCOUNT_CHANGED")
