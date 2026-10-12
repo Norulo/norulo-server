@@ -83,9 +83,11 @@ def test_max_capacity_accepts_final_project_and_record_and_downgrade_keeps_histo
     write(limited, frozen, fixture, 1)
     with fixture.store._immediate() as db:
         db.execute("INSERT INTO expense_categories(id,owner_id,name,color,archived_at,revision,created_at,updated_at) VALUES('category','owner','Hosting',NULL,NULL,1,'created','updated')")
-        # Project capacity is cumulative; expense capacity follows active rows,
-        # so a legacy cumulative record counter cannot stand in for them.
+        # Both capacity boundaries depend on current rows, not saved counters.
         db.execute("UPDATE ledger_plan_usage SET projects=99,records=99999 WHERE owner_id='owner'")
+        db.executemany("""INSERT INTO ledger_projects(id,owner_id,name,description,status,
+            revision,created_at,updated_at) VALUES(?,'owner',?,'','active',1,'local','local')""",
+            [("seed_p" + str(number), "Project " + str(number)) for number in range(98)])
         db.execute("""WITH RECURSIVE numbers(n) AS (
             SELECT 1 UNION ALL SELECT n+1 FROM numbers WHERE n<99999)
             INSERT INTO expenses(id,owner_id,target_kind,category_id,occurred_on,
@@ -108,7 +110,7 @@ def test_max_capacity_accepts_final_project_and_record_and_downgrade_keeps_histo
         write(limited, frozen, fixture, 7, kind="record")
     with fixture.store._immediate() as db:
         assert db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()[:] == (100, 100000)
-        assert db.execute("SELECT COUNT(*) FROM ledger_projects").fetchone()[0] == 2
+        assert db.execute("SELECT COUNT(*) FROM ledger_projects").fetchone()[0] == 100
         assert db.execute("SELECT COUNT(*) FROM expenses").fetchone()[0] == 100000
         assert db.execute("SELECT description FROM ledger_projects WHERE id='p1'").fetchone()[0] == "6"
 
@@ -155,6 +157,41 @@ def test_concurrent_creations_cannot_overfill_project_slots(setup):
             return False
     with ThreadPoolExecutor(max_workers=2) as pool:
         assert sorted(pool.map(attempt, [1, 2])) == [False, True]
+
+
+@pytest.mark.parametrize("legacy_projects", [None, 0, 3, 30])
+def test_concurrent_creations_reuse_only_one_deleted_slot_with_archives_and_legacy_counters(setup, legacy_projects):
+    fixture, _ = setup
+    frozen = account_plan(fixture, "free")
+    raw = D1ShapedSQLite(fixture.store)
+    limited = PlanLimitedD1(raw, now=fixture.now)
+    for number in range(1, 4):
+        write(limited, frozen, fixture, number)
+    with fixture.store._immediate() as db:
+        db.execute("UPDATE ledger_projects SET status='archived' WHERE id='p2'")
+        db.execute("""UPDATE ledger_projects SET deleted_at='2026-10-09T00:00:00Z',
+            status='archived',github_repo_id=NULL,github_full_name=NULL,
+            github_organization_id=NULL WHERE id='p3'""")
+        if legacy_projects is None:
+            db.execute("DELETE FROM ledger_plan_usage WHERE owner_id='owner'")
+        else:
+            db.execute("UPDATE ledger_plan_usage SET projects=?,project_delta=0 WHERE owner_id='owner'", (legacy_projects,))
+
+    def attempt(number):
+        try:
+            write(PlanLimitedD1(D1ShapedSQLite(fixture.store), now=fixture.now), frozen, fixture, number)
+            return True
+        except PlanLimitError as error:
+            assert error.code == "PROJECT_LIMIT"
+            return False
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(attempt, [4, 5])) == [False, True]
+    with fixture.store._immediate() as db:
+        assert db.execute("SELECT projects FROM ledger_plan_usage").fetchone()[0] == 3
+        assert db.execute("SELECT COUNT(*) FROM ledger_projects WHERE deleted_at IS NULL").fetchone()[0] == 3
+        assert db.execute("SELECT COUNT(*) FROM ledger_projects").fetchone()[0] == 4
+        assert db.execute("SELECT status FROM ledger_projects WHERE id='p2'").fetchone()[0] == "archived"
 
 
 def test_free_jev_is_rejected_even_with_a_positive_unparsed_budget(setup):

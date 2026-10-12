@@ -40,7 +40,7 @@ def test_owner_removal_erases_financial_rows_history_and_releases_repository_anc
     assert all(not values for values in after.values())
     with ledger.store.connect() as db:
         assert db.execute("SELECT id FROM expense_categories").fetchone()[0] == chosen
-        assert db.execute("SELECT projects,records,writes FROM ledger_plan_usage").fetchone()[:] == (1, 0, 1)
+        assert db.execute("SELECT projects,records,writes FROM ledger_plan_usage").fetchone()[:] == (0, 0, 1)
         assert db.execute("PRAGMA foreign_key_check").fetchall() == []
     assert ledger.call("GET", "/api/v1/projects/" + project["id"])[0] == 404
     assert ledger.call("GET", "/api/v1/expenses/" + saved["id"])[0] == 404
@@ -253,6 +253,39 @@ def test_erasure_uses_one_closed_bounded_batch_and_releases_actual_capacity(ledg
     assert any(item.sql.lstrip().startswith("DELETE FROM expenses") for item in batch)
     with ledger.store.connect() as db:
         assert db.execute("SELECT projects,writes FROM ledger_plan_usage").fetchone()["writes"] == 1
-        # Active expense slots are released; cumulative projects/spend remain.
+        # Project/expense slots are released while commercial write charges remain.
         assert db.execute("SELECT COUNT(*) FROM ledger_projects").fetchone()[0] == 0
-        assert db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()[:] == (1, 0)
+        assert db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()[:] == (0, 0)
+
+
+@pytest.mark.parametrize("legacy_usage", [None, 0, 3, 30])
+def test_free_owner_deletion_releases_one_slot_and_billing_matches_creation_limit(ledger, legacy_usage):
+    from norulo_server.cloudflare_billing_read import read_billing
+
+    add_usage_meter(ledger)
+    projects = [blank(ledger, "Free project " + str(number)) for number in range(3)]
+    with ledger.store.connect() as db:
+        key = record_name("users", OWNER)
+        user = json.loads(db.execute("SELECT payload FROM app_state WHERE name=?", (key,)).fetchone()[0])
+        user["billing"] = {"plan": "free", "status": "active"}
+        db.execute("UPDATE app_state SET payload=? WHERE name=?", (encode_record("users", OWNER, user), key))
+        if legacy_usage is None:
+            db.execute("DELETE FROM ledger_plan_usage WHERE owner_id=?", (OWNER,))
+        else:
+            db.execute("UPDATE ledger_plan_usage SET projects=?,project_delta=0 WHERE owner_id=?", (legacy_usage, OWNER))
+    assert ledger.call("POST", "/api/v1/projects", {"name": "At capacity"}) == (
+        403, {"error": {"code": "PROJECT_LIMIT"}})
+    assert remove(ledger, projects[0]) == (204, None)
+    status, billing = asyncio.run(read_billing(binding=ledger.binding,
+        headers=ledger.headers, now=ledger.now))
+    assert status == 200 and billing["ledgerUsage"]["projects"] == {"used": 2, "limit": 3, "remaining": 1}
+    with ledger.store.connect() as db:
+        usage_after_delete = tuple(db.execute("SELECT projects,writes FROM ledger_plan_usage WHERE owner_id=?", (OWNER,)).fetchone())
+        assert usage_after_delete[0] == 2
+    assert remove(ledger, projects[0]) == (204, None)
+    with ledger.store.connect() as db:
+        assert tuple(db.execute("SELECT projects,writes FROM ledger_plan_usage WHERE owner_id=?", (OWNER,)).fetchone()) == usage_after_delete
+    replacement = blank(ledger, "Replacement")
+    assert replacement["id"] not in {project["id"] for project in projects}
+    assert ledger.call("POST", "/api/v1/projects", {"name": "Over capacity"}) == (
+        403, {"error": {"code": "PROJECT_LIMIT"}})

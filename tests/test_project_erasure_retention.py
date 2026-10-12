@@ -14,7 +14,7 @@ def test_erasing_an_already_retired_project_does_not_free_a_second_active_slot(a
 
     assert request(app, "/api/v1/projects/prj_1", method="DELETE", revision=1) == (204, None)
     usage = app.rows("ledger_plan_usage")[0]
-    assert (usage["projects"], usage["records"]) == (1, 2)
+    assert (usage["projects"], usage["records"]) == (0, 2)
     assert {row["id"] for row in app.rows("expenses")} == {shared["id"], replacement["id"]}
     assert all(row["expense_id"] != retired["id"] for row in app.rows("expense_events"))
     assert all(row["expense_id"] != retired["id"] for row in app.rows("expense_create_idempotency"))
@@ -41,4 +41,4 @@ def test_erasing_active_project_frees_places_without_retiring_surviving_shared_d
     assert all(row["action"] != "delete" for row in app.rows("expense_events"))
     assert all(row in app.rows("expense_events") for row in surviving_events)
     assert all(row["expense_id"] != erased["id"] for row in app.rows("expense_events"))
-    assert (app.rows("ledger_plan_usage")[0]["projects"], app.rows("ledger_plan_usage")[0]["records"]) == (1, 2)
+    assert (app.rows("ledger_plan_usage")[0]["projects"], app.rows("ledger_plan_usage")[0]["records"]) == (0, 2)

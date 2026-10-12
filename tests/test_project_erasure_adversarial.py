@@ -146,7 +146,7 @@ def test_current_targets_define_erased_expenses_but_historical_project_snapshots
                 if row[column]:
                     assert json.loads(row[column]).get("target") != {"kind": "project", "projectId": "prj_1"}
     assert {row["id"] for row in app.rows("ledger_projects")} == {"prj_other"}
-    assert app.rows("ledger_plan_usage")[0]["projects"] == 2
+    assert app.rows("ledger_plan_usage")[0]["projects"] == 1
     assert app.rows("ledger_plan_usage")[0]["records"] == 2
 
 
@@ -200,20 +200,20 @@ def test_capacity_zero_after_paid_downgrade_still_allows_one_charged_erasure_wit
     assert app.rows("ledger_plan_usage") == []
     assert erase(app) == (204, None)
     usage = app.rows("ledger_plan_usage")[0]
-    assert (usage["projects"], usage["records"], usage["writes"], usage["minute_writes"], usage["jev_cap"]) == (1, 0, 1, 1, 0)
+    assert (usage["projects"], usage["records"], usage["writes"], usage["minute_writes"], usage["jev_cap"]) == (0, 0, 1, 1, 0)
     before = facts(app)
     assert erase(app) == (204, None)
     assert facts(app) == before
 
 
-def test_cumulative_project_counter_below_existing_projects_fails_closed_before_cleanup(app):
+def test_legacy_project_counter_below_existing_projects_is_reconciled_with_erasure(app):
     save(app, "selected", project="prj_1")
     with closing(app.store.connect()) as db:
         db.execute("UPDATE ledger_plan_usage SET projects=0")
         db.commit()
-    before = facts(app)
-    assert erase(app) == (503, {"error": {"code": "USAGE_GUARD_UNAVAILABLE"}})
-    assert facts(app) == before
+    assert erase(app) == (204, None)
+    assert app.rows("ledger_projects") == app.rows("expenses") == []
+    assert app.rows("ledger_plan_usage")[0]["projects"] == 0
 
 
 @pytest.mark.parametrize("race", ["minute", "month", "quota"])
@@ -551,7 +551,7 @@ def test_fully_rebound_key_recipe_cannot_replace_trusted_application_clock_or_li
 
 @pytest.mark.parametrize("usage_mode", ["legacy-high", "legacy-low", "missing"])
 @pytest.mark.parametrize("project_already_removed", [False, True])
-def test_erasure_reconciles_active_records_and_retains_cumulative_projects_fees_and_owner_preferences(
+def test_erasure_reconciles_current_capacity_and_retains_fees_and_owner_preferences(
         app, usage_mode, project_already_removed):
     seed_other_project(app)
     with closing(app.store.connect()) as db:
@@ -609,9 +609,9 @@ def test_erasure_reconciles_active_records_and_retains_cumulative_projects_fees_
     assert usage["project_delta"] == usage["record_delta"] == usage["jev_delta"] == 0
     if usage_mode == "missing":
         assert (usage["projects"], usage["writes"], usage["minute_writes"],
-                usage["jev_reserved_microusd"]) == (3, 1, 1, 0)
+                usage["jev_reserved_microusd"]) == (1, 1, 1, 0)
     else:
-        assert usage["projects"] == usage_before[0]["projects"] == 7
+        assert usage["projects"] == 1
         assert usage["writes"] == usage_before[0]["writes"] + 1
         assert usage["minute_writes"] == usage_before[0]["minute_writes"] + 1
         assert usage["jev_reserved_microusd"] == usage_before[0]["jev_reserved_microusd"]

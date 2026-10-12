@@ -1,4 +1,4 @@
-"""Fixed 39-request expense-retention journey in a fresh native local Worker.
+"""Fixed 41-request expense-retention journey in a fresh native local Worker.
 
 Uses unchanged canonical modules and the existing REST parity runtime helpers.
 Only synthetic local DB/DO state is seeded. No providers, remote D1, redirects,
@@ -27,7 +27,7 @@ WORKER = ROOT / "cloudflare/server"
 spec = importlib.util.spec_from_file_location("rest_parity_native", ROOT / "scripts/check-rest-parity-native-runtime.py")
 parity = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(parity)
-HTTP_CAP, FIXED_HTTP_COUNT = 100, 39
+HTTP_CAP, FIXED_HTTP_COUNT = 100, 41
 READ_CAP, WRITE_CAP, PROBE_READ_CAP = 250000, 25000, 10000
 OWNER, EDITOR = parity.OWNER, parity.EDITOR
 FIXTURE_NOW = parity.FIXTURE_NOW
@@ -56,6 +56,7 @@ def seed(now):
         created_at,updated_at) VALUES('cat_native_retention',?,'Hosting',1,'local','local')""",(OWNER,)))
     for identifier,status,deleted in (("prj_native_active","active",None),
             ("prj_native_archived","archived",None),
+            ("prj_native_spare","active",None),
             ("prj_native_removed","archived","2025-01-01T00:00:00Z")):
         values.append(("""INSERT INTO ledger_projects(id,owner_id,name,github_repo_id,
             github_full_name,description,status,revision,created_at,updated_at,deleted_at)
@@ -90,6 +91,7 @@ def seed(now):
             (identifier,OWNER,"project" if project else "shared",project,date,created,created,deleted)))
     # This legal legacy cumulative value must remain unchanged on GET/settings.
     # The first financial mutation reconciles it from current visible expenses.
+    # Three visible projects fill Free capacity; the removed fourth does not count.
     values.append(("""INSERT INTO ledger_plan_usage(owner_id,projects,records,month,writes,minute,
         minute_writes,jev_reserved_microusd,project_cap,record_cap,minute_cap,month_cap,jev_cap,
         project_delta,record_delta,jev_delta,previous_month,previous_minute)
@@ -115,7 +117,7 @@ async def snapshot(native,journal):
         for item in rows["expense_recurring_rules"]]
     state=journal.snapshot()
     assert len(rows["api_keys"])==2 and len(rules)<=1 and len(rows["expenses"])<=107
-    assert len(rows["ledger_projects"])==3 and len(rows["workspace_members"])==1
+    assert 3<=len(rows["ledger_projects"])<=4 and len(rows["workspace_members"])==1
     assert tables["d1_command_guard"]["rows"]==0
     return {"tables":tables,"rules":rules,"activeExpenseCount":len(active),
         "retiredSeedIds":sorted(row["id"] for row in rows["expenses"]
@@ -160,10 +162,10 @@ def journey(call):
         return {"target":{"kind":"project","projectId":"prj_native_active"} if project else {"kind":"shared"},
             "occurredOn":"2026-10-09","amount":"12.00","currency":"USD",
             "categoryId":"cat_native_retention","purpose":"Hosting",**changes}
-    def usage(name, expected):
+    def usage(name, expected, projects=3):
         response=call(name,"GET","/api/v1/me",token=FULL_KEY)
         assert response["ledgerUsage"]["expenseRecords"]=={"used":expected,"limit":100,"remaining":max(0,100-expected)}
-        assert response["ledgerUsage"]["projects"]=={"used":3,"limit":3,"remaining":0}
+        assert response["ledgerUsage"]["projects"]=={"used":projects,"limit":3,"remaining":max(0,3-projects)}
     call("setup","POST","/_fixture/setup",body={})
     assert call("default_off","GET",PREFERENCE,cookie="owner")=={"autoRemoveOldestExpense":False,"revision":1}
     call("bearer_preference_forbidden","GET",PREFERENCE,token=FULL_KEY,expected=401)
@@ -198,14 +200,16 @@ def journey(call):
     call("advance_fixture_minute_once","POST","/_fixture/advance-clock",body={})
     recurring=expense(); recurring.pop("occurredOn")
     recurring["schedule"]={"frequency":"monthly","day":9,"timezone":"Asia/Shanghai","startOn":"2026-10-01"}
-    rule=call("recurring_rule_create","POST","/api/v1/expense-recurring-rules",token=FULL_KEY,body=recurring,idempotency="native-recurring",expected=201)
-    assert call("recurring_replaces_oldest_created_tie","POST","/_fixture/tick",body={})=={"ok":True,"scanned":1,"created":1,"blocked":0,"replayed":0}
+    rule=call("recurring_rule_create_replaces_oldest_created_tie","POST","/api/v1/expense-recurring-rules",token=FULL_KEY,body=recurring,idempotency="native-recurring",expected=201)
+    assert call("recurring_create_no_extra_occurrence","POST","/_fixture/tick",body={})=={"ok":True,"scanned":0,"created":0,"blocked":0,"replayed":0}
     assert call("recurring_no_extra_occurrence","POST","/_fixture/tick",body={})=={"ok":True,"scanned":0,"created":0,"blocked":0,"replayed":0}
     call("replace_archived_project_expense","POST","/api/v1/expenses",token=FULL_KEY,body=expense(),idempotency="native-archived",expected=201)
     usage("archived_replacement_keeps_capacity",100)
     call("remove_project_frees_visible_expenses","DELETE","/api/v1/projects/prj_native_active",token=FULL_KEY,revision=1,expected=204)
-    usage("removed_project_frees_expense_capacity",99)
-    failed=call("project_slots_remain_cumulative","POST","/api/v1/projects",token=FULL_KEY,body={"name":"Fourth cumulative project"},idempotency="native-fourth-project",expected=403)
+    usage("removed_project_frees_project_and_expense_capacity",99,projects=2)
+    call("removed_project_slot_can_be_reused","POST","/api/v1/projects",token=FULL_KEY,body={"name":"Replacement project"},idempotency="native-replacement-project",expected=201)
+    usage("replacement_project_restores_capacity",99)
+    failed=call("project_limit_still_enforced_after_replacement","POST","/api/v1/projects",token=FULL_KEY,body={"name":"Fourth active project"},idempotency="native-fourth-project",expected=403)
     assert failed["error"]["code"]=="PROJECT_LIMIT"
     call("late_stale_preference_no_write","PATCH",PREFERENCE,cookie="owner",body={"autoRemoveOldestExpense":False},revision=3,expected=412)
     assert call("final_owner_preference","GET",PREFERENCE,cookie="owner")=={"autoRemoveOldestExpense":True,"revision":4}
@@ -222,7 +226,7 @@ def verify(cases, observations):
         current=obs["integrity"]
         assert obs["journalActualDeltasMatchRawMeta"] and obs["journalHealthy"] and obs["providerCalls"]==0
         assert current["cardinalityVerified"]
-        if case["status"]>=400 or case["name"] in {"replacement_idempotent_replay","same_preference_no_write","recurring_no_extra_occurrence"}:
+        if case["status"]>=400 or case["name"] in {"replacement_idempotent_replay","same_preference_no_write","recurring_create_no_extra_occurrence","recurring_no_extra_occurrence"}:
             assert sum(group["rowsWritten"] for group in obs["meteredGroups"])==0,case["name"]
             assert current["tables"]==previous["tables"],case["name"]
         if case["method"]=="GET":
@@ -231,6 +235,7 @@ def verify(cases, observations):
         previous=current
     seeded=by_name["setup"]["integrity"]
     assert seeded["activeExpenseCount"]==101 and seeded["tables"]["expenses"]["rows"]==103
+    assert seeded["tables"]["ledger_projects"]["rows"]==4
     assert seeded["usage"]==[{"owner":OWNER,"projects":3,"records":999,"writes":0}]
     assert by_name["enabled_over_capacity_requires_cleanup"]["integrity"]["usage"]==seeded["usage"]
     cleanup=by_name["manual_cleanup_to_capacity"]["integrity"]
@@ -243,7 +248,7 @@ def verify(cases, observations):
     assert replaced["tables"]["ledger_activity_events"]["rows"]==3
     refilled=by_name["off_refills_free_slot"]["integrity"]
     assert refilled["activeExpenseCount"]==100 and refilled["tables"]["expenses"]["rows"]==105
-    generated=by_name["recurring_replaces_oldest_created_tie"]["integrity"]
+    generated=by_name["recurring_rule_create_replaces_oldest_created_tie"]["integrity"]
     assert generated["activeExpenseCount"]==100 and generated["tables"]["expenses"]["rows"]==106
     assert generated["tables"]["expense_recurring_occurrences"]["rows"]==1
     assert "exp_native_late_created" in generated["retiredSeedIds"]
@@ -255,8 +260,14 @@ def verify(cases, observations):
     assert "exp_native_archived" in archived["retiredSeedIds"]
     assert archived["activeExpenseCount"]==100 and archived["tables"]["expenses"]["rows"]==107
     removed=by_name["remove_project_frees_visible_expenses"]["integrity"]
-    assert removed["activeExpenseCount"]==99 and removed["tables"]["expenses"]==archived["tables"]["expenses"]
-    assert removed["usage"][0]["records"]==99 and removed["usage"][0]["projects"]==3
+    assert removed["activeExpenseCount"]==99 and removed["tables"]["expenses"]["rows"]==105
+    assert removed["tables"]["ledger_projects"]["rows"]==3
+    assert "exp_native_cleanup" not in removed["retiredSeedIds"]
+    assert removed["usage"][0]["records"]==99 and removed["usage"][0]["projects"]==2
+    reused=by_name["removed_project_slot_can_be_reused"]["integrity"]
+    assert reused["activeExpenseCount"]==99 and reused["tables"]["expenses"]==removed["tables"]["expenses"]
+    assert reused["tables"]["ledger_projects"]["rows"]==4
+    assert reused["usage"][0]["records"]==99 and reused["usage"][0]["projects"]==3
 
 
 def main():
@@ -307,7 +318,7 @@ def main():
         "WRANGLER_LOG_PATH":str(directory/"wrangler-debug.log")}
     files=sorted((source/"norulo_server").glob("*.py"))
     manifest=[(str(path.relative_to(source)),parity.sha256(path)) for path in files]
-    evidence={"passed":False,"date":"2026-10-09","localOnly":True,
+    evidence={"passed":False,"date":"2026-10-12","localOnly":True,
         "nativePythonFFI":True,"nativeDurableObjectSQLite":True,"canonicalDefaultAndValidationBudget":True,
         "singletonScope":"norulo-s17-s18-2026-09-28","fixtureClockStart":FIXTURE_NOW,"fixtureClockAdvanceSeconds":61,
         "canonicalApplicationEntrySha256":parity.sha256(source/"application_entry.py"),
@@ -392,7 +403,7 @@ def main():
                     defaultOffFullRejectionNativeAcceptance=True,oneOldestReplacementAndAuditNativeAcceptance=True,
                     activeArchivedRemovedAndLegacyCapacityNativeAcceptance=True,cookieAccountRevisionIsolationNativeAcceptance=True,
                     keyRestrictionAndIdempotencyNativeAcceptance=True,recurringReplacementAndNoExtraOccurrenceNativeAcceptance=True,
-                    cumulativeProjectCapacityNativeAcceptance=True,publicDtosDoNotLeakKeyHash=True)
+                    deletedProjectSlotReuseAndLimitNativeAcceptance=True,publicDtosDoNotLeakKeyHash=True)
             except Exception as error:
                 evidence["passed"]=False; evidence["failure"]="Native observation assertion failed: "+str(error)
         args.output.parent.mkdir(parents=True,exist_ok=True)

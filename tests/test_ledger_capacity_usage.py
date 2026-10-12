@@ -44,13 +44,13 @@ COOKIE = {"Cookie": "nr_session=session-local"}
 
 
 @pytest.mark.parametrize("reader", [read_billing, read_public_plan, read_ledger_me])
-def test_capacity_read_counts_active_expenses_without_initializing_usage(capacity, reader):
+def test_capacity_read_counts_current_projects_and_expenses_without_initializing_usage(capacity, reader):
     fixture, _ = capacity
     binding = D1ShapedSQLite(fixture.store)
     status, payload = asyncio.run(reader(binding=binding, headers=COOKIE, now=fixture.now))
     assert status == 200
     assert payload["ledgerUsage"] == {"workspaceId": "owner",
-        "projects": {"used": 3, "limit": 20, "remaining": 17},
+        "projects": {"used": 2, "limit": 20, "remaining": 18},
         "expenseRecords": {"used": 2, "limit": 20000, "remaining": 19998},
         "jev": {"month": datetime.fromtimestamp(fixture.now, timezone.utc).strftime("%Y-%m"),
                 "currency": "USD", "usedMicrousd": 0, "limitMicrousd": 3000000}}
@@ -64,30 +64,31 @@ def test_me_bearer_capacity_is_same_owner_projection_and_scope_guard(capacity):
     binding = D1ShapedSQLite(fixture.store)
     bearer = {"Authorization": "Bearer " + TOKEN}
     status, payload = asyncio.run(read_ledger_me(binding=binding, headers=bearer, now=fixture.now))
-    assert status == 200 and payload["ledgerUsage"]["projects"]["used"] == 3
+    assert status == 200 and payload["ledgerUsage"]["projects"]["used"] == 2
     with fixture.store._immediate() as db:
         db.execute("UPDATE api_keys SET scopes='[\"expenses:read\"]'")
     assert asyncio.run(read_ledger_me(binding=binding, headers=bearer, now=fixture.now))[0] == 403
 
 
 @pytest.mark.parametrize("reader", [read_billing, read_public_plan, read_ledger_me])
-def test_capacity_ignores_legacy_record_counter_and_keeps_configured_limits(capacity, reader):
+@pytest.mark.parametrize("legacy_projects", [0, 30])
+def test_capacity_ignores_legacy_capacity_counters_and_keeps_configured_limits(capacity, reader, legacy_projects):
     fixture, frozen = capacity
     policy = default_policy()
     policy["pro"].update(projects=40, records=80)
     binding = PlanLimitedD1(D1ShapedSQLite(fixture.store), policy=policy, now=fixture.now)
     write(binding, frozen, fixture, 1)
     with fixture.store._immediate() as db:
-        db.execute("UPDATE ledger_plan_usage SET projects=30,records=90 WHERE owner_id='owner'")
+        db.execute("UPDATE ledger_plan_usage SET projects=?,records=90 WHERE owner_id='owner'", (legacy_projects,))
     status, payload = asyncio.run(reader(binding=binding, headers=COOKIE, now=fixture.now))
     assert status == 200
     assert payload["ledgerUsage"] == {"workspaceId": "owner",
-        "projects": {"used": 30, "limit": 40, "remaining": 10},
+        "projects": {"used": 3, "limit": 40, "remaining": 37},
         "expenseRecords": {"used": 2, "limit": 80, "remaining": 78},
         "jev": {"month": datetime.fromtimestamp(fixture.now, timezone.utc).strftime("%Y-%m"),
                 "currency": "USD", "usedMicrousd": 0, "limitMicrousd": 3000000}}
     with closing(fixture.store.connect()) as db:
-        assert tuple(db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()) == (30, 90)
+        assert tuple(db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()) == (legacy_projects, 90)
 
 
 def test_personal_billing_stays_personal_while_me_uses_selected_workspace(capacity):
@@ -142,6 +143,6 @@ def test_expired_paid_plan_reports_free_limits_without_truncating_existing_capac
     status, payload = asyncio.run(read_billing(binding=D1ShapedSQLite(fixture.store),
         headers=COOKIE, now=fixture.now))
     assert status == 200
-    assert payload["ledgerUsage"]["projects"] == {"used": 3, "limit": 3, "remaining": 0}
+    assert payload["ledgerUsage"]["projects"] == {"used": 2, "limit": 3, "remaining": 1}
     assert payload["ledgerUsage"]["expenseRecords"] == {"used": 2, "limit": 100, "remaining": 98}
     assert payload["ledgerUsage"]["jev"] is None

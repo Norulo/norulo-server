@@ -58,18 +58,18 @@ PROJECT_GUARD = """INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN EXISTS(
     THEN 1 ELSE 0 END)"""
 CHANGED_GUARD = "INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)"
 CLEANUP = "DELETE FROM d1_command_guard"
-COUNTS = "SELECT COUNT(*) AS projects FROM ledger_projects WHERE owner_id=?"
 USAGE = f"""INSERT INTO ledger_plan_usage(owner_id,projects,records,month,writes,minute,
     minute_writes,jev_reserved_microusd,project_cap,record_cap,minute_cap,month_cap,jev_cap,
     project_delta,record_delta,jev_delta,previous_month,previous_minute)
     VALUES(:owner,
-      (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=:owner),
+      (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=:owner AND deleted_at IS NULL)-
+      (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=:owner AND id=:project AND deleted_at IS NULL),
       (SELECT COUNT(*) FROM expenses WHERE owner_id=:owner AND {ACTIVE_EXPENSE_SQL})-
       (SELECT COUNT(*) FROM expenses WHERE owner_id=:owner AND target_kind='project'
           AND project_id=:project AND {ACTIVE_EXPENSE_SQL}),
       :month,1,:minute,1,0,:project_cap,:record_cap,:minute_cap,:month_cap,:jev_cap,0,0,0,:month,:minute)
     ON CONFLICT(owner_id) DO UPDATE SET
-      projects=ledger_plan_usage.projects,
+      projects=excluded.projects,
       records=excluded.records,
       writes=CASE WHEN ledger_plan_usage.month=excluded.month THEN ledger_plan_usage.writes+1 ELSE 1 END,
       minute_writes=CASE WHEN ledger_plan_usage.minute=excluded.minute THEN ledger_plan_usage.minute_writes+1 ELSE 1 END,
@@ -78,8 +78,7 @@ USAGE = f"""INSERT INTO ledger_plan_usage(owner_id,projects,records,month,writes
       previous_month=ledger_plan_usage.month,previous_minute=ledger_plan_usage.minute,
       month=excluded.month,minute=excluded.minute,project_cap=excluded.project_cap,record_cap=excluded.record_cap,
       minute_cap=excluded.minute_cap,month_cap=excluded.month_cap,jev_cap=excluded.jev_cap,
-      project_delta=0,record_delta=0,jev_delta=0
-    WHERE ledger_plan_usage.projects>=(SELECT COUNT(*) FROM ledger_projects WHERE owner_id=:owner)"""
+      project_delta=0,record_delta=0,jev_delta=0"""
 FINAL_GUARD = f"""INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN
     NOT EXISTS(SELECT 1 FROM ledger_projects WHERE owner_id=:owner AND id=:project)
     AND NOT EXISTS(SELECT 1 FROM expenses WHERE owner_id=:owner AND project_id=:project)
@@ -93,7 +92,7 @@ FINAL_GUARD = f"""INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN
     AND NOT EXISTS(SELECT 1 FROM ledger_activity_events WHERE owner_id=:owner
         AND (project_id=:project OR {mentions('before_json')} OR {mentions('after_json')}))
     AND EXISTS(SELECT 1 FROM ledger_plan_usage WHERE owner_id=:owner
-        AND projects>=(SELECT COUNT(*) FROM ledger_projects WHERE owner_id=:owner)
+        AND projects=(SELECT COUNT(*) FROM ledger_projects WHERE owner_id=:owner AND deleted_at IS NULL)
         AND records=(SELECT COUNT(*) FROM expenses WHERE owner_id=:owner AND {ACTIVE_EXPENSE_SQL}))
     THEN 1 ELSE 0 END)"""
 
@@ -275,12 +274,9 @@ def recipe_bounds(statements, rows, indexes):
 
 
 async def preflight_usage(binding, owner, project, user, now, policy):
-    counts = await binding.prepare(COUNTS).bind(owner).first()
     usage = await binding.prepare("SELECT * FROM ledger_plan_usage WHERE owner_id=?").bind(owner).first()
-    # Project capacity is cumulative. Legacy expense counters are refreshed
-    # from active rows in the same erasure transaction, never on this read.
-    if usage and usage['projects'] < counts['projects']:
-        raise PlanLimitError(503, 'USAGE_GUARD_UNAVAILABLE')
+    # Legacy capacity counters do not control erasure. Both are refreshed from
+    # current rows in the same guarded transaction, never on this read.
     values = usage_values(owner, project, user, now, policy)
     if usage and (values['month'] < usage['month'] or values['minute'] < usage['minute']):
         raise PlanLimitError(409, 'QUOTA_WINDOW_CHANGED')

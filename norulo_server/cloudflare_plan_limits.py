@@ -34,21 +34,24 @@ def active_expense_count_statement(binding, owner_id):
         ACTIVE_EXPENSE_SQL).bind(owner_id)
 
 
-def capacity_usage_statement(binding, owner_id):
-    """Projects retain cumulative capacity; expenses count current visible rows.
+def active_project_count_statement(binding, owner_id):
+    return binding.prepare("SELECT COUNT(*) AS projects FROM ledger_projects "
+        "WHERE owner_id=? AND deleted_at IS NULL").bind(owner_id)
 
-    Before the first metered mutation, the bounded owner-indexed fallback has
-    exactly the same stored-row semantics as the quota initialization itself.
-    Reads never rewrite legacy cumulative expense counters. The next ordinary
-    mutation refreshes that counter from the same active predicate atomically.
+
+def capacity_usage_statement(binding, owner_id):
+    """Projects and expenses count current visible rows, including archives.
+
+    The owner-indexed counts share the quota mutation predicates. Reads never
+    rewrite legacy cumulative capacity counters. The next ordinary mutation
+    refreshes those counters from current rows atomically.
     """
     return binding.prepare("""SELECT
-        COALESCE((SELECT projects FROM ledger_plan_usage WHERE owner_id=?),
-            (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=?)) AS projects,
+        (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=? AND deleted_at IS NULL) AS projects,
         (SELECT COUNT(*) FROM expenses WHERE owner_id=? AND """ + ACTIVE_EXPENSE_SQL + """ ) AS records,
         (SELECT month FROM ledger_plan_usage WHERE owner_id=?) AS jev_month,
         (SELECT jev_reserved_microusd FROM ledger_plan_usage WHERE owner_id=?) AS jev_reserved_microusd""").bind(
-                owner_id, owner_id, owner_id, owner_id, owner_id)
+                owner_id, owner_id, owner_id, owner_id)
 
 
 def capacity_usage_payload(user, rows, *, now, policy=None):
@@ -117,12 +120,11 @@ _USAGE_SQL = """INSERT INTO ledger_plan_usage(owner_id,projects,records,month,wr
     minute_writes,jev_reserved_microusd,project_cap,record_cap,minute_cap,month_cap,jev_cap,
     project_delta,record_delta,jev_delta,previous_month,previous_minute)
     VALUES(?,
-      CASE WHEN EXISTS(SELECT 1 FROM ledger_plan_usage WHERE owner_id=?) THEN 0
-        ELSE (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=?) END,
+      (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=? AND deleted_at IS NULL),
       (SELECT COUNT(*) FROM expenses WHERE owner_id=? AND """ + ACTIVE_EXPENSE_SQL + """),
       ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(owner_id) DO UPDATE SET
-      projects=ledger_plan_usage.projects+excluded.project_delta,
+      projects=excluded.projects,
       records=excluded.records,
       writes=CASE WHEN ledger_plan_usage.month=excluded.month
         THEN ledger_plan_usage.writes+excluded.writes ELSE excluded.writes END,
@@ -236,15 +238,11 @@ class PlanLimitedD1:
             minute_writes,jev_reserved_microusd FROM ledger_plan_usage WHERE owner_id=?""").bind(owner).first()
         if usage and (period < usage["month"] or minute < usage["minute"]):
             raise PlanLimitError(409, "QUOTA_WINDOW_CHANGED")
-        if usage:
-            projects = usage["projects"]
-        elif project_delta:
-            # Accounts created before the usage table retain their capacity
-            # history, including archived projects and removed expenses.
-            counts = await self.binding.prepare("SELECT COUNT(*) AS projects FROM ledger_projects WHERE owner_id=?").bind(owner).first()
-            projects = counts["projects"]
-        else:
-            projects = 0
+        # Legacy usage rows can retain deleted project slots. Current rows,
+        # including archives, determine admission; the atomic UPSERT recounts
+        # after the mutation and remains the authority for concurrent requests.
+        projects = ((await active_project_count_statement(self.binding, owner).first())["projects"]
+                    if project_delta else 0)
         records = (await active_expense_count_statement(self.binding, owner).first())["records"]
         month_writes = usage["writes"] if usage and usage["month"] == period else 0
         minute_writes = usage["minute_writes"] if usage and usage["minute"] == minute else 0
@@ -267,7 +265,7 @@ class PlanLimitedD1:
                 # Deterministic optional exhaustion must not dispatch a failing
                 # D1 batch. The atomic UPSERT still fences concurrent admission.
                 raise PlanLimitError(429, "JEV_BUDGET_LIMIT")
-        counter = self.binding.prepare(_USAGE_SQL).bind(owner, owner, owner, owner,
+        counter = self.binding.prepare(_USAGE_SQL).bind(owner, owner, owner,
             period, write_delta, minute, write_delta, jev_delta,
             limits["projects"], limits["records"],
             limits["writesPerMinute"] if write_delta else max(limits["writesPerMinute"], minute_writes),
