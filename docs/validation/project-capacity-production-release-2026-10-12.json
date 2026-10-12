@@ -1,0 +1,448 @@
+{
+  "recordedAtUtc": "2026-10-12T09:04:50.169360+00:00",
+  "recordingTimezone": "Asia/Shanghai",
+  "scope": "User-authorized main publication and Cloudflare production deployment of the Project capacity deletion fix in both repositories",
+  "change": "Count current undeleted projects, including archives, for Billing and creation quota; deleting a project releases its place. Ignore old cumulative project counters without a migration or read-triggered writes. Six-language copy and shared API contract match.",
+  "repositories": {
+    "norulo-server": {
+      "sourceCommit": "81cea4337e80b7d19c6f79ba94447bb9d95505cf",
+      "sourceUrl": "https://github.com/Norulo/norulo-server/commit/81cea4337e80b7d19c6f79ba94447bb9d95505cf",
+      "worker": "norulo-server-production",
+      "previousVersion": "6ce431bf-941b-4c29-80e8-1ddad786b888",
+      "version": "075fb193-6440-4182-8470-5f40c43f7c70",
+      "trafficPercentage": 100,
+      "deploymentCreatedAtUtc": "2026-10-12T08:57:04.872027Z",
+      "githubMainSourceVerifiedBeforeDeployment": true,
+      "publicVariables": {
+        "NORULO_ALLOWED_ORIGINS": "https://norulo.com",
+        "NORULO_APP_URL": "https://norulo.com",
+        "NORULO_COOKIE_SAME_SITE": "None",
+        "NORULO_CREEM_API_BASE_URL": "https://api.creem.io",
+        "NORULO_CREEM_PRODUCT_IDS_JSON": "{\"pro\":{\"month\":\"prod_1epM6PhPRtYV9kBpdYW10O\",\"year\":\"prod_1sjSCiHtaGv7Ayv1gdC0G0\"},\"max\":{\"month\":\"prod_2HxOZvntzCz5nswEIv4L4K\",\"year\":\"prod_FjgOMROB94ZJDIopXdcRn\"}}",
+        "NORULO_D1_ACCESS_ENABLED": "1",
+        "NORULO_EMAIL_AUTH_ENABLED": "1",
+        "NORULO_EMAIL_FROM": "login@auth.norulo.com",
+        "NORULO_GITHUB_APP_SLUG": "norulo",
+        "NORULO_GITHUB_CALLBACK_URL": "https://norulo.com/api/auth/github/callback",
+        "NORULO_GITHUB_CLIENT_ID": "Iv23li78ZPeUgSxJkLUj",
+        "NORULO_JEV_SUGGESTIONS_ENABLED": "1",
+        "NORULO_JEV_SUGGESTIONS_EVALUATED": "1",
+        "NORULO_MODE": "production",
+        "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":100,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\"},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\"},\"max\":{\"projects\":100,\"records\":100000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"5.00\"}}",
+        "NORULO_PREVIEW_BUSINESS_CLEAR_ID": "",
+        "NORULO_PREVIEW_BUSINESS_CLEAR_MANIFEST": "",
+        "NORULO_PREVIEW_SCHEMA_V11_UPGRADE_ENABLED": "0",
+        "NORULO_RECURRING_EXPENSES_ENABLED": "1"
+      },
+      "secretNames": [
+        "NORULO_CREEM_API_KEY",
+        "NORULO_CREEM_WEBHOOK_SECRET",
+        "NORULO_EMAIL_CODE_SECRET",
+        "NORULO_GITHUB_CLIENT_SECRET",
+        "NORULO_GITHUB_TOKEN_KEY",
+        "TYPESAFE_API_KEY"
+      ],
+      "resourceBindings": [
+        {
+          "database_id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+          "id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+          "name": "DB",
+          "type": "d1"
+        },
+        {
+          "allowed_sender_addresses": [
+            "login@auth.norulo.com"
+          ],
+          "name": "EMAIL",
+          "type": "send_email"
+        },
+        {
+          "class_name": "EmailAdmission",
+          "name": "EMAIL_ADMISSION",
+          "namespace_id": "6588312f00f74840a37463e72a2d75eb",
+          "type": "durable_object_namespace"
+        },
+        {
+          "class_name": "RecurringScheduler",
+          "name": "RECURRING_SCHEDULER",
+          "namespace_id": "b3f41def1906481e9c72662debf4b505",
+          "type": "durable_object_namespace"
+        }
+      ],
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "redact_query_string": true,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 1,
+          "persist": true,
+          "invocation_logs": false
+        },
+        "traces": {
+          "enabled": false,
+          "persist": true,
+          "head_sampling_rate": 1
+        }
+      },
+      "limits": {
+        "cpu_ms": 300000,
+        "subrequests": 9000
+      },
+      "schedules": [
+        "10 16 * * *"
+      ],
+      "subdomain": {
+        "enabled": false,
+        "previews_enabled": false
+      }
+    },
+    "norulo-web": {
+      "sourceCommit": "ce91b4468df1bf322deb5ed4fb9f5a8a46927f02",
+      "sourceUrl": "https://github.com/Norulo/norulo-web/commit/ce91b4468df1bf322deb5ed4fb9f5a8a46927f02",
+      "worker": "norulo-web",
+      "previousVersion": "4f6d4f6a-ef42-4b58-8de3-3ae07c8fd010",
+      "version": "55cf559b-c1ae-46b8-99f3-1f64a6add3c1",
+      "trafficPercentage": 100,
+      "deploymentCreatedAtUtc": "2026-10-12T08:58:03.4903Z",
+      "githubMainSourceVerifiedBeforeDeployment": true,
+      "publicVariables": {
+        "NORULO_API_ORIGIN": "https://api.norulo.com",
+        "NORULO_MODE": "production"
+      },
+      "secretNames": [],
+      "resourceBindings": [
+        {
+          "name": "ASSETS",
+          "type": "assets"
+        },
+        {
+          "environment": "production",
+          "name": "NORULO_SERVER",
+          "service": "norulo-server-production",
+          "type": "service"
+        }
+      ],
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "redact_query_string": true,
+        "logs": {
+          "enabled": true,
+          "head_sampling_rate": 0.01,
+          "persist": true,
+          "invocation_logs": false
+        },
+        "traces": {
+          "enabled": false,
+          "persist": true,
+          "head_sampling_rate": 1
+        },
+        "issues": {
+          "enabled": true
+        }
+      },
+      "limits": null,
+      "schedules": [],
+      "subdomain": {
+        "enabled": false,
+        "previews_enabled": false
+      }
+    }
+  },
+  "accountId": "84e421f26c708c0cf437e287eed11fa1",
+  "zone": "norulo.com",
+  "controlPlaneVerification": {
+    "passed": true,
+    "versions": {
+      "norulo-server-production": "075fb193-6440-4182-8470-5f40c43f7c70",
+      "norulo-web": "55cf559b-c1ae-46b8-99f3-1f64a6add3c1"
+    },
+    "sourceCommits": {
+      "norulo-server-production": "81cea4337e80b7d19c6f79ba94447bb9d95505cf",
+      "norulo-web": "ce91b4468df1bf322deb5ed4fb9f5a8a46927f02"
+    },
+    "trafficPercentage": 100,
+    "bindingsPreserved": true,
+    "secretNamesPreserved": true,
+    "publicVariablesPreserved": true,
+    "observabilityAndLimitsPreserved": true,
+    "schedulesPreserved": true,
+    "domainsAndExposurePreserved": true
+  },
+  "schemaReadback": {
+    "schemaVersion": 12,
+    "schemaFingerprint": "d5f53c6229d5b5c318060c26e5e984052aa65cfcf7bc5564f9a52699ca41a77b",
+    "canonicalObjects": 77,
+    "exactMatch": true,
+    "migrations": [
+      "0001_ledger.sql",
+      "0002_identity_billing_keys.sql",
+      "0003_ledger_suggestions.sql",
+      "0004_ledger_plan_usage.sql",
+      "0005_workspaces_repositories.sql",
+      "0006_blank_projects.sql",
+      "0007_recurring_expenses_project_links.sql",
+      "0008_workspace_join_approval.sql",
+      "0009_activity_log.sql",
+      "0010_project_removal.sql",
+      "0011_business_erasure.sql",
+      "0012_recurring_pending.sql"
+    ],
+    "rowsRead": 334,
+    "rowsWritten": 0,
+    "readOnlyQueryStatements": 4,
+    "completeSqlReadback": "Two long SQL strings were re-read in bounded parts because the connector truncates long strings"
+  },
+  "serverLocalValidation": {
+    "allTestsPassed": 3101,
+    "python": "3.10.12",
+    "fullSuiteSeconds": 133.41,
+    "localEvidence": "project-capacity-local-2026-10-12.json",
+    "productionCustomerDeletionRecreationTested": false
+  },
+  "webIntegratedValidation": {
+    "allTestsPassed": 1706,
+    "testFiles": 84,
+    "seconds": 55.18,
+    "lint": true,
+    "explicitProductionBuild": true,
+    "workerOfflineCheck": true,
+    "apiContractSynchronization": true,
+    "newRemoteMainChangesRetained": [
+      "b5b4afd",
+      "5236c12"
+    ]
+  },
+  "serverPackage": {
+    "canonicalModuleCount": 64,
+    "canonicalModuleByteEquality": true,
+    "blankPackageInitializer": true,
+    "actualEntryByteEquality": true,
+    "actualEntryAndAllModulesImportClosure": true,
+    "uploadedFileCountIncludingEntry": 730,
+    "totalUploadedBytes": 1723582,
+    "uploadedManifestSha256": "c528d80ad73b3dcea376a42bbd16968ce0b90f622b37fbd777413c4dfa39b713",
+    "configurationSha256": "1aa651a403462bb5053ff99efb638d4694cf4152226ac64f638916d1c966d812",
+    "sourceConfigPreserved": true,
+    "inputSha256": {
+      "pyproject.toml": "9c7f1c1bc5541a5b33be846e90479b1efa1b251203eac5f6c9ee100548f0999c",
+      "uv.lock": "d8bbd3fca064e356204226ef9970278ef9b176523aaf1bc8c64792620e1fc9b0",
+      "pylock.toml": "d7a3bb80dc3055b5abd8b0bc2414b38c5cd6929f5c19434260a1b5c6654fa54e",
+      "package.json": "ee591b5b146a2cf7dc67f6018b42aa3f7d063fa35ab06ee4f9f382188a24fee1",
+      "package-lock.json": "2f92e86058d50ccbc0fb32c4e20dc67ae9cf0bede05238db32e2e4b5361493b0",
+      ".norulo-recurring-deploy.A9xRO8.jsonc": "1aa651a403462bb5053ff99efb638d4694cf4152226ac64f638916d1c966d812"
+    },
+    "dryRunLogSha256": "ae3f75b80f875f73eb5aeb21fd00f81a889187fba0f89550007faab4f18b9cbe"
+  },
+  "webPackage": {
+    "sourceInputTreeSha256": "a821953637a0be9f3c2b03a618970a643c8b46457d4bc383e222fac4a212bc3b",
+    "distFiles": 57,
+    "distTreeSha256": "d6fb30ce3f8e76713d429f5b74231bb0d1bf912105216dbccb0513f984f8f3fe",
+    "workerBundleSha256": "f7d693df76c0acd775aab439cffea9ee197024634511bc4d68d401e5d6ce20ed",
+    "publicAssets": {
+      "files": 13,
+      "allMatchDistBytes": true,
+      "originalLogoSha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f"
+    },
+    "publicBuildEnvironment": {
+      "VITE_APP_URL": {
+        "expected": "https://norulo.com",
+        "observed": [
+          "https://norulo.com"
+        ],
+        "matched": true
+      },
+      "VITE_API_BASE_URL": {
+        "expected": "/api",
+        "observed": [
+          "/api"
+        ],
+        "matched": true
+      },
+      "VITE_GITHUB_APP_SLUG": {
+        "expected": "norulo",
+        "observed": [
+          "norulo"
+        ],
+        "matched": true
+      }
+    },
+    "packageLock": {
+      "sha256": "5bee55b41b3949fddcc11e5853e5aa3546b35b7385d4047484848ef434f23f00",
+      "unchangedFromHead": true
+    }
+  },
+  "actualUploadedArtifactsMatchReviewedDryRuns": true,
+  "productionSmoke": {
+    "recordedAtUtc": "2026-10-12T09:01:41.497347+00:00",
+    "passed": true,
+    "method": "GET only; default TLS certificate verification; redirects disabled",
+    "authenticatedCustomerJourneyTested": false,
+    "applicationRequestsDoNotExposeNativeD1RowMetadata": true,
+    "priorHarnessAttempt": {
+      "requests": 3,
+      "successfulHttpStatuses": [
+        200,
+        200,
+        200
+      ],
+      "assertionFailure": "Harness expected health.status; canonical contract uses ok=true. No application failure or business mutation."
+    },
+    "results": [
+      {
+        "name": "home",
+        "url": "https://norulo.com/",
+        "status": 200,
+        "bytes": 5327,
+        "sha256": "6ae688480ea46c6e36343ec1d82875c9132008fab96d16328f595b17fad43960",
+        "setCookiePresent": false,
+        "cacheControl": "no-cache",
+        "location": null
+      },
+      {
+        "name": "projects",
+        "url": "https://norulo.com/projects",
+        "status": 200,
+        "bytes": 2536,
+        "sha256": "34c4c2a6b74cc8ae422df4011a8d798ce99ff8b1aee2f034d7db87eef481cad5",
+        "setCookiePresent": false,
+        "cacheControl": "no-cache",
+        "location": null
+      },
+      {
+        "name": "health_direct",
+        "url": "https://api.norulo.com/health",
+        "status": 200,
+        "bytes": 88,
+        "sha256": "fb437ad47c6e9f3241477d292e451632361c8432ff389ca9313c4995fab7eaee",
+        "setCookiePresent": false,
+        "cacheControl": null,
+        "location": null,
+        "body": {
+          "ok": true,
+          "service": "norulo-server",
+          "database": {
+            "type": "d1",
+            "configured": true
+          }
+        }
+      },
+      {
+        "name": "health_proxy",
+        "url": "https://norulo.com/api/health",
+        "status": 200,
+        "bytes": 88,
+        "sha256": "fb437ad47c6e9f3241477d292e451632361c8432ff389ca9313c4995fab7eaee",
+        "setCookiePresent": false,
+        "cacheControl": null,
+        "location": null,
+        "body": {
+          "ok": true,
+          "service": "norulo-server",
+          "database": {
+            "type": "d1",
+            "configured": true
+          }
+        }
+      },
+      {
+        "name": "private_direct",
+        "url": "https://api.norulo.com/api/v1/me",
+        "status": 401,
+        "bytes": 38,
+        "sha256": "48220ecdf89ae5e130bd1bb8c1705c83a32388d380f556d02aab160247b16bdb",
+        "setCookiePresent": false,
+        "cacheControl": "no-store",
+        "location": null
+      },
+      {
+        "name": "private_proxy",
+        "url": "https://norulo.com/api/api/v1/me",
+        "status": 401,
+        "bytes": 38,
+        "sha256": "48220ecdf89ae5e130bd1bb8c1705c83a32388d380f556d02aab160247b16bdb",
+        "setCookiePresent": false,
+        "cacheControl": "no-store",
+        "location": null
+      },
+      {
+        "name": "www_redirect",
+        "url": "https://www.norulo.com/projects?source=project-capacity-release",
+        "status": 308,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "setCookiePresent": false,
+        "cacheControl": null,
+        "location": "https://norulo.com/projects?source=project-capacity-release"
+      },
+      {
+        "name": "asset_billing-DdApdLCN.js",
+        "url": "https://norulo.com/assets/billing-DdApdLCN.js",
+        "status": 200,
+        "bytes": 47038,
+        "sha256": "da6baf69301ba7d4703d68ae3db147ff885c9cf239ef47a63a7c90a798950212",
+        "setCookiePresent": false,
+        "cacheControl": "public, max-age=31536000, immutable",
+        "location": null,
+        "localBytesMatch": true
+      },
+      {
+        "name": "asset_api-docs-B3yY8Z4P.js",
+        "url": "https://norulo.com/assets/api-docs-B3yY8Z4P.js",
+        "status": 200,
+        "bytes": 313176,
+        "sha256": "1e8984207a224fde1921ae83bf9ab6fce5a956b6223b2b5cb6b65bcca5594ad4",
+        "setCookiePresent": false,
+        "cacheControl": "public, max-age=31536000, immutable",
+        "location": null,
+        "localBytesMatch": true
+      },
+      {
+        "name": "asset_navigation-t4ONNl4_.js",
+        "url": "https://norulo.com/assets/navigation-t4ONNl4_.js",
+        "status": 200,
+        "bytes": 7820,
+        "sha256": "69a17e79655dbcadc77f6c2b6f016e8e22b51f62421323be843892fe3f58d76b",
+        "setCookiePresent": false,
+        "cacheControl": "public, max-age=31536000, immutable",
+        "location": null,
+        "localBytesMatch": true
+      },
+      {
+        "name": "public_openapi/ledger-v1.json",
+        "url": "https://norulo.com/openapi/ledger-v1.json",
+        "status": 200,
+        "bytes": 235278,
+        "sha256": "ca387f8dee1e71c0af86f75270581b2c8efff7fb66c8d3cd3d631e0cab55268a",
+        "setCookiePresent": false,
+        "cacheControl": "no-cache",
+        "location": null,
+        "localBytesMatch": true
+      },
+      {
+        "name": "public_norulo-logo.png",
+        "url": "https://norulo.com/norulo-logo.png",
+        "status": 200,
+        "bytes": 663100,
+        "sha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f",
+        "setCookiePresent": false,
+        "cacheControl": "no-cache",
+        "location": null,
+        "localBytesMatch": true
+      }
+    ],
+    "wwwRedirectContract": "308 with path and query preserved, matching canonical worker; initial harness expected 301 and was corrected without repeating this GET",
+    "requests": 12,
+    "totalRequestsIncludingPriorHarnessAttempt": 15
+  },
+  "migrationPerformed": false,
+  "remoteFixturesOrFinancialWritesPerformed": false,
+  "providerCallsChargesOrMessagesSent": false,
+  "limitations": [
+    "Read-only production checks and deployment readback do not establish an authenticated customer deletion/recreation journey",
+    "The local native capacity HTTP checks used /api/v1/me; Billing was independently covered by the SQLite read_billing and Web read-lifecycle regressions",
+    "Only the explicit D1 schema checks expose native row metrics; application GETs do not report them"
+  ],
+  "deploymentRecordsAreDatedSnapshots": true
+}

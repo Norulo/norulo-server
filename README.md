@@ -6,6 +6,14 @@ projects, categories, exact money, recurring expenses, reports and conditional
 AI assistance. Expenses remain separate from platform subscription payments,
 and reports keep each currency separate.
 
+The Project capacity deletion fix was published on 2026-10-12 from main
+`81cea4337e80b7d19c6f79ba94447bb9d95505cf` as production Worker version
+`075fb193-6440-4182-8470-5f40c43f7c70`. Billing and creation limits count current
+undeleted projects, including archives. Deletion releases its project place;
+legacy cumulative counters no longer block creation. The 3,101-test Server suite
+and local native regression passed. See the [production release record](docs/validation/project-capacity-production-release-2026-10-12.json)
+for actual runtime readback, unchanged resources and read-only smoke scope.
+
 This repository contains the complete imported source main history and a Norulo
 rebrand. The current schema is version 12. Imported provider deployments and
 validation records are historical; source databases, data and provider deployments
