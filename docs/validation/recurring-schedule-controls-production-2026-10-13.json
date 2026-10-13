@@ -1,0 +1,91 @@
+{
+  "verifiedAtUTC": "2026-10-13 02:31:08 UTC",
+  "repositories": {
+    "server": {
+      "branch": "main",
+      "sourceCommit": "263a4c15cb6615eedb0de3128f29e998d5186857",
+      "version": "0cc26b2f-3a7d-4966-a07d-cd779ab8a236",
+      "trafficPercent": 100
+    },
+    "web": {
+      "branch": "main",
+      "sourceCommit": "e3b26881688dcf4b14fd4f949fab5bf092641602",
+      "version": "031a6cf6-d3d0-44ba-b0a2-c4db9f92388a",
+      "trafficPercent": 100
+    }
+  },
+  "configuration": {
+    "account": "84e421f26c708c0cf437e287eed11fa1",
+    "database": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+    "emailAdmissionNamespace": "6588312f00f74840a37463e72a2d75eb",
+    "recurringSchedulerNamespace": "b3f41def1906481e9c72662debf4b505",
+    "authRateLimitNamespace": "1576996832",
+    "publicVariablesPreserved": 19,
+    "secretNamesPreserved": 6,
+    "allFiveActivationFlags": "1",
+    "cron": "10 16 * * *",
+    "cpuMs": 300000,
+    "subrequests": 9000,
+    "fullBindingsVariablesLimitsObservabilityMatchedPreRelease": true,
+    "workersDev": false,
+    "previewURLs": false,
+    "domains": [
+      {
+        "hostname": "api.norulo.com",
+        "service": "norulo-server-production",
+        "enabled": true,
+        "previewsEnabled": false
+      },
+      {
+        "hostname": "norulo.com",
+        "service": "norulo-web",
+        "enabled": true,
+        "previewsEnabled": false
+      },
+      {
+        "hostname": "www.norulo.com",
+        "service": "norulo-web",
+        "enabled": true,
+        "previewsEnabled": false
+      }
+    ]
+  },
+  "validation": {
+    "localRecord": "recurring-schedule-controls-local-2026-10-13.json",
+    "webTests": 1870,
+    "webFiles": 88,
+    "serverTests": 3239,
+    "serverSubtests": 107,
+    "browserEngine": "Chromium",
+    "newBrowserStates": 50,
+    "existingBrowserLayoutStates": 258,
+    "canonicalWorkerModulesMatch": 65,
+    "reviewedPayloadMatchesActualUpload": true,
+    "uploadMetadataDifference": "Only informational README timestamps and sourcemap sourceRoot output-directory names differ.",
+    "publicChecks": {
+      "health": "direct/proxied 200",
+      "anonymousProfile": "direct/proxied 401",
+      "home": "200 and current bootstrap referenced",
+      "www": "308 preserving path/query",
+      "matchedAssets": 14,
+      "smokeGETs": 20,
+      "diagnosticGETs": 4,
+      "diagnosticNote": "Three default urllib User-Agent probes received Cloudflare Browser Integrity Check code 1010; one browser-User-Agent probe succeeded. All twenty final checks then passed."
+    },
+    "sqlSchemaReadback": {
+      "criticalObjects": 5,
+      "rowsRead": 88,
+      "rowsWritten": 0
+    }
+  },
+  "scope": {
+    "productionBusinessWrites": 0,
+    "schemaMigrations": 0,
+    "manualCronCalls": 0,
+    "journalResetCalls": 0,
+    "existingFinancialRepair": false,
+    "authenticatedCustomerAcceptance": false,
+    "naturalFinancialSchedulingAcceptance": false,
+    "physicalDeviceAcceptance": false
+  }
+}

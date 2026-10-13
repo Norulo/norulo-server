@@ -1,5 +1,13 @@
 # Norulo production operations
 
+The 2026-10-13 [recurring controls release](validation/recurring-schedule-controls-production-2026-10-13.json)
+preserves schema v13, all production resources and the daily schedule. Browser
+creation/editing derives repeat dates from startOn; end-date Clear sends null.
+Complete Server edits/resumes skip posted and retained pending period identities
+before saving the next date. Historical expenses and frozen failures remain
+intact; this release does not repair or regenerate existing financial records.
+
+
 This runbook covers norulo.com and api.norulo.com only. Preview and Workers.dev
 remain disabled. Dated records in [production readiness](validation/production-readiness-2026-10-10.md)
 identify what was actually published/read back; source configuration or a local
