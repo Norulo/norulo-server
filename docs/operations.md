@@ -1,5 +1,15 @@
 # Norulo production operations
 
+The 2026-10-13 [expense source release](validation/expense-last-source-production-2026-10-13.json)
+is verified on both production domains at 100% traffic. Schema v14 adds only
+0014_expense_last_source.sql: a nullable latest-source snapshot on each expense.
+Owner/member writes and all recurring generation paths update it in the original
+atomic save. Old records stay unknown until edited; there is no backfill or new
+history stream. Production resources, 19 public variables, six Secret names and
+the daily schedule were preserved. Local suites and native source checks passed;
+public production verification is read-only, not authenticated customer acceptance.
+
+
 The 2026-10-13 [recurring controls release](validation/recurring-schedule-controls-production-2026-10-13.json)
 preserves schema v13, all production resources and the daily schedule. Browser
 creation/editing derives repeat dates from startOn; end-date Clear sends null.
@@ -49,7 +59,7 @@ their deployed state in the subsequent dated release readback.
 
 | Resource or control | Required preservation |
 | --- | --- |
-| Production D1 | norulo-ledger-production, c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5; verified schema v13 and sole added 0013 index migration |
+| Production D1 | norulo-ledger-production, c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5; verified schema v14; additive 0014 latest-source column, no backfill |
 | Email admission | EMAIL_ADMISSION / EmailAdmission, namespace 6588312f00f74840a37463e72a2d75eb |
 | Recurrence | RECURRING_SCHEDULER / RecurringScheduler, namespace b3f41def1906481e9c72662debf4b505; existing Root/Owner scopes and journal state |
 | System sender | EMAIL restricted to login@auth.norulo.com; authenticated sending domain and existing contact Email Routing retained |

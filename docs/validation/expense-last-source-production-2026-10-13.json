@@ -1,0 +1,140 @@
+{
+  "verifiedAtUTC": "2026-10-13T07:41:31.765654+00:00",
+  "configuration": {
+    "norulo-server-production": {
+      "version": "624d697a-a208-4aee-8000-87bd1f5a8a72",
+      "trafficPercent": 100,
+      "bindingsAndPublicVariablesAndSecretNamesPreserved": true,
+      "limitsAndObservabilityPreserved": true,
+      "crons": [
+        "10 16 * * *"
+      ]
+    },
+    "norulo-web": {
+      "version": "5bf1f851-7d00-4784-b4a9-e1caf0212ad2",
+      "trafficPercent": 100,
+      "bindingsAndPublicVariablesAndSecretNamesPreserved": true,
+      "limitsAndObservabilityPreserved": true,
+      "crons": []
+    }
+  },
+  "publicChecks": [
+    {
+      "url": "https://api.norulo.com/health",
+      "status": 200
+    },
+    {
+      "url": "https://api.norulo.com/api/v1/me",
+      "status": 401
+    },
+    {
+      "url": "https://norulo.com/api/health",
+      "status": 200
+    },
+    {
+      "url": "https://norulo.com/api/api/v1/me",
+      "status": 401
+    },
+    {
+      "url": "https://norulo.com/",
+      "status": 200
+    },
+    {
+      "url": "https://norulo.com/assets/index-C7G-nMrO.js",
+      "status": 200
+    },
+    {
+      "url": "https://norulo.com/assets/ledger-summary-DzGplJgH.js",
+      "status": 200
+    },
+    {
+      "url": "https://norulo.com/assets/ledger-EWltqm2-.js",
+      "status": 200
+    },
+    {
+      "url": "https://norulo.com/assets/ledger-overview-CmFYiWnV.js",
+      "status": 200
+    },
+    {
+      "url": "https://norulo.com/assets/ledger-split-C2K-t25V.js",
+      "status": 200
+    },
+    {
+      "url": "https://norulo.com/openapi/ledger-v1.json",
+      "status": 200
+    },
+    {
+      "url": "https://norulo.com/norulo-logo.png",
+      "status": 200
+    },
+    {
+      "url": "https://www.norulo.com/shared?source=last",
+      "status": 308
+    }
+  ],
+  "matchedAssets": 7,
+  "health": "direct/proxied 200",
+  "anonymousProfile": "direct/proxied 401",
+  "scope": {
+    "productionBusinessTestWrites": 0,
+    "manualCronCalls": 0,
+    "providerCalls": 0,
+    "emailSends": 0,
+    "previewDeployment": false,
+    "authenticatedCustomerAcceptance": false
+  },
+  "repositories": {
+    "server": {
+      "branch": "main",
+      "sourceCommit": "9a899adf281acd573d4aaefe1e4a469e17e45518",
+      "workerVersion": "624d697a-a208-4aee-8000-87bd1f5a8a72"
+    },
+    "web": {
+      "branch": "main",
+      "sourceCommit": "01a7d87b0466b3a8b0ab03cd302ac23dfb97d9f1",
+      "workerVersion": "5bf1f851-7d00-4784-b4a9-e1caf0212ad2"
+    }
+  },
+  "feature": {
+    "lastSource": "Owner/member public identity plus create/update, or recurring generation; one latest snapshot overwritten atomically with the expense",
+    "oldRecords": "null / Source unknown until the next successful edit; no backfill",
+    "latestOnly": true
+  },
+  "validation": {
+    "localRecord": "expense-last-source-local-2026-10-13.json",
+    "serverTests": 3244,
+    "serverSubtests": 107,
+    "webTests": 1877,
+    "sixLanguageViewportStates": 72,
+    "nativeLocalRequests": 9,
+    "canonicalModulesMatchActualUpload": 65,
+    "lintBuildOfflineChecksAndDryRunsPassed": true
+  },
+  "database": {
+    "id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+    "schemaVersion": 14,
+    "migration": "0014_expense_last_source.sql",
+    "appliedOnce": true,
+    "migrationCLIExecutedCommands": 2,
+    "migrationNativeRowsRead": null,
+    "migrationNativeRowsWritten": null,
+    "migrationAccountingLimitation": "Wrangler migration output reports command count and duration but omits row metadata. DDL and the migration-journal write are not claimed free.",
+    "schemaFingerprint": "31afe5490ea960ad28d4e929a8c1494099f8fd1c972439b6c2b96c054112a3bd",
+    "schemaObjects": 79,
+    "journalNames": 14,
+    "readbackRowsRead": 176,
+    "readbackRowsWritten": 0,
+    "financialDataBackfill": false
+  },
+  "preserved": {
+    "serverPublicVariables": 19,
+    "serverSecretNames": 6,
+    "databaseAndDurableObjectResourceIdentities": true,
+    "allFiveActivationFlags": "1",
+    "cron": "10 16 * * *",
+    "cpuMs": 300000,
+    "subrequests": 9000,
+    "previewURLs": false,
+    "workersDev": false
+  }
+}
