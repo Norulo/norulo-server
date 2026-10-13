@@ -788,7 +788,7 @@ def test_monthly_start_boundary_is_saved_without_changing_the_selected_day(app, 
 
 @pytest.mark.parametrize("project", [False, True])
 @pytest.mark.parametrize("edit_date,candidate", [
-    ("2026-10-09", "2026-10-10"),
+    ("2026-10-09", "2026-11-10"),
     ("2026-10-10", "2026-11-10"),
 ])
 def test_monthly_day_edit_keeps_recorded_october_period_and_applies_in_november(app, project, edit_date, candidate):
@@ -820,13 +820,11 @@ def test_monthly_day_edit_keeps_recorded_october_period_and_applies_in_november(
     assert json.loads(app.rows("expense_recurring_rules")[0]["schedule_json"]) == saved["schedule"]
     assert {table: app.rows(table) for table in recorded} == recorded
     usage_after_save = app.rows("ledger_plan_usage")
-    # On local October 9, tomorrow is a valid candidate date. Its monthly
-    # identity is already recorded: the runner advances the pointer without
-    # publishing another expense/audit/occurrence or charging a business write.
+    # The edit has already excluded October's consumed identity, so tomorrow's
+    # natural tick has no replay maintenance or financial work for this plan.
     tick_now = _shanghai_instant("2026-10-10T00:06:00")
     result = app.tick(now=tick_now)
-    assert result == {"scanned": int(edit_date == "2026-10-09"), "created": 0,
-        "blocked": 0, "replayed": int(edit_date == "2026-10-09")}
+    assert result == {"scanned": 0, "created": 0, "blocked": 0, "replayed": 0}
     assert {table: app.rows(table) for table in recorded} == recorded
     assert app.rows("ledger_plan_usage") == usage_after_save
     next_rule = app.call("GET", original["id"], now=tick_now)[1]

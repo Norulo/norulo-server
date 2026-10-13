@@ -101,9 +101,9 @@ def test_actual_erasure_preserves_external_consumed_month_after_generated_expens
     assert app.rows("expense_recurring_occurrences") == [{**occurrence, "expense_id": None}]
     status, edited = app.call("PATCH", original["id"],
         {**body, "schedule": {**body["schedule"], "day": 20}}, revision=rule_before["revision"])
-    assert status == 200 and edited["nextOccurrenceOn"] == "2026-10-20"
+    assert status == 200 and edited["nextOccurrenceOn"] == "2026-11-20"
     later = int(datetime(2026, 10, 20, 12, tzinfo=timezone.utc).timestamp())
-    assert app.tick(now=later) == {"scanned": 1, "created": 0, "blocked": 0, "replayed": 1}
+    assert app.tick(now=later) == {"scanned": 0, "created": 0, "blocked": 0, "replayed": 0}
     assert app.rows("expenses") == []
     assert app.rows("expense_recurring_rules")[0]["next_occurrence_on"] == "2026-11-20"
     assert app.rows("expense_recurring_occurrences")[0]["expense_id"] is None

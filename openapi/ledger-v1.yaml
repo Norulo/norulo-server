@@ -1019,7 +1019,16 @@ paths:
         CATEGORY_REQUIRED leaves the saved rule unchanged and preserves input.
         Canceled rules cannot resume. Changes affect future occurrences only;
         after an edit/resume the next occurrence is strictly after the current
-        date in the rule's timezone. Pausing remains available when commercial
+        date in the rule's timezone and excludes periods already posted or
+        retained for explicit retry. Deleted expenses still consume their
+        original period identities. Changing a selector or timezone does not
+        recreate those identities; changing frequency uses that frequency's
+        existing weekly/monthly/quarterly/yearly identity namespace. The next
+        pointer is checked before saving, with at most 20 indexed candidate
+        period probes; RECURRING_SCHEDULE_SEARCH_LIMIT returns 409 without
+        saving when that finite search cannot establish the next date. If no
+        eligible date remains, the active rule completes with a null pointer.
+        Pausing remains available when commercial
         write allowances are exhausted, with all role and revision guards.
         A retry uses the retained occurrence's frozen date, amount, currency,
         purpose and category, together with current actor, target, category,

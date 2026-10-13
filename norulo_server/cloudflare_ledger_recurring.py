@@ -37,6 +37,9 @@ MAX_RULES_PER_OWNER = 100
 MAX_TICK_RULES = 10
 MAX_TICK_OCCURRENCES = 10
 MAX_PENDING_OCCURRENCES = 10
+# Editing/resuming needs only candidate identities, never a history scan. Keep
+# this read-only search finite alongside the existing pending/catch-up bounds.
+MAX_SCHEDULE_SEARCH_OCCURRENCES = MAX_PENDING_OCCURRENCES + MAX_TICK_OCCURRENCES
 CAPACITY_FAILURE_CODES = {"RECORD_LIMIT", "RETENTION_CLEANUP_REQUIRED", "RETENTION_TARGET_FORBIDDEN"}
 LEGACY_RECOVERY_CODES = CAPACITY_FAILURE_CODES | {"CATCHUP_REVIEW_REQUIRED"}
 
@@ -124,11 +127,40 @@ async def _current_dto(binding, row, now):
     return rule_dto(row, now=now, pending=await _pending_rows(binding, row["owner_id"], row["id"]))
 
 
-def _rule_guard(binding, row, *, active=False):
-    return binding.prepare("""INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN
-        EXISTS(SELECT 1 FROM expense_recurring_rules WHERE id=? AND owner_id=? AND revision=?
-            AND (?=0 OR status='active') AND """ + _VISIBLE_TARGET + ") THEN 1 ELSE 0 END)").bind(
-                row["id"], row["owner_id"], row["revision"], 1 if active else 0)
+async def _unconsumed_future_occurrence(binding, row, schedule, now):
+    """Skip posted/frozen identities even after changing a calendar selector.
+
+    A nullable expense_id still consumes its period; a pending occurrence keeps
+    its frozen values and is handled only through its explicit retry workflow.
+    Both lookups use the existing (rule_id, period_key) unique indexes.
+    """
+    occurrence = future_occurrence(schedule, now)
+    for _ in range(MAX_SCHEDULE_SEARCH_OCCURRENCES):
+        if occurrence is None:
+            return None, False
+        period = period_key(schedule, occurrence)
+        occupied = await binding.prepare("""SELECT
+            EXISTS(SELECT 1 FROM expense_recurring_occurrences WHERE rule_id=? AND period_key=?)
+            OR EXISTS(SELECT 1 FROM expense_recurring_pending WHERE rule_id=? AND period_key=?)
+            AS occupied""").bind(row["id"], period, row["id"], period).first()
+        if not occupied["occupied"]:
+            return occurrence, False
+        occurrence = following_occurrence(schedule, occurrence)
+    # A consumed final eligible period completes the plan. Otherwise reject the
+    # edit without writes instead of publishing an unverified next occurrence.
+    return None, occurrence is not None
+
+
+def _rule_guard(binding, row, *, active=False, available_period=None):
+    condition = """EXISTS(SELECT 1 FROM expense_recurring_rules WHERE id=? AND owner_id=? AND revision=?
+        AND (?=0 OR status='active') AND """ + _VISIBLE_TARGET + ")"
+    values = [row["id"], row["owner_id"], row["revision"], 1 if active else 0]
+    if available_period is not None:
+        condition += """ AND NOT EXISTS(SELECT 1 FROM expense_recurring_occurrences WHERE rule_id=? AND period_key=?)
+            AND NOT EXISTS(SELECT 1 FROM expense_recurring_pending WHERE rule_id=? AND period_key=?)"""
+        values.extend([row["id"], available_period, row["id"], available_period])
+    return binding.prepare("""INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN """ + condition +
+        " THEN 1 ELSE 0 END)").bind(*values)
 
 
 async def _validate_template(binding, gateway, user, restrictions, template):
@@ -264,6 +296,13 @@ async def _http(binding, gateway, method, identifier, headers, params, body, now
                 restrictions, saved["target_kind"], saved["project_id"]):
             return _error(404, "NOT_FOUND")
         return (201, json.loads(saved["create_response_json"])) if digest == saved["create_sha256"] else _error(409, "IDEMPOTENCY_CONFLICT")
+    initial = None if current or iso_date(schedule["startOn"]) > local_today(schedule, now) else iso_date(schedule["startOn"])
+    if current:
+        occurrence, search_limited = await _unconsumed_future_occurrence(binding, current, schedule, now)
+        if search_limited:
+            return _error(409, "RECURRING_SCHEDULE_SEARCH_LIMIT")
+    else:
+        occurrence = future_occurrence(schedule, now, consumed_on=initial) if initial else iso_date(schedule["startOn"])
     assistance = None
     if template["category_id"] is None:
         denied = await _valid_target(binding, user, restrictions, template, gateway, True)
@@ -282,8 +321,6 @@ async def _http(binding, gateway, method, identifier, headers, params, body, now
             _VISIBLE_TARGET).bind(user["id"]).first()
         if count["total"] >= MAX_RULES_PER_OWNER:
             return _error(403, "RECURRING_RULE_LIMIT")
-    initial = None if current or iso_date(schedule["startOn"]) > local_today(schedule, now) else iso_date(schedule["startOn"])
-    occurrence = future_occurrence(schedule, now, consumed_on=initial) if current or initial else iso_date(schedule["startOn"])
     status = "active" if occurrence else "completed"
     if current and not resuming and current["status"] in {"paused", "blocked"}:
         status = current["status"]
@@ -313,7 +350,7 @@ async def _http(binding, gateway, method, identifier, headers, params, body, now
             initial_failure = _pending_record(row, template, initial, period_key(schedule, initial), error.code, now)
             initial_commands = [_pending_insert(binding, initial_failure)]
     if current:
-        commands.append(_rule_guard(binding, current))
+        commands.append(_rule_guard(binding, current, available_period=row["next_period_key"]))
         commands.append(binding.prepare("""UPDATE expense_recurring_rules SET actor_user_id=?,template_json=?,schedule_json=?,
             status=?,revision=revision+1,next_run_at=?,next_occurrence_on=?,next_period_key=?,blocked_code=?,
             updated_at=? WHERE id=? AND owner_id=? AND revision=?""").bind(row["actor_user_id"], row["template_json"], row["schedule_json"],

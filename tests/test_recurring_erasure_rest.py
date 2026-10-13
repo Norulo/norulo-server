@@ -74,9 +74,9 @@ def test_key_rule_nullable_consumed_period_survives_key_and_cookie_adoption(app,
     status, changed = rule_call(app, "PATCH", rule["id"],
         {**body, "schedule": {**body["schedule"], "day": 20}},
         revision=before_erasure["revision"], headers=editor_key)
-    assert status == 200 and changed["nextOccurrenceOn"] == "2026-10-20"
+    assert status == 200 and changed["nextOccurrenceOn"] == "2026-11-20"
     assert grant(app) != original_grant and stored_rule(app)["actor_user_id"] == "editor"
-    assert app.tick(now=day(10, 20)) == {"scanned": 1, "created": 0, "blocked": 0, "replayed": 1}
+    assert app.tick(now=day(10, 20)) == {"scanned": 0, "created": 0, "blocked": 0, "replayed": 0}
     assert app.rows("expenses") == []
     assert app.rows("expense_recurring_occurrences") == [{**occurrence, "expense_id": None}]
 
@@ -91,11 +91,11 @@ def test_key_rule_nullable_consumed_period_survives_key_and_cookie_adoption(app,
     assert grant(app) is None and stored_rule(app)["actor_user_id"] == "owner"
     status, resumed = rule_call(app, "PATCH", rule["id"], {"status": "active"},
                                 revision=edited["revision"])
-    assert status == 200 and resumed["nextOccurrenceOn"] == "2026-10-25"
+    assert status == 200 and resumed["nextOccurrenceOn"] == "2026-11-25"
     assert "_api_key_hash" not in json.loads(stored_rule(app)["template_json"])
     with app.store._immediate() as db:
         db.execute("UPDATE api_keys SET revoked_at=?", (NOW,))
-    assert app.tick(now=day(10, 25)) == {"scanned": 1, "created": 0, "blocked": 0, "replayed": 1}
+    assert app.tick(now=day(10, 25)) == {"scanned": 0, "created": 0, "blocked": 0, "replayed": 0}
     assert app.rows("expenses") == []
     assert app.rows("expense_recurring_occurrences") == [{**occurrence, "expense_id": None}]
     assert app.tick(now=day(11, 25)) == {"scanned": 1, "created": 1, "blocked": 0, "replayed": 0}

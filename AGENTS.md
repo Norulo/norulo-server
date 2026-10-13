@@ -1,5 +1,20 @@
 # Norulo Server
 
+## 2026-10-13 recurring edit pointer
+
+Complete edits and resumes select the first unconsumed future calendar period
+before saving. Occurrence rows with nullable expense_id and retained pending
+rows still consume their original period. Check at most 20 indexed candidates;
+RECURRING_SCHEDULE_SEARCH_LIMIT returns 409 before AI/usage or business writes.
+The candidate's absence is rechecked with the existing rule revision guard in
+the atomic save. Keep the scheduler replay protection, frequency identity
+namespaces, frozen pending values, authorization fences and financial history.
+Browser selectors now derive from startOn and are read-only; API calendars retain
+the explicit selectors defined in the OpenAPI contract. This release requires
+no schema migration or existing-plan/expense repair. Preserve the live resource
+identities, 19 public variables, six Secrets and the daily schedule below.
+
+
 ## 2026-10-12 review release
 
 The current review release upgrades the independent production schema to v13

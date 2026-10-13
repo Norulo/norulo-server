@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-13",
+  "scope": "Recurring schedule creation and editing; no production business mutation or schema migration",
+  "changes": [
+    "Derive browser recurrence selectors from the start date for all four frequencies and display them read-only.",
+    "Enumerate browser IANA time zones with search, UTC, preserved saved names, and a final Custom option.",
+    "Clear optional end date to null without submitting.",
+    "Exclude consumed and retained pending calendar periods before saving edited/resumed next pointers, retaining atomic revision and authority guards."
+  ],
+  "validation": {
+    "web": {
+      "lint": "passed",
+      "files": 88,
+      "tests": 1870,
+      "testWorkers": 2,
+      "build": "passed",
+      "offlineWorkerConfig": "passed",
+      "wranglerDryRun": "passed",
+      "initialFailures": "New helper copy required locale catalog entries and test expectation updates; one existing 5-second test timed out under unconstrained concurrent execution. Focused rerun and the final full suite passed."
+    },
+    "server": {
+      "python": "3.10.12",
+      "tests": 3239,
+      "subtests": 107,
+      "focusedNewPointerTests": 20,
+      "staticS01": "passed",
+      "moduleSync": "passed",
+      "deploymentShellSyntax": "passed",
+      "wranglerDryRun": "passed",
+      "initialFailures": "Two existing erasure assertions expected the former consumed candidate; updated to the corrected future pointer. A local HTTP fixture required loopback socket permission. The final full suite passed."
+    },
+    "browser": {
+      "engine": "Chromium",
+      "newStates": 50,
+      "existingDateLayoutStates": 258,
+      "profiles": 4,
+      "localOnly": true,
+      "externalRequests": 0,
+      "financialSubmissions": 0,
+      "physicalDeviceAcceptance": false,
+      "otherEngines": "not exercised"
+    },
+    "package": {
+      "canonicalModules": 65,
+      "canonicalByteEquality": true,
+      "entryByteEquality": true,
+      "importClosureComplete": true
+    }
+  },
+  "contractSha256": "d836ea31165c04c79786a6d3c66f138ba18e81751eca85a630dd3fac79adb14d",
+  "productionPreparation": {
+    "database": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+    "schemaCriticalObjectsReadBack": 5,
+    "sqlRowsRead": 88,
+    "sqlRowsWritten": 0,
+    "publicVariableCount": 19,
+    "secretNamesCount": 6,
+    "cron": "10 16 * * *",
+    "cpuMs": 300000,
+    "subrequests": 9000,
+    "publication": "pending, see subsequent production release record"
+  }
+}
