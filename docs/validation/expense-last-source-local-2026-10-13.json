@@ -1,0 +1,57 @@
+{
+  "feature": "Persist only last successful expense source on the expense row; Owner/member public identity or recurring generation; six-language tag; old records remain unknown until edited.",
+  "validation": {
+    "serverTests": 3244,
+    "serverSubtests": 107,
+    "serverSeconds": 138.7,
+    "webTests": 1877,
+    "webFiles": 89,
+    "lint": true,
+    "build": true,
+    "offlineWorkerChecks": true,
+    "apiContractCheck": true,
+    "browserEngine": "Chromium",
+    "sourceTagStates": 72,
+    "viewportWidths": [
+      1440,
+      390,
+      320
+    ],
+    "languages": [
+      "en",
+      "zh",
+      "ja",
+      "ko",
+      "fr",
+      "es"
+    ],
+    "nativeLocalFinalRequests": 9,
+    "nativeCases": [
+      "Owner API creation",
+      "shared member edit",
+      "stale revision leaves source",
+      "creation replay leaves latest source",
+      "recurring immediate generation",
+      "member edit replaces recurring tag"
+    ],
+    "nativeFixtureCorrection": "One initial request rejected with 403 before financial writes because the synthetic Owner key lacked its shared target grant; corrected only the local fixture.",
+    "canonicalModulesMatchUpload": 65,
+    "pythonPackageMarker": "pywrangler emits its normal empty __init__.py package marker"
+  },
+  "schema": {
+    "version": 14,
+    "migration": "0014_expense_last_source.sql",
+    "statements": 1,
+    "financialBackfill": false,
+    "newIndexes": 0,
+    "fingerprint": "31afe5490ea960ad28d4e929a8c1494099f8fd1c972439b6c2b96c054112a3bd"
+  },
+  "scope": {
+    "localFixtureOnly": true,
+    "productionBusinessTestWrites": 0,
+    "providerCalls": 0,
+    "emailSends": 0,
+    "previewDeployment": false,
+    "previewMaintenance": "Historical v13 clear/upgrade authority remains frozen. Existing v13 previews fail closed until a separately reviewed v14 upgrade; no preview release or maintenance performed."
+  }
+}

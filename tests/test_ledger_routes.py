@@ -6,7 +6,7 @@ from pathlib import Path
 
 from norulo_server.cloudflare_ledger_api import handle_ledger_request
 from norulo_server.cloudflare_api_key_write import create_api_key
-from norulo_server.cloudflare_preview_schema import UPGRADE_V6_SQL, UPGRADE_V7_SQL, UPGRADE_V8_SQL, UPGRADE_V9_SQL, UPGRADE_V10_SQL, UPGRADE_V11_SQL, UPGRADE_V12_SQL, UPGRADE_V13_SQL
+from norulo_server.cloudflare_preview_schema import UPGRADE_V6_SQL, UPGRADE_V7_SQL, UPGRADE_V8_SQL, UPGRADE_V9_SQL, UPGRADE_V10_SQL, UPGRADE_V11_SQL, UPGRADE_V12_SQL, UPGRADE_V13_SQL, UPGRADE_V14_SQL
 from test_cloudflare_github_identity_http import D1ShapedSQLite, GitHubStub, call, login, seed
 from urllib.parse import parse_qs, urlsplit
 
@@ -27,7 +27,7 @@ class LedgerRoutesTests(unittest.TestCase):
             db.executescript((migration.parent / "0005_workspaces_repositories.sql").read_text())
             db.commit()
             db.execute("BEGIN")
-            for sql in (*UPGRADE_V6_SQL, *UPGRADE_V7_SQL, *UPGRADE_V8_SQL, *UPGRADE_V9_SQL, *UPGRADE_V10_SQL, *UPGRADE_V11_SQL, *UPGRADE_V12_SQL, *UPGRADE_V13_SQL):
+            for sql in (*UPGRADE_V6_SQL, *UPGRADE_V7_SQL, *UPGRADE_V8_SQL, *UPGRADE_V9_SQL, *UPGRADE_V10_SQL, *UPGRADE_V11_SQL, *UPGRADE_V12_SQL, *UPGRADE_V13_SQL, *UPGRADE_V14_SQL):
                 db.execute(sql)
         self.binding = D1ShapedSQLite(self.store)
         _, _, headers = login(self.binding, GitHubStub(), self.now)

@@ -1,5 +1,18 @@
 # Norulo Server
 
+## 2026-10-13 expense last source
+
+Expense.lastSource is read-only and contains the last successful creation/edit
+source, stored atomically in expenses.last_source_json. Owner/member identity is
+a bounded public snapshot; never expose email, API-key token/hash or credential
+IDs. Recurring initial/background/pending generation uses recurring/create; a
+later human edit replaces it. Failed CAS and creation replay do not overwrite
+the stored source. Old rows stay null/Source unknown, without historical backfill.
+This release requires only 0014_expense_last_source.sql and schema v14. Keep the
+historical v13 preview clear/upgrade authorities frozen; do not deploy or repair
+preview. Preserve production resources, 19 public vars, six Secrets and daily cron.
+
+
 ## 2026-10-13 recurring edit pointer
 
 Complete edits and resumes select the first unconsumed future calendar period

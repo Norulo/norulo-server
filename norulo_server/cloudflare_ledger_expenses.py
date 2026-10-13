@@ -119,6 +119,42 @@ def _decimal_amount(minor, currency):
     return str(minor) if exponent == 0 else f"{minor // 10**exponent}.{minor % 10**exponent:0{exponent}d}"
 
 
+def _last_source(user, action, *, proof=None, recurring=False):
+    """Snapshot public attribution inside the expense's original atomic write."""
+    actor = user.get("_actor", user)
+    return {"kind": "recurring" if recurring else "owner" if actor["id"] == user["id"] else "member",
+            "action": action, "userId": None if recurring else actor["id"],
+            "name": None if recurring else str(actor.get("name") or "")[:120] or None,
+            "githubLogin": None if recurring else str(actor.get("githubLogin") or "")[:39] or None,
+            "via": "schedule" if recurring else "api_key" if (proof or {}).get("key") is not None else "web"}
+
+
+def _source_payload(value):
+    if not isinstance(value, str) or len(value) > 2048:
+        return None
+    try:
+        source = json.loads(value)
+    except (ValueError, TypeError):
+        return None
+    if (not isinstance(source, dict)
+            or set(source) != {"kind", "action", "userId", "name", "githubLogin", "via"}
+            or any(not isinstance(source[key], str) for key in ("kind", "action", "via"))
+            or source["kind"] not in {"owner", "member", "recurring"}
+            or source["action"] not in {"create", "update"}
+            or source["via"] not in {"web", "api_key", "schedule"}):
+        return None
+    for key, maximum in (("userId", 120), ("name", 120), ("githubLogin", 39)):
+        if source[key] is not None and (not isinstance(source[key], str) or not 1 <= len(source[key]) <= maximum):
+            return None
+    if source["kind"] == "recurring":
+        if source["action"] != "create" or source["via"] != "schedule" or any(
+                source[key] is not None for key in ("userId", "name", "githubLogin")):
+            return None
+    elif not source["userId"] or source["via"] == "schedule":
+        return None
+    return source
+
+
 def _dto(row):
     currency = row["currency"]
     minor = row["amount_minor"]
@@ -129,7 +165,7 @@ def _dto(row):
             "currency": currency, "categoryId": row["category_id"], "purpose": row["purpose"],
             "note": row["note"], "quantity": row["quantity_decimal"], "unit": row["unit"],
             "revision": row["revision"], "createdAt": row["created_at"],
-            "updatedAt": row["updated_at"]}
+            "updatedAt": row["updated_at"], "lastSource": _source_payload(row.get("last_source_json"))}
 
 
 async def _snapshot(binding, headers, now, scope, queries, *, actor_queries=False):
@@ -331,7 +367,8 @@ async def _write(binding, gateway, method, item_id, headers, data, now, suggesti
     if method == "POST":
         expense_id = "exp_" + uuid.uuid4().hex
         record = {**data, "id": expense_id, "owner_id": user["id"], "revision": 1,
-                  "created_at": stamp, "updated_at": stamp, "deleted_at": None}
+                  "created_at": stamp, "updated_at": stamp, "deleted_at": None,
+                  "last_source_json": json.dumps(_last_source(user, "create", proof=proof), ensure_ascii=False, separators=(",", ":"))}
         payload = _dto(record)
         if assistance is not None:
             payload["assistance"] = assistance
@@ -344,7 +381,7 @@ async def _write(binding, gateway, method, item_id, headers, data, now, suggesti
             payload, now, proof=proof, operation_id=event_id)
         values = [record[name] for name in ("id", "owner_id", "target_kind", "project_id", "category_id",
             "occurred_on", "amount_minor", "currency", "purpose", "note", "quantity_decimal", "unit",
-            "revision", "created_at", "updated_at", "deleted_at")]
+            "revision", "created_at", "updated_at", "deleted_at", "last_source_json")]
         commands = [_write_guard(binding, proof, user["id"], now),
             binding.prepare("""INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN
               EXISTS(SELECT 1 FROM expense_categories WHERE owner_id=? AND id=? AND archived_at IS NULL)
@@ -356,7 +393,7 @@ async def _write(binding, gateway, method, item_id, headers, data, now, suggesti
             *retirement,
             binding.prepare("""INSERT INTO expenses(id,owner_id,target_kind,project_id,category_id,
               occurred_on,amount_minor,currency,purpose,note,quantity_decimal,unit,revision,
-              created_at,updated_at,deleted_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""").bind(*values),
+              created_at,updated_at,deleted_at,last_source_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""").bind(*values),
             binding.prepare("""INSERT INTO expense_events(id,expense_id,owner_id,actor_kind,actor_id,
               action,before_json,after_json,created_at) VALUES(?,?,?,?,?,'create',NULL,?,?)""").bind(
                 event_id, expense_id, user["id"], actor_kind, actor_id,
@@ -388,16 +425,17 @@ async def _write(binding, gateway, method, item_id, headers, data, now, suggesti
         return 201, payload
     before = _dto(current)
     if method == "PATCH":
-        record = {**current, **data, "revision": expected + 1, "updated_at": stamp}
+        record = {**current, **data, "revision": expected + 1, "updated_at": stamp,
+                  "last_source_json": json.dumps(_last_source(user, "update", proof=proof), ensure_ascii=False, separators=(",", ":"))}
         after = _dto(record)
         if assistance is not None:
             after["assistance"] = assistance
         sql = """UPDATE expenses SET target_kind=?,project_id=?,category_id=?,occurred_on=?,
           amount_minor=?,currency=?,purpose=?,note=?,quantity_decimal=?,unit=?,revision=revision+1,
-          updated_at=? WHERE id=? AND owner_id=? AND revision=? AND deleted_at IS NULL """ + VISIBLE_EXPENSE_TARGET_SQL
+          updated_at=?,last_source_json=? WHERE id=? AND owner_id=? AND revision=? AND deleted_at IS NULL """ + VISIBLE_EXPENSE_TARGET_SQL
         values = [data[name] for name in ("target_kind", "project_id", "category_id", "occurred_on",
             "amount_minor", "currency", "purpose", "note", "quantity_decimal", "unit")]
-        values += [stamp, item_id, user["id"], expected]
+        values += [stamp, record["last_source_json"], item_id, user["id"], expected]
     else:
         after = None
         sql = """UPDATE expenses SET deleted_at=?,updated_at=?,revision=revision+1

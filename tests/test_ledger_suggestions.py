@@ -9,7 +9,7 @@ from norulo_server.cloudflare_ledger_api import handle_ledger_request
 from norulo_server.cloudflare_ledger_suggestions import _draft
 from norulo_server.ledger_plan_policy import JEV_RESERVATION_MICROUSD
 from norulo_server.cloudflare_state_records import encode_record, record_name
-from norulo_server.cloudflare_preview_schema import UPGRADE_V6_SQL, UPGRADE_V7_SQL, UPGRADE_V8_SQL, UPGRADE_V9_SQL, UPGRADE_V10_SQL, UPGRADE_V11_SQL, UPGRADE_V12_SQL
+from norulo_server.cloudflare_preview_schema import UPGRADE_V6_SQL, UPGRADE_V7_SQL, UPGRADE_V8_SQL, UPGRADE_V9_SQL, UPGRADE_V10_SQL, UPGRADE_V11_SQL, UPGRADE_V12_SQL, UPGRADE_V13_SQL, UPGRADE_V14_SQL
 from test_cloudflare_github_identity_http import D1ShapedSQLite, GitHubStub, login, seed
 from state_record_fixtures import normalize_legacy_state
 
@@ -40,7 +40,7 @@ class LedgerSuggestionTests(unittest.TestCase):
                 "cloudflare/server/migrations/0005_workspaces_repositories.sql").read_text())
             db.commit()
             db.execute("BEGIN")
-            for sql in (*UPGRADE_V6_SQL, *UPGRADE_V7_SQL, *UPGRADE_V8_SQL, *UPGRADE_V9_SQL, *UPGRADE_V10_SQL, *UPGRADE_V11_SQL, *UPGRADE_V12_SQL):
+            for sql in (*UPGRADE_V6_SQL, *UPGRADE_V7_SQL, *UPGRADE_V8_SQL, *UPGRADE_V9_SQL, *UPGRADE_V10_SQL, *UPGRADE_V11_SQL, *UPGRADE_V12_SQL, *UPGRADE_V13_SQL, *UPGRADE_V14_SQL):
                 db.execute(sql)
             normalize_legacy_state(db, now=self.now)
         self.binding = D1ShapedSQLite(self.store)

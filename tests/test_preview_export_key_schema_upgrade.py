@@ -13,8 +13,8 @@ from norulo_server.cloudflare_preview_budget import (
     upgrade_product_schema_v13, upgrade_product_schema_v11,
 )
 from norulo_server.cloudflare_preview_schema import (
-    INDEX_COUNTS, MIGRATIONS, SCHEMA_FINGERPRINT, SCHEMA_OBJECTS, SCHEMA_SQL,
-    SCHEMA_VERSION, UPGRADE_V13_SQL, V12_INDEX_COUNTS, V12_SCHEMA_OBJECTS,
+    V13_INDEX_COUNTS as INDEX_COUNTS, V13_MIGRATIONS as MIGRATIONS, V13_SCHEMA_FINGERPRINT as SCHEMA_FINGERPRINT, V13_SCHEMA_OBJECTS as SCHEMA_OBJECTS, V13_SCHEMA_SQL as SCHEMA_SQL,
+    V13_SCHEMA_VERSION as SCHEMA_VERSION, UPGRADE_V13_SQL, V12_INDEX_COUNTS, V12_SCHEMA_OBJECTS,
 )
 from norulo_server.cloudflare_validation_budget import BudgetError, BudgetJournal
 from test_d1_validation_budget import LocalSql
@@ -104,7 +104,7 @@ def test_unknown_index_build_retains_reservation_and_never_retries(fault, previo
 
 def test_fresh_v13_matches_all_canonical_migrations_and_accounts_for_both_indexes():
     root = Path(__file__).resolve().parents[1]
-    paths = sorted((root / "cloudflare/server/migrations").glob("*.sql"))
+    paths = [p for p in sorted((root / "cloudflare/server/migrations").glob("*.sql")) if p.name <= "0013_export_key_indexes.sql"]
     assert paths[-1].name == "0013_export_key_indexes.sql" and SCHEMA_VERSION == 13
     assert len(SCHEMA_SQL) == 56 <= 64 and len(UPGRADE_V13_SQL) == 2
     assert {item["name"]: item["sha256"] for item in MIGRATIONS} == {

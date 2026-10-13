@@ -306,7 +306,7 @@ def validate_contract() -> None:
         from norulo_server.cloudflare_preview_schema import (
             SCHEMA_VERSION, SCHEMA_SQL, SCHEMA_OBJECTS, SCHEMA_FINGERPRINT, MIGRATIONS,
         )
-        if SCHEMA_VERSION != 13 or len(SCHEMA_SQL) > 64:
+        if SCHEMA_VERSION != 14 or len(SCHEMA_SQL) > 64:
             raise ValueError("recurring recovery schema authority or fresh batch bound is invalid")
         def objects(connection):
             return tuple((kind, name, table, " ".join(sql.split()) if sql else None)

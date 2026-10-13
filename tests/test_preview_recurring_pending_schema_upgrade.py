@@ -231,7 +231,7 @@ def test_pending_input_bound_and_unique_fences_include_both_indexes():
 
 
 def test_fresh_v12_canonical_migrations_fingerprint_and_historical_v11_agree():
-    paths=sorted((ROOT/"cloudflare/server/migrations").glob("*.sql"))[:-1]
+    paths=[p for p in sorted((ROOT/"cloudflare/server/migrations").glob("*.sql")) if p.name <= "0012_recurring_pending.sql"]
     assert paths[-1].name=="0012_recurring_pending.sql" and SCHEMA_VERSION==12
     assert len(SCHEMA_SQL)==54<=64 and len(UPGRADE_V12_SQL)==6
     assert {item["name"]:item["sha256"] for item in MIGRATIONS}=={path.name:hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
@@ -244,3 +244,10 @@ def test_fresh_v12_canonical_migrations_fingerprint_and_historical_v11_agree():
     current={(kind,name):(table,sql) for kind,name,table,sql in SCHEMA_OBJECTS}
     assert all(current[key]==value for key,value in old.items())
     assert INDEX_COUNTS=={**V11_INDEX_COUNTS,"expense_recurring_pending":2}
+
+
+@pytest.fixture(autouse=True)
+def frozen_v13_meter(monkeypatch):
+    # These are dated historical proofs, not an admission of v14 preview maintenance.
+    from legacy_preview_schema import pin_v13_meter
+    pin_v13_meter(monkeypatch)

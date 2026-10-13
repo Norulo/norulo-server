@@ -347,3 +347,10 @@ def test_final_empty_schema_matches_all_canonical_migrations_within_batch_cap():
     finally:
         canonical.close()
         compiled.close()
+
+
+@pytest.fixture(autouse=True)
+def frozen_v13_meter(monkeypatch):
+    # These are dated historical proofs, not an admission of v14 preview maintenance.
+    from legacy_preview_schema import pin_v13_meter
+    pin_v13_meter(monkeypatch)

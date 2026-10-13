@@ -34,14 +34,14 @@ MIGRATION_NAMES = (
     "0004_ledger_plan_usage.sql", "0005_workspaces_repositories.sql", "0006_blank_projects.sql",
     "0007_recurring_expenses_project_links.sql", "0008_workspace_join_approval.sql",
     "0009_activity_log.sql", "0010_project_removal.sql", "0011_business_erasure.sql",
-    "0012_recurring_pending.sql", "0013_export_key_indexes.sql",
+    "0012_recurring_pending.sql", "0013_export_key_indexes.sql", "0014_expense_last_source.sql",
 )
 SCHEMA_QUERY = """SELECT type,name,tbl_name,sql FROM sqlite_schema
     WHERE name NOT GLOB '_cf_*' AND tbl_name NOT GLOB '_cf_*'
     AND tbl_name <> 'd1_migrations'
     AND (name NOT GLOB 'sqlite_*' OR name GLOB 'sqlite_autoindex_*')
     ORDER BY type,name LIMIT 129"""
-MIGRATION_QUERY = "SELECT name FROM d1_migrations ORDER BY id LIMIT 14"
+MIGRATION_QUERY = "SELECT name FROM d1_migrations ORDER BY id LIMIT 15"
 
 
 class RecurringFailure(Exception):
@@ -318,7 +318,7 @@ class RecurringJournal:
 
 async def verify_recurring_schema(binding):
     """Read only, once per coordinator incarnation; no migration/seed/repair path."""
-    if SCHEMA_VERSION != 13:
+    if SCHEMA_VERSION != 14:
         raise RecurringFailure("RECURRING_SCHEMA_REQUIRED")
     results = await binding.batch([binding.prepare(SCHEMA_QUERY), binding.prepare(MIGRATION_QUERY)])
     schema = list(_field(results[0], "results", []))

@@ -185,6 +185,12 @@ def test_fresh_schema_matches_canonical_migrations_within_original_batch_cap():
             canonical.executescript(migration.read_text())
         for sql in SCHEMA_SQL:
             compiled.execute(sql)
-        assert len(SCHEMA_SQL) == 56 <= 64
+        assert len(SCHEMA_SQL) == 57 <= 64
         assert schema(canonical) == schema(compiled) == SCHEMA_OBJECTS
         assert len(INDEX_COUNTS) == 23 and sum(INDEX_COUNTS.values()) == 54
+
+
+@pytest.fixture(autouse=True)
+def frozen_v13_meter(monkeypatch):
+    from legacy_preview_schema import pin_v13_meter
+    pin_v13_meter(monkeypatch)

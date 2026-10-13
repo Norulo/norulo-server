@@ -1942,7 +1942,20 @@ components:
     Expense:
       allOf:
         - {$ref: '#/components/schemas/ExpenseFields'}
-        - {type: object, required: [id, categoryId, amountMinor, revision, createdAt, updatedAt], properties: {id: {type: string}, categoryId: {type: string, minLength: 1}, amountMinor: {type: integer, minimum: 0, maximum: 9007199254740991}, revision: {type: integer, minimum: 1}, createdAt: {type: string, format: date-time}, updatedAt: {type: string, format: date-time}, assistance: {$ref: '#/components/schemas/ExpenseAssistance'}}}
+        - {type: object, required: [id, categoryId, amountMinor, revision, createdAt, updatedAt], properties: {id: {type: string}, categoryId: {type: string, minLength: 1}, amountMinor: {type: integer, minimum: 0, maximum: 9007199254740991}, revision: {type: integer, minimum: 1}, createdAt: {type: string, format: date-time}, updatedAt: {type: string, format: date-time}, lastSource: {$ref: '#/components/schemas/ExpenseLastSource'}, assistance: {$ref: '#/components/schemas/ExpenseAssistance'}}}
+    ExpenseLastSource:
+      type: [object, 'null']
+      readOnly: true
+      description: "Last successful creation or edit, atomically replaced with the expense. Owner/member refers to the actual writer at save time. Recurring creation includes immediate, background and explicit pending-occurrence generation. Older records return null until their next successful edit; failed writes and creation replays leave the saved source unchanged. Only public display identity is exposed, never private email or credential identifiers."
+      additionalProperties: false
+      required: [kind, action, userId, name, githubLogin, via]
+      properties:
+        kind: {type: string, enum: [owner, member, recurring]}
+        action: {type: string, enum: [create, update]}
+        userId: {type: [string, 'null'], maxLength: 120}
+        name: {type: [string, 'null'], maxLength: 120}
+        githubLogin: {type: [string, 'null'], maxLength: 39}
+        via: {type: string, enum: [web, api_key, schedule]}
     ExpensePage:
       type: object
       required: [items, nextCursor]

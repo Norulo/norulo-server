@@ -15,7 +15,10 @@ from .cloudflare_preview_budget import (
     STATE_RECORD_INTEGRITY_VERSION, _COUNT_SQL, _FK_COUNT_SQL, _RECORD_COUNT_SQL,
     _SCHEMA_QUERY, _STRICT_RECORD_SQL, _record_product_data, _schema_objects,
 )
-from .cloudflare_preview_schema import INDEX_COUNTS, SCHEMA_FINGERPRINT, SCHEMA_OBJECTS, SCHEMA_VERSION
+from .cloudflare_preview_schema import (
+    V13_INDEX_COUNTS as INDEX_COUNTS, V13_SCHEMA_FINGERPRINT as SCHEMA_FINGERPRINT,
+    V13_SCHEMA_OBJECTS as SCHEMA_OBJECTS, V13_SCHEMA_VERSION as SCHEMA_VERSION,
+)
 from .cloudflare_state_records import MAX_SAFE_INTEGER, STATE_KINDS, STATE_STORAGE_VERSION
 from .cloudflare_validation_budget import BUDGET_SCOPE, WRITE_CEILING, BudgetError, MeteredD1, OperationBound, _field
 

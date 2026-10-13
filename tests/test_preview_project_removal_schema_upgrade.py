@@ -350,3 +350,10 @@ def test_native_fixture_seed_is_valid_v9_and_imports_frozen_v10_target():
         assert db.execute('SELECT COUNT(*) FROM ledger_activity_events WHERE before_json IS NOT NULL AND after_json IS NOT NULL').fetchone()[0] == 4
         assert db.execute('SELECT COUNT(*) FROM expense_recurring_occurrences').fetchone()[0] == 2
         assert not list(db.execute('PRAGMA foreign_key_check'))
+
+
+@pytest.fixture(autouse=True)
+def frozen_v13_meter(monkeypatch):
+    # These are dated historical proofs, not an admission of v14 preview maintenance.
+    from legacy_preview_schema import pin_v13_meter
+    pin_v13_meter(monkeypatch)

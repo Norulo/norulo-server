@@ -13,6 +13,7 @@ from norulo_server.cloudflare_preview_business_clear import BUSINESS_TABLES, CLE
 def runtime(fixture, monkeypatch):
     database, storage, journal = fixture
     entry = load_entry()
+    monkeypatch.setattr(entry, "SCHEMA_VERSION", 13)
     raw = RecordingD1(database, journal)
     events = []
     async def prepared(*args):
@@ -94,3 +95,10 @@ def test_invalid_arming_and_cached_budget_do_not_run_d1(runtime):
     assert runtime.raw.calls == 0 and runtime.journal.snapshot() == before
     payload, _ = fetch(runtime, "/_preview/budget")
     assert payload["businessClear"] is None and runtime.raw.calls == 0
+
+
+@pytest.fixture(autouse=True)
+def frozen_v13_meter(monkeypatch):
+    # These are dated historical proofs, not an admission of v14 preview maintenance.
+    from legacy_preview_schema import pin_v13_meter
+    pin_v13_meter(monkeypatch)

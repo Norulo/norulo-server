@@ -27,6 +27,7 @@ from .cloudflare_preview_schema import (
     V10_SCHEMA_OBJECTS, V10_SCHEMA_FINGERPRINT, V10_INDEX_COUNTS, UPGRADE_V11_SQL,
     V11_SCHEMA_OBJECTS, V11_SCHEMA_FINGERPRINT, V11_INDEX_COUNTS, UPGRADE_V12_SQL,
     V12_SCHEMA_OBJECTS, V12_SCHEMA_FINGERPRINT, V12_INDEX_COUNTS, UPGRADE_V13_SQL,
+    V13_SCHEMA_OBJECTS, V13_SCHEMA_FINGERPRINT,
 )
 from .cloudflare_validation_budget import (
     BudgetError, MeteredD1, OperationBound, RequestPlan, _Statement, _field,
@@ -1624,7 +1625,7 @@ async def upgrade_product_schema_v13(binding, journal, *, clock=time.time):
     if state["stopped"]:
         raise BudgetError(state["stopped"])
     if (_current_schema(state) or
-            (state.get("schema_version") == 13 and state.get("schema_fingerprint") == SCHEMA_FINGERPRINT)):
+            (state.get("schema_version") == 13 and state.get("schema_fingerprint") == V13_SCHEMA_FINGERPRINT)):
         marker = state.get("schema_upgrade_v13")
         if marker is not None and marker.get("complete") is not True:
             raise BudgetError("SCHEMA_V13_UPGRADE_UNREVIEWED")
@@ -1666,12 +1667,12 @@ async def upgrade_product_schema_v13(binding, journal, *, clock=time.time):
         validate(await execute(1), 0, old=True)
         await execute(2)
         verified = await execute(3)
-        if _schema_objects(verified[0]) != SCHEMA_OBJECTS:
+        if _schema_objects(verified[0]) != V13_SCHEMA_OBJECTS:
             journal._reject("PREVIEW_SCHEMA_MISMATCH")
         data = validate(verified, 1)
         saved = journal.check(ticket, now=clock())
         saved.update(product_data=data, schema_version=13,
-                     schema_fingerprint=SCHEMA_FINGERPRINT, product_data_verified=True)
+                     schema_fingerprint=V13_SCHEMA_FINGERPRINT, product_data_verified=True)
         if saved.get("state_record_integrity_version") != STATE_RECORD_INTEGRITY_VERSION:
             saved["state_record_integrity_version"] = STATE_RECORD_INTEGRITY_VERSION
             saved["state_record_integrity_request"] = ticket

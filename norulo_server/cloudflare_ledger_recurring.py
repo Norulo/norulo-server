@@ -426,14 +426,16 @@ async def _notify_failure(binding, row, period, now):
 
 
 async def _expense_commands(binding, user, row, template, occurred, period, now, *, retirement=(), proof=None):
+    from .cloudflare_ledger_expenses import _last_source
     stamp = _timestamp(now)
     record = {**template, "occurred_on": occurred.isoformat(), "id": "exp_" + uuid.uuid4().hex,
-        "owner_id": row["owner_id"], "revision": 1, "created_at": stamp, "updated_at": stamp, "deleted_at": None}
+        "owner_id": row["owner_id"], "revision": 1, "created_at": stamp, "updated_at": stamp, "deleted_at": None,
+        "last_source_json": _json(_last_source(user, "create", recurring=True), 2048)}
     payload, event_id = expense_dto(record), "evt_" + uuid.uuid4().hex
     activity = await activity_commands(binding, user, "expense", record["id"], "generate", None,
         payload, now, proof=proof, scheduled=proof is None, operation_id=event_id)
     columns = ("id", "owner_id", "target_kind", "project_id", "category_id", "occurred_on", "amount_minor",
-        "currency", "purpose", "note", "quantity_decimal", "unit", "revision", "created_at", "updated_at", "deleted_at")
+        "currency", "purpose", "note", "quantity_decimal", "unit", "revision", "created_at", "updated_at", "deleted_at", "last_source_json")
     from .cloudflare_ledger_expenses import _actor
     actor_kind, actor_id = _actor(proof) if proof else ("schedule", row["id"] + ":" + row["actor_user_id"])
     return [*retirement,

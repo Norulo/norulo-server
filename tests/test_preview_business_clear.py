@@ -19,7 +19,8 @@ from norulo_server.cloudflare_preview_business_clear import (
     _compile_plan, business_clear_pending, business_clear_receipt, clear_preview_business,
 )
 from norulo_server.cloudflare_preview_schema import (
-    INDEX_COUNTS, SCHEMA_FINGERPRINT, SCHEMA_SQL, SCHEMA_VERSION,
+    V13_INDEX_COUNTS as INDEX_COUNTS, V13_SCHEMA_FINGERPRINT as SCHEMA_FINGERPRINT,
+    V13_SCHEMA_SQL as SCHEMA_SQL, V13_SCHEMA_VERSION as SCHEMA_VERSION,
 )
 from norulo_server.cloudflare_state_records import encode_record, record_name
 from norulo_server.cloudflare_validation_budget import BudgetError, BudgetJournal
