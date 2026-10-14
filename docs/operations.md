@@ -1,3 +1,26 @@
+# Integrated rounded Jev release, 2026-10-14
+
+The final frontend includes the concurrently published ledger navigation fix
+`7ba841c35133c834e20ab9f435d37d8e6f88d7e7` alongside Pro 1,000 / Max 4,000 monthly Jev calls and Free 20 lifetime
+trials. Source main `ba51dbf3f54bcb106237f4cd116267421ec0fcca` is deployed as Web version
+`d8914456-e029-47c8-a38e-33fb2226afb1` at 100% traffic. Server remains at
+`45411608-40ae-4dee-a389-80d3200f2a5e` with source
+`2fc9b48265e6cd4afff8f2b26457ddceb888af60`. Later evidence commits change only docs.
+The earlier rounded-call and navigation snapshots below remain historical.
+
+The integrated application files match the upstream navigation source, whose
+existing full-suite evidence passed all 1,936 Web cases. This integration
+rechecked all 75 App tests, lint, build, Worker configuration and contract sync.
+Final Chromium Billing passed 84 states in 24 contexts across six languages.
+An earlier integrated browser attempt had one cold page-loading timeout; the
+full rerun of the identical build passed. All 32 final public checks passed,
+including 14 byte-identical assets and current root entry references. Direct
+and proxied catalogs confirm the rounded calls and unchanged prices/capacities.
+Resource bindings, six Secret names, limits and the daily cron are preserved.
+No migration, model evaluation or authenticated production business write was
+needed. See [final integrated evidence](validation/jev-rounded-calls-main-integration-production-2026-10-14.json); original
+Server regression and upload results remain in the prior rounded-call record.
+
 # Rounded Jev call allowances, 2026-10-14
 
 Production is verified at 100% traffic. Server source

@@ -1,0 +1,373 @@
+{
+  "verifiedAtUTC": "2026-10-14T13:24:29.745729+00:00",
+  "sourceCommits": {
+    "server": "2fc9b48265e6cd4afff8f2b26457ddceb888af60",
+    "web": "ba51dbf3f54bcb106237f4cd116267421ec0fcca"
+  },
+  "versions": {
+    "norulo-server-production": "45411608-40ae-4dee-a389-80d3200f2a5e",
+    "norulo-web": "d8914456-e029-47c8-a38e-33fb2226afb1"
+  },
+  "trafficPercent": 100,
+  "publicChecks": [
+    {
+      "url": "https://norulo.com/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/pricing",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/billing",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/settings",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/developers/docs",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/developers/api",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/privacy",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/terms",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/api/v1/me",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/api/v1/account/jev",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/api/v1/me",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/api/v1/account/jev",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://www.norulo.com/pricing?lang=zh",
+      "status": 308,
+      "passed": true,
+      "location": "https://norulo.com/pricing?lang=zh"
+    },
+    {
+      "url": "https://api.norulo.com/billing/plan",
+      "status": 200,
+      "passed": true,
+      "pricesAndCallsVerified": true
+    },
+    {
+      "url": "https://norulo.com/api/billing/plan",
+      "status": 200,
+      "passed": true,
+      "pricesAndCallsVerified": true
+    },
+    {
+      "url": "https://norulo.com/assets/index-CKie1VC_.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "89030c4ab1874d53b9fbaf17c4fbb5df6642f44e979ac168895b3d1b032d6124"
+    },
+    {
+      "url": "https://norulo.com/assets/billing-DCktA5Ne.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "1dced6c8ab73eaf4702cc392f6a5d6f33b84bf0f5d2820f03c4bf5bb834a7f0b"
+    },
+    {
+      "url": "https://norulo.com/assets/settings-DwR22WpQ.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "025c2f5497ab222dd29b61ce157f370270483528cf2c67414116600a98d4a125"
+    },
+    {
+      "url": "https://norulo.com/assets/docs-z2B4z8T-.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "dca0a70e6c4e330d00b1ff16b86fb79f061fe35c77da92cf780c383ff0ea3640"
+    },
+    {
+      "url": "https://norulo.com/assets/api-docs-BT-K8xGk.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "38312ab3edb412e74b1b892845e68f1250dfe5412c057f40552992b05f770e51"
+    },
+    {
+      "url": "https://norulo.com/assets/legal-CW9J7Trj.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "add9bc7fade1b0d4d8d7eb260db9845bca48e1d7fe34191165746fd96f5fdf65"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-3v38wnmX.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "32a4ceb8ab4c95eb9af4d532a43164ff4faba93d9669f609f8baad223ff51086"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-BSXwL7TC.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "c219aca1a206276eab86e91113065db2d13b069237a1b01e59686a44c12a2617"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-Bi5emf0c.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "126cb16441e6531893cda613444544e6849d1ee4ca6e74636019faa08100049a"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-D5SFkqRz.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "9b299851ff8631f6eae109f8e7521a3ef19b4c0f10ece87eb16e9c6bdd167338"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-DuhAqHBo.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "4609b7de45ab4bc4da2d75dabbe95996344fb573a82af5b9afd2dd737fbff021"
+    },
+    {
+      "url": "https://norulo.com/assets/jev-copy-KlJVGdae.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "d7bfbc75ab37530b4ecd7e53ad13ef90e032e22f559c3c951e7a8e465c294d80"
+    },
+    {
+      "url": "https://norulo.com/openapi/ledger-v1.json",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "e9beb499d17f71ad9cd12c4daba1051cb010e8e354321f09110e4902787d47e1"
+    },
+    {
+      "url": "https://norulo.com/norulo-logo.png",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f"
+    },
+    {
+      "url": "https://norulo.com/",
+      "status": 200,
+      "passed": true,
+      "purpose": "Root HTML references the integrated main entry assets",
+      "entryAssetReferences": [
+        "/assets/i18n-OwqZr5_P.js",
+        "/assets/index-CKie1VC_.js",
+        "/assets/index-CyL2mzIf.css",
+        "/assets/navigation-DHQunuIk.js",
+        "/assets/norulo-DBdsjYwQ.js",
+        "/assets/rolldown-runtime-Bh1tDfsg.js",
+        "/assets/vendor-CHwUWPSh.js",
+        "/assets/vendor-react-9XhioiGP.js"
+      ]
+    }
+  ],
+  "otherConfigurationPreserved": true,
+  "intentionalConfigurationChange": "NORULO_PLAN_LIMITS_JSON jevMonthlyCalls: Free 0, Pro 1000, Max 4000",
+  "priorVerifiedSchemaVersion": 15,
+  "productionBusinessMutationRequests": 0,
+  "productionProviderEvaluations": 0,
+  "migrationRequired": false,
+  "migrationApplied": null,
+  "remoteSqlVerificationCalls": 0,
+  "rootHtmlEntryAssetsVerified": true,
+  "policy": {
+    "free": {
+      "jevLifetimeTrials": 20,
+      "expenses": 300,
+      "projects": 3
+    },
+    "pro": {
+      "jevMonthlyCalls": 1000,
+      "expenses": 20000,
+      "projects": 20,
+      "monthlyUsd": "4.99",
+      "annualUsd": "49.99"
+    },
+    "max": {
+      "jevMonthlyCalls": 4000,
+      "expenses": 200000,
+      "projects": 100,
+      "monthlyUsd": "12.99",
+      "annualUsd": "129.99"
+    },
+    "monthlyCallsForAnnualPlans": true,
+    "rollover": false,
+    "reservationMicrousdPerCall": 2753,
+    "trialRenewsOnPlanPreferenceOrMonthChange": false,
+    "paidHistoryReset": false,
+    "deprecatedUsdContractFieldsRetained": true
+  },
+  "includedLedgerNavigationFix": "7ba841c35133c834e20ab9f435d37d8e6f88d7e7",
+  "originalJevWebSource": "fdc1b012d3419f628e8d475bbb24025b203d9202",
+  "applicationFilesMatchVerifiedUpstreamSource": true,
+  "localChecks": {
+    "serverValidationEvidence": "jev-rounded-calls-production-2026-10-14.json",
+    "serverCasesCovered": 3294,
+    "integratedWebApp": {
+      "passed": 75,
+      "failed": 0,
+      "maxWorkers": 1
+    },
+    "upstreamFullWebValidation": {
+      "sourceCommit": "7ba841c35133c834e20ab9f435d37d8e6f88d7e7",
+      "sourceEvidence": "ledger-switch-production-2026-10-14.json",
+      "testsPassed": 1936,
+      "filesPassed": 91,
+      "scope": "Existing full-suite evidence for the identical application tree, including the rounded Jev code; rebase added only release documentation."
+    },
+    "finalBillingBrowser": {
+      "contexts": 24,
+      "states": 84,
+      "languages": [
+        "en",
+        "zh",
+        "ja",
+        "ko",
+        "fr",
+        "es"
+      ],
+      "failed": 0
+    },
+    "earlierIntegratedBrowserAttempt": {
+      "completedContexts": 14,
+      "failure": "One Chinese 320px page remained loading past the ten-second region wait.",
+      "resolution": "Full identical-build rerun passed all 24 contexts and 84 states."
+    },
+    "lintBuildWorkersAndContractSync": "passed"
+  },
+  "serverBundleAudit": {
+    "canonicalModules": 65,
+    "canonicalHashes": {
+      "account_cycle_rules": "f0cc61223ce05a3075461a81bff1469eca656fa003bdee121031cd9258ad8e7c",
+      "preview_plan_grants": "05f721de80a65033d7154f38a1601393ca96fcf694798b435e2aca9af3a3fa06",
+      "api_key_dto_rules": "4940c03b93444d700930040975c56758c190fc826314a526ff93b4b29598d9e7",
+      "billing_account_rules": "50e1b5ca2a9e397b66721f0c155ebf5cfdd3e8e211c1fd236c8871bd194df2a2",
+      "billing_catalog_rules": "f26d684fd9ca1fa0419ac7659d6edfd1a9217706315d507585bea94a0d778033",
+      "billing_projection": "e4e59d349edc2f52574d599eb4769690d7f0b4cb5dfb5a365eaedcca2dd268a9",
+      "cloudflare_account_adapter": "c7c0378da2982510671bea8fa027954194662c17201c663424cebee3fd086e46",
+      "cloudflare_api_key_read": "58239552eb7dfc729e70d749b7d3bdb4c288fcb7bdb4de6be4d979ac44d1af9e",
+      "cloudflare_api_key_write": "42f4bfe2978c73048c8fdc8b512326a41aef03d7c847abe4b10ac110f6dc36f5",
+      "cloudflare_auth_admission": "0cf2bbea26f538c3815dbd11d7a4555b75d35f6983f537386da938919b700fe1",
+      "cloudflare_billing_catalog": "f32d596f0c5caacb203f3eb131c3389dbd92b6573ec6c8aa0b1d8f7c015df154",
+      "cloudflare_billing_catalog_refresh": "c75ac1a745e7f03f1c7dbfd35c0bc46612d3b6f0e6e3c7efaa829138bc226397",
+      "cloudflare_billing_catalog_write": "145ec58d410b47ba0f92a891db3aa8b6cf53a97ac0cfe8d51f8c6c45cb97f486",
+      "cloudflare_billing_mutations": "e235bedcb66197ea8072729e20c243c84d3e3d104d2a4d5a6086551c6e1d25bd",
+      "cloudflare_billing_read": "27dc12ec4d37e6885d11a699189b97111b686b704988595fb00fdecbef704759",
+      "cloudflare_creem_gateway": "5d465d8885dd492d63c096b798143447d63974f56799ab7da59c2be5aecadc27",
+      "cloudflare_creem_handler": "4af4c9917c59b450a2e593af6c88639589d1fef79b078158eb745a0470fddc0e",
+      "cloudflare_d1_batch": "f3e3e4df4f9d8892683b061cbac8a90c6ba33b5903216e8dc600a5dd3008ca9c",
+      "cloudflare_d1_mapping": "30a9bbc39b5e4e695d3c17aeb7a9b53eb2ed86c6faf12ac8e57e7c59ef61ba1c",
+      "cloudflare_email_admission": "b3da5314def108e817143e2b60d8bffa8beba7c876df9082d903b9d54b7bd9bc",
+      "cloudflare_email_auth": "43e34290f58742756b6d9a165611128d199f3f79b6ef1305a71a0d004a797294",
+      "cloudflare_email_gateway": "acffa2a5aebfcbf8430fbcdcff7460a164682656cb234efa6d43ab10007b12e1",
+      "cloudflare_github_gateway": "f30b25bbafcf56e53b8573cb5fa74b16b9ec78892e4e8a44f5802042b42cf749",
+      "cloudflare_github_identity_http": "7ecd7621ad2c1404d91b4ea931b76f4cdbd35e65fafa7051d5da35038e4aa6b1",
+      "cloudflare_github_refresh": "2596459a603fb3f8b8977afcf89ecd9c19d58ae7661301b00c9ded4da8cad522",
+      "cloudflare_http_contract": "d346222eca9f05a474dda4611c08ce61289beb08685da83cc894cb1fc724149d",
+      "cloudflare_jev_gateway": "eea97c86e6fbff8de9eb50418938e02a0b84e3016593c5b269b5d120cd697818",
+      "cloudflare_jev_preferences": "9db51604df3068277fd25b8f14a905142953a35b37d3a46e5933a9200be0aa2a",
+      "cloudflare_expense_retention": "b7b295a80bd23508a00d0d0058dc27ee2d26f9f9504bed47b12130de6767ab3a",
+      "cloudflare_ledger_activity": "45c2f25ae916d71fa51ab3db4e7fcadb3b11dc0fe27cf31f8dc38b3e86615dad",
+      "cloudflare_ledger_api": "2357b6ba4b5ce566fc73d74abc2c7bdc6b59cc2c02e364e2484ab7a5c9f87385",
+      "cloudflare_ledger_categories": "3b768281db66faf909a24e51495db62ca9df3fe8c8947025f6df41f3c76e5019",
+      "cloudflare_ledger_auth": "4e8931934bec62618ffcc4d388e0c6a62416c1a9d2fd3465886287ebbefef7fb",
+      "cloudflare_ledger_expenses": "c0e61d2369778c644f7c09d96555bca93eff71059d3fd7801e53745b48d0a31a",
+      "cloudflare_ledger_profile": "7a21ecbb5a7eda37f3e6dc4309f486dad8b7dd0c6c61a4037e7ae6e9c07a8e54",
+      "cloudflare_ledger_reports": "e923a7b91f8d8cd4be5ce70b13d952c08b707138ad30ab73aeb90df7ff4bb949",
+      "cloudflare_ledger_review": "01818a0e473037e9b996a4802ef338795a71effac22c19621aba9c8c30117963",
+      "cloudflare_ledger_recurring": "78e4681b5c41b9398c7966fa68befe93effae291b90ba8c8975730e2a5c7e60d",
+      "cloudflare_recurring_scheduler": "314e0ead6a9844c7b8b3ee629efbb51bc5fc27e72b637e8b0b4ad3a885784930",
+      "cloudflare_recurring_assistance": "8571f43be0aefb45423e6b8f0aa3e969c93165aed36306703749341993537bf3",
+      "cloudflare_recurring_notifications": "29c5c5a9fb21e8bb8dc6207d4a80d569d690984efbe2a10efe67f7d5b08f951a",
+      "ledger_recurrence_calendar": "21e33ed0fe7c92de453a8839dece749b2a964b0226ef182915843b859234af41",
+      "cloudflare_ledger_suggestions": "ed2d2efc5966ec539a92b843a86391193f3bf94aa8e39728f1dda99e4f88d2a6",
+      "cloudflare_native_d1": "b19bb7e352c24e76af94e3f5e4f0f6969bde9853ce92f7735a4189b80e67a930",
+      "cloudflare_oauth_state_adapter": "7586855d9deca10c0763d5d0ac24ad9c335c574fb98ef207b90a74c5cabe56bd",
+      "cloudflare_principal": "18aa5eece212bece3efea3a74e416a61f88e405a1d4b4111c11b34cc894b9002",
+      "cloudflare_project_repositories": "a7310b6721e6976d8424b904a1f0d90c8e52c0ba6ddbf3f1b3e1fd4601cfbf78",
+      "cloudflare_project_erasure": "f0e53a07d01103ed1aa53089a8b6c0857137c20ddf12d6f29efe8522851784eb",
+      "cloudflare_session_adapter": "d908befe501dff08a7ab54e040ad39aba01b5565d72d158d8ae51478db7f6903",
+      "cloudflare_state_records": "49ae0272e49ae481e6748bcc0e1835bd08b6fa40aca68ab4c339c4c830fed990",
+      "cloudflare_webhook_receipts": "71d4cdddba613b68f58c8dcd685bcc3fe7a176ff85eee0a36d09fabc9d1ff3e3",
+      "cloudflare_workspaces": "acbf606779357d756e87a86c812a8799214b8e10eaa75d22ac02eb5c63092a12",
+      "cloudflare_validation_budget": "b7682bfafdea56de7cb6aeb9204378ea9b22bde95c71e5dc68f3a8c06bb5f65f",
+      "cloudflare_preview_budget": "d2802e4f9e9e278159672ea81bacf0f24475f7bfdc8c9fd7e31b1b8b23f70e20",
+      "cloudflare_preview_business_clear": "aa41febdebb868ee047c596f650a8fab8c3958959527f388c2af95940a17a31c",
+      "cloudflare_preview_rate": "5aadbe66a803496d63db8493890b6ca665953f78bbe30b883a1599cbe9bc6ede",
+      "cloudflare_preview_schema": "5e2d47ca87de3e65856fe0e6ad11f4beccc9730a8aa915961984d688ccf6eb32",
+      "cloudflare_plan_limits": "fa84fcac5607b21a8f85376aa760a36d6eb924b8da149bef11067230d9c4fc81",
+      "ledger_plan_policy": "67e6d5044820362ae7957aeeb8fb11eb52281de13fded1075e5da1b48740b3b7",
+      "ledger_money_totals": "552c26b9c14343336f9e858488552e05ce1bd90345e3d2f10422c14634124de1",
+      "json_input": "f0eb95eb53c52cceb31b69aa5b7c93dfd03aaee1af2376a1fc1277d3a76786cc",
+      "creem_event_rules": "7f1054d8bf4d04009a48385ed3d393ed983d9e33f940e260d5f757fcbcca1614",
+      "creem_public_catalog_rules": "45403e0a0b019bfbec6fcb81e116180127c5b60955fc5913f97f9b17e1ded9dd",
+      "creem_signature": "3cb105e50952a79365d64f8946db39f7647f5b5da1b52b3e1c4d70cab11787cc",
+      "typesafe_client": "7a18ee3bd21267e6e18b751902ea55561e6074c7c6d9968fff7d173015e7d903"
+    },
+    "entryImportClosurePassed": true,
+    "sourceMatchesDryRun": true,
+    "deployedUploadFiles": 731,
+    "actualUploadMatchesDryRun": true,
+    "canonicalSourceMatchesActualUpload": true
+  },
+  "priorRoundedReleaseEvidence": "jev-rounded-calls-production-2026-10-14.json",
+  "mainPublishedBeforeDeploy": true,
+  "integrationReason": "Preserve the ledger navigation fix concurrently published on main after the original Jev frontend source commit.",
+  "databaseAccountingNote": "No migration or SQL verification request was needed for this call-configuration change. Ordinary public catalog reads can refresh the existing provider cache; their D1 row metrics are not exposed or claimed to be zero.",
+  "dailyCronUTC": "10 16 * * *",
+  "publicVariables": 19,
+  "unchangedPublicVariables": 18,
+  "secretNamesPreserved": 6
+}
