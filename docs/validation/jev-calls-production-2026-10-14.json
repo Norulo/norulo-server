@@ -1,0 +1,422 @@
+{
+  "verifiedAtUTC": "2026-10-14T12:11:23.350324+00:00",
+  "sourceCommits": {
+    "server": "ad63c4d790215cabb41911faaffc06d73ee864e8",
+    "web": "9621562f617231bd42eff9de92f19dc064b1d129"
+  },
+  "versions": {
+    "norulo-server-production": "f6e778ff-9f9e-4d98-99c9-27a7f210df73",
+    "norulo-web": "de8d4cce-9057-4db3-87d6-499959931513"
+  },
+  "trafficPercent": 100,
+  "publicChecks": [
+    {
+      "url": "https://norulo.com/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/pricing",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/billing",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/settings",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/developers/docs",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/developers/api",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/privacy",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/terms",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/api/v1/me",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/api/v1/account/jev",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/api/v1/me",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/api/v1/account/jev",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://www.norulo.com/pricing?lang=zh",
+      "status": 308,
+      "passed": true,
+      "location": "https://norulo.com/pricing?lang=zh"
+    },
+    {
+      "url": "https://api.norulo.com/billing/plan",
+      "status": 200,
+      "passed": true,
+      "pricesAndCallsVerified": true
+    },
+    {
+      "url": "https://norulo.com/api/billing/plan",
+      "status": 200,
+      "passed": true,
+      "pricesAndCallsVerified": true
+    },
+    {
+      "url": "https://norulo.com/assets/index-DE72aUAa.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "30feec2b06e07bc42da2e0c9e19aea5a28f04ccebdef6fab872587a5b93f012e"
+    },
+    {
+      "url": "https://norulo.com/assets/billing-B79HMXma.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "8993586a2e01556cb830ff829f694aa8d255033ed45b89e745b91724f3058b4d"
+    },
+    {
+      "url": "https://norulo.com/assets/settings-C-ym9XWf.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "0d2c7a47422639ab8a10ba32a6eb74b7cbfbd91c2693081eeec61e5d4f9f15fb"
+    },
+    {
+      "url": "https://norulo.com/assets/docs-DmEcunlk.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "490e0ab459699a13921117dbea11caaad52a232146c8b880446c427f0cdd75c4"
+    },
+    {
+      "url": "https://norulo.com/assets/api-docs-CTz-GQWt.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "ac425e2c3fc39867957f5910dc1d8a2c870c21aba272b3d27356da40c5e84ecf"
+    },
+    {
+      "url": "https://norulo.com/assets/legal-BL6auP6u.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "598ff3203682da5b1313add5d5a3bbf202e937fa28d3fb74999c4d49b95414cd"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-BgDPlQ2h.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "7af23080b0d2992ae75bea2ae38a791c0d26ca2f73f28cf767cf49b49add89a4"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-C4rVwbiy.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "19a6f3bb0107bfb323bff49cd64a5d6894096912861fa73cc43cc277a1d7dbec"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-CzGkHs4y.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "53057426a2ec26aee232cf87b535429432f0e3af871e46b0b854c95051c56972"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-Dfc5gELm.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "b8acd281cfa0c4b2ac02a203c13ac171c6ce7ecaf29227245522f5b8bb183d20"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-DzWtCWdb.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "fabadb884ab3cd42d506570f4ccfc63b9c996735a3f384767a9404b993ff8c50"
+    },
+    {
+      "url": "https://norulo.com/assets/jev-copy-C_XsqMym.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "2926b565858abee79c68f3ce706727261b5754e0fcd3f03bcd5e84d826c70410"
+    },
+    {
+      "url": "https://norulo.com/openapi/ledger-v1.json",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "5077910e98d448bdc725fe179161c2640d6d97da11d89c917688851db7bec63a"
+    },
+    {
+      "url": "https://norulo.com/norulo-logo.png",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f"
+    }
+  ],
+  "configurationPreserved": true,
+  "schemaVersion": 15,
+  "productionBusinessMutationRequests": 0,
+  "productionProviderEvaluations": 0,
+  "migrationApplied": "0015_jev_trial_calls.sql",
+  "policy": {
+    "free": {
+      "jevLifetimeTrials": 20,
+      "expenses": 300,
+      "projects": 3
+    },
+    "pro": {
+      "jevMonthlyCalls": 1089,
+      "expenses": 20000,
+      "projects": 20,
+      "monthlyUsd": "4.99",
+      "annualUsd": "49.99"
+    },
+    "max": {
+      "jevMonthlyCalls": 4358,
+      "expenses": 200000,
+      "projects": 100,
+      "monthlyUsd": "12.99",
+      "annualUsd": "129.99"
+    },
+    "monthlyCallsForAnnualPlans": true,
+    "rollover": false,
+    "reservationMicrousdPerCall": 2753,
+    "trialRenewsOnPlanPreferenceOrMonthChange": false,
+    "paidHistoryReset": false,
+    "deprecatedUsdContractFieldsRetained": true
+  },
+  "localChecks": {
+    "serverFull": {
+      "passed": 3285,
+      "subtestsPassed": 107,
+      "failed": 0
+    },
+    "webFullFinalProductSource": {
+      "passed": 1929,
+      "failed": 1,
+      "files": 91,
+      "testTimeoutMs": 30000,
+      "remainingFailure": "Cold lazy /developers/docs import exceeded the default one-second Testing Library DOM wait in App skip-navigation test."
+    },
+    "webFinalApp": {
+      "passed": 69,
+      "failed": 0,
+      "includes": "All App tests after bounded ten-second lazy-route DOM wait; every other test case passed in the full run."
+    },
+    "webAdditionalRechecks": {
+      "localeLegalTimezonePassed": 50,
+      "navigationCasesPassed": 3,
+      "invitationCasesPassed": 1,
+      "categoryCasesPassed": 2,
+      "purpose": "Loaded CI timing failures and revised copy were rechecked; assertions retained."
+    },
+    "boundedChromiumBilling": {
+      "contexts": 24,
+      "states": 84,
+      "languages": [
+        "en",
+        "zh",
+        "ja",
+        "ko",
+        "fr",
+        "es"
+      ],
+      "includes": "Count usage, remaining calls, Free lifetime trial, max safe integers, 320/390/1024/1906 widths and both themes"
+    },
+    "nativeD1Trial": {
+      "httpRequests": 24,
+      "admittedCalls": 20,
+      "twentyFirstDenied": true,
+      "staleGuardCharged": false,
+      "monthResetRenewsTrials": false,
+      "compatibilityDate": "2026-09-23",
+      "wranglerVersion": "4.136.3",
+      "evidence": "jev-trial-native-local-2026-10-14.json"
+    },
+    "lintBuildWorkersContractAndSourceSync": "passed"
+  },
+  "serverBundleAudit": {
+    "canonicalModules": 65,
+    "canonicalHashes": {
+      "account_cycle_rules": "f0cc61223ce05a3075461a81bff1469eca656fa003bdee121031cd9258ad8e7c",
+      "preview_plan_grants": "05f721de80a65033d7154f38a1601393ca96fcf694798b435e2aca9af3a3fa06",
+      "api_key_dto_rules": "4940c03b93444d700930040975c56758c190fc826314a526ff93b4b29598d9e7",
+      "billing_account_rules": "50e1b5ca2a9e397b66721f0c155ebf5cfdd3e8e211c1fd236c8871bd194df2a2",
+      "billing_catalog_rules": "f26d684fd9ca1fa0419ac7659d6edfd1a9217706315d507585bea94a0d778033",
+      "billing_projection": "e4e59d349edc2f52574d599eb4769690d7f0b4cb5dfb5a365eaedcca2dd268a9",
+      "cloudflare_account_adapter": "c7c0378da2982510671bea8fa027954194662c17201c663424cebee3fd086e46",
+      "cloudflare_api_key_read": "58239552eb7dfc729e70d749b7d3bdb4c288fcb7bdb4de6be4d979ac44d1af9e",
+      "cloudflare_api_key_write": "42f4bfe2978c73048c8fdc8b512326a41aef03d7c847abe4b10ac110f6dc36f5",
+      "cloudflare_auth_admission": "0cf2bbea26f538c3815dbd11d7a4555b75d35f6983f537386da938919b700fe1",
+      "cloudflare_billing_catalog": "f32d596f0c5caacb203f3eb131c3389dbd92b6573ec6c8aa0b1d8f7c015df154",
+      "cloudflare_billing_catalog_refresh": "c75ac1a745e7f03f1c7dbfd35c0bc46612d3b6f0e6e3c7efaa829138bc226397",
+      "cloudflare_billing_catalog_write": "145ec58d410b47ba0f92a891db3aa8b6cf53a97ac0cfe8d51f8c6c45cb97f486",
+      "cloudflare_billing_mutations": "e235bedcb66197ea8072729e20c243c84d3e3d104d2a4d5a6086551c6e1d25bd",
+      "cloudflare_billing_read": "27dc12ec4d37e6885d11a699189b97111b686b704988595fb00fdecbef704759",
+      "cloudflare_creem_gateway": "5d465d8885dd492d63c096b798143447d63974f56799ab7da59c2be5aecadc27",
+      "cloudflare_creem_handler": "4af4c9917c59b450a2e593af6c88639589d1fef79b078158eb745a0470fddc0e",
+      "cloudflare_d1_batch": "f3e3e4df4f9d8892683b061cbac8a90c6ba33b5903216e8dc600a5dd3008ca9c",
+      "cloudflare_d1_mapping": "30a9bbc39b5e4e695d3c17aeb7a9b53eb2ed86c6faf12ac8e57e7c59ef61ba1c",
+      "cloudflare_email_admission": "b3da5314def108e817143e2b60d8bffa8beba7c876df9082d903b9d54b7bd9bc",
+      "cloudflare_email_auth": "43e34290f58742756b6d9a165611128d199f3f79b6ef1305a71a0d004a797294",
+      "cloudflare_email_gateway": "acffa2a5aebfcbf8430fbcdcff7460a164682656cb234efa6d43ab10007b12e1",
+      "cloudflare_github_gateway": "f30b25bbafcf56e53b8573cb5fa74b16b9ec78892e4e8a44f5802042b42cf749",
+      "cloudflare_github_identity_http": "7ecd7621ad2c1404d91b4ea931b76f4cdbd35e65fafa7051d5da35038e4aa6b1",
+      "cloudflare_github_refresh": "2596459a603fb3f8b8977afcf89ecd9c19d58ae7661301b00c9ded4da8cad522",
+      "cloudflare_http_contract": "d346222eca9f05a474dda4611c08ce61289beb08685da83cc894cb1fc724149d",
+      "cloudflare_jev_gateway": "eea97c86e6fbff8de9eb50418938e02a0b84e3016593c5b269b5d120cd697818",
+      "cloudflare_jev_preferences": "9db51604df3068277fd25b8f14a905142953a35b37d3a46e5933a9200be0aa2a",
+      "cloudflare_expense_retention": "b7b295a80bd23508a00d0d0058dc27ee2d26f9f9504bed47b12130de6767ab3a",
+      "cloudflare_ledger_activity": "45c2f25ae916d71fa51ab3db4e7fcadb3b11dc0fe27cf31f8dc38b3e86615dad",
+      "cloudflare_ledger_api": "2357b6ba4b5ce566fc73d74abc2c7bdc6b59cc2c02e364e2484ab7a5c9f87385",
+      "cloudflare_ledger_categories": "3b768281db66faf909a24e51495db62ca9df3fe8c8947025f6df41f3c76e5019",
+      "cloudflare_ledger_auth": "4e8931934bec62618ffcc4d388e0c6a62416c1a9d2fd3465886287ebbefef7fb",
+      "cloudflare_ledger_expenses": "c0e61d2369778c644f7c09d96555bca93eff71059d3fd7801e53745b48d0a31a",
+      "cloudflare_ledger_profile": "7a21ecbb5a7eda37f3e6dc4309f486dad8b7dd0c6c61a4037e7ae6e9c07a8e54",
+      "cloudflare_ledger_reports": "e923a7b91f8d8cd4be5ce70b13d952c08b707138ad30ab73aeb90df7ff4bb949",
+      "cloudflare_ledger_review": "01818a0e473037e9b996a4802ef338795a71effac22c19621aba9c8c30117963",
+      "cloudflare_ledger_recurring": "78e4681b5c41b9398c7966fa68befe93effae291b90ba8c8975730e2a5c7e60d",
+      "cloudflare_recurring_scheduler": "314e0ead6a9844c7b8b3ee629efbb51bc5fc27e72b637e8b0b4ad3a885784930",
+      "cloudflare_recurring_assistance": "8571f43be0aefb45423e6b8f0aa3e969c93165aed36306703749341993537bf3",
+      "cloudflare_recurring_notifications": "29c5c5a9fb21e8bb8dc6207d4a80d569d690984efbe2a10efe67f7d5b08f951a",
+      "ledger_recurrence_calendar": "21e33ed0fe7c92de453a8839dece749b2a964b0226ef182915843b859234af41",
+      "cloudflare_ledger_suggestions": "ed2d2efc5966ec539a92b843a86391193f3bf94aa8e39728f1dda99e4f88d2a6",
+      "cloudflare_native_d1": "b19bb7e352c24e76af94e3f5e4f0f6969bde9853ce92f7735a4189b80e67a930",
+      "cloudflare_oauth_state_adapter": "7586855d9deca10c0763d5d0ac24ad9c335c574fb98ef207b90a74c5cabe56bd",
+      "cloudflare_principal": "18aa5eece212bece3efea3a74e416a61f88e405a1d4b4111c11b34cc894b9002",
+      "cloudflare_project_repositories": "a7310b6721e6976d8424b904a1f0d90c8e52c0ba6ddbf3f1b3e1fd4601cfbf78",
+      "cloudflare_project_erasure": "f0e53a07d01103ed1aa53089a8b6c0857137c20ddf12d6f29efe8522851784eb",
+      "cloudflare_session_adapter": "d908befe501dff08a7ab54e040ad39aba01b5565d72d158d8ae51478db7f6903",
+      "cloudflare_state_records": "49ae0272e49ae481e6748bcc0e1835bd08b6fa40aca68ab4c339c4c830fed990",
+      "cloudflare_webhook_receipts": "71d4cdddba613b68f58c8dcd685bcc3fe7a176ff85eee0a36d09fabc9d1ff3e3",
+      "cloudflare_workspaces": "acbf606779357d756e87a86c812a8799214b8e10eaa75d22ac02eb5c63092a12",
+      "cloudflare_validation_budget": "b7682bfafdea56de7cb6aeb9204378ea9b22bde95c71e5dc68f3a8c06bb5f65f",
+      "cloudflare_preview_budget": "d2802e4f9e9e278159672ea81bacf0f24475f7bfdc8c9fd7e31b1b8b23f70e20",
+      "cloudflare_preview_business_clear": "aa41febdebb868ee047c596f650a8fab8c3958959527f388c2af95940a17a31c",
+      "cloudflare_preview_rate": "5aadbe66a803496d63db8493890b6ca665953f78bbe30b883a1599cbe9bc6ede",
+      "cloudflare_preview_schema": "5e2d47ca87de3e65856fe0e6ad11f4beccc9730a8aa915961984d688ccf6eb32",
+      "cloudflare_plan_limits": "7b156bf8b3bf0cca5a177c28b1058d0732b67457e7517890d48aacfefa60125f",
+      "ledger_plan_policy": "a4c879b57c4a2f7adcf7ac261e54f5e32342abf9e2df4b8989370378c8e47e88",
+      "ledger_money_totals": "552c26b9c14343336f9e858488552e05ce1bd90345e3d2f10422c14634124de1",
+      "json_input": "f0eb95eb53c52cceb31b69aa5b7c93dfd03aaee1af2376a1fc1277d3a76786cc",
+      "creem_event_rules": "7f1054d8bf4d04009a48385ed3d393ed983d9e33f940e260d5f757fcbcca1614",
+      "creem_public_catalog_rules": "45403e0a0b019bfbec6fcb81e116180127c5b60955fc5913f97f9b17e1ded9dd",
+      "creem_signature": "3cb105e50952a79365d64f8946db39f7647f5b5da1b52b3e1c4d70cab11787cc",
+      "typesafe_client": "7a18ee3bd21267e6e18b751902ea55561e6074c7c6d9968fff7d173015e7d903"
+    },
+    "dryRunUploadFiles": 761,
+    "sourceMatchesDryRun": true,
+    "deployedUploadFiles": 731,
+    "actualUploadMatchesDryRun": true
+  },
+  "migration": {
+    "name": "0015_jev_trial_calls.sql",
+    "databaseId": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+    "schemaBefore": 14,
+    "schemaAfter": 15,
+    "commandsExecuted": 2,
+    "durationMsReported": 2.84,
+    "success": true,
+    "schemaAndAllFifteenMigrationNamesVerified": true,
+    "nativeDdlRowsRead": null,
+    "nativeDdlRowsWritten": null,
+    "accountingNote": "Wrangler exposed successful two-command migration duration but sanitized its API response; native DDL/journal row totals were not returned in the CLI output and are unknown. They are not claimed to be zero. Migration list/apply also performs internal schema/journal reads without exposed row metrics."
+  },
+  "schemaVerificationSql": {
+    "calls": [
+      {
+        "phase": "d1-before.json",
+        "sql": "SELECT type,name,tbl_name,sql FROM sqlite_schema\n    WHERE name NOT GLOB '_cf_*' AND tbl_name NOT GLOB '_cf_*'\n    AND tbl_name <> 'd1_migrations'\n    AND (name NOT GLOB 'sqlite_*' OR name GLOB 'sqlite_autoindex_*')\n    ORDER BY type,name LIMIT 129",
+        "rowsRead": 162,
+        "rowsWritten": 0,
+        "totalAttempts": 1
+      },
+      {
+        "phase": "d1-before.json",
+        "sql": "SELECT id,name FROM d1_migrations ORDER BY id LIMIT 16",
+        "rowsRead": 14,
+        "rowsWritten": 0,
+        "totalAttempts": 1
+      },
+      {
+        "phase": "prepublish.json",
+        "sql": "SELECT type,name,tbl_name,sql FROM sqlite_schema\n    WHERE name NOT GLOB '_cf_*' AND tbl_name NOT GLOB '_cf_*'\n    AND tbl_name <> 'd1_migrations'\n    AND (name NOT GLOB 'sqlite_*' OR name GLOB 'sqlite_autoindex_*')\n    ORDER BY type,name LIMIT 129",
+        "rowsRead": 162,
+        "rowsWritten": 0,
+        "totalAttempts": 1
+      },
+      {
+        "phase": "prepublish.json",
+        "sql": "SELECT name FROM d1_migrations ORDER BY id LIMIT 16",
+        "rowsRead": 14,
+        "rowsWritten": 0,
+        "totalAttempts": 1
+      },
+      {
+        "phase": "d1-after.json",
+        "sql": "SELECT type,name,tbl_name,sql FROM sqlite_schema\n    WHERE name NOT GLOB '_cf_*' AND tbl_name NOT GLOB '_cf_*'\n    AND tbl_name <> 'd1_migrations'\n    AND (name NOT GLOB 'sqlite_*' OR name GLOB 'sqlite_autoindex_*')\n    ORDER BY type,name LIMIT 129",
+        "rowsRead": 162,
+        "rowsWritten": 0,
+        "totalAttempts": 1
+      },
+      {
+        "phase": "d1-after.json",
+        "sql": "SELECT name FROM d1_migrations ORDER BY id LIMIT 16",
+        "rowsRead": 15,
+        "rowsWritten": 0,
+        "totalAttempts": 1
+      }
+    ],
+    "knownRowsRead": 529,
+    "knownRowsWritten": 0,
+    "scope": "Only the six explicitly captured schema/migration SELECTs; excludes unknown migration CLI accounting and any ordinary catalog cache refresh."
+  },
+  "dailyCronUTC": "10 16 * * *",
+  "publicVarsPreserved": 19,
+  "secretNamesPreserved": 6,
+  "mainPublishedBeforeDeploy": true
+}

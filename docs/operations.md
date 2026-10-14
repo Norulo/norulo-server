@@ -1,3 +1,37 @@
+# Jev call allowance production release, 2026-10-14
+
+Production publication is verified at 100% traffic. Server source
+`ad63c4d790215cabb41911faaffc06d73ee864e8` is version
+`f6e778ff-9f9e-4d98-99c9-27a7f210df73`; Web source
+`9621562f617231bd42eff9de92f19dc064b1d129` is version
+`de8d4cce-9057-4db3-87d6-499959931513`. Later evidence or test-only
+commits do not change production application code.
+
+Free has 20 lifetime Jev trials per Owner, shared with members and API keys.
+Pro has 1,089 calls per UTC month; Max has 4,358. Annual plans get the same
+monthly calls without rollover. Plan changes, preference toggles and deletion
+never renew trials. Paid historical reservations are retained; the additive
+0015 migration alone advances production D1 to canonical v15. Billing,
+pricing, Settings, review, six-language guides and policy disclosures show
+calls. Old USD API fields remain deprecated compatibility metadata.
+
+Direct/proxied catalogs confirm all counts and unchanged prices/capacities.
+All 31 public checks passed, including 14 byte-identical deployed assets.
+The six Secret names, 19 public variables, D1/DO/rate-limit bindings, worker
+limits and daily `10 16 * * *` cron are preserved. No production customer
+write, provider evaluation, email send or manual scheduler invocation was used.
+
+The full Server suite passed 3,285 tests and 107 subtests. All Web cases were
+covered: the final full run passed 1,929 with one cold lazy-route DOM timeout;
+the corrected bounded wait then passed all 69 App tests with assertions retained.
+Six-language Billing checks passed 84 Chromium layout states in 24 contexts.
+Isolated native D1 proved the 20th/21st boundary, stale-guard rollback and
+lifetime persistence. Migration CLI row totals were not exposed and are unknown;
+the six captured schema/journal SELECTs read 529 rows and wrote zero. Those
+SELECT totals do not include migration bookkeeping or normal catalog cache
+refreshes. Full details are in
+[release evidence](validation/jev-calls-production-2026-10-14.json).
+
 # Norulo production operations
 
 The paid allowance release was verified on 2026-10-14. Server main source
