@@ -1,5 +1,11 @@
 # Norulo Server
 
+The default Free ledger allowance is 3 projects and 300 retained expense records
+per Owner, combined across projects, the shared pool and generated recurring
+expenses, including archived projects. Pro and Max retain their 20,000/100,000
+record defaults. `NORULO_PLAN_LIMITS_JSON` can override these defaults; clients
+must use current `entitlements` and `ledgerUsage` from the API.
+
 Cloudflare Python Worker for Norulo, a project expense ledger for developers
 and teams. It owns account identity, cookie/API-key authorization, shared ledgers,
 projects, categories, exact money, recurring expenses, reports and conditional

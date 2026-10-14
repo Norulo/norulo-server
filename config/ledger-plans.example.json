@@ -1,7 +1,7 @@
 {
   "free": {
     "projects": 3,
-    "records": 100,
+    "records": 300,
     "writesPerMinute": 10,
     "writesPerMonth": 1000,
     "jevMonthlyBudgetUsd": "0.00"

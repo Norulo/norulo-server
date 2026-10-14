@@ -9,7 +9,7 @@ from .cloudflare_jev_preferences import jev_enabled
 
 
 _DEFAULT = {
-    "free": {"projects": 3, "records": 100, "writesPerMinute": 10,
+    "free": {"projects": 3, "records": 300, "writesPerMinute": 10,
              "writesPerMonth": 1000, "jevMonthlyBudgetUsd": "0.00"},
     "pro": {"projects": 20, "records": 20000, "writesPerMinute": 60,
             "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "3.00"},

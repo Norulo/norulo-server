@@ -323,7 +323,7 @@ def verify_financial_snapshot(value,owners,rules_per_owner):
     assert all(row["total"]==rules_per_owner for row in value["events"]+value["occurrences"])
     assert all(row["records"]==rules_per_owner and row["writes"]==2*rules_per_owner
         and row["minute_writes"]==rules_per_owner and row["month"]=="2026-10" and row["jev_reserved_microusd"]==0
-        and row["record_cap"]==100 and row["minute_cap"]==10 and row["month_cap"]==1000 for row in value["usage"])
+        and row["record_cap"]==300 and row["minute_cap"]==10 and row["month_cap"]==1000 for row in value["usage"])
     assert all(row["plan"]=="free" and row["dirty"]==0 for row in value["authority"])
     assert value["completedPeriodRules"]==value["linkedFinancialChains"]==owners*rules_per_owner
     assert value["unprocessedRules"]==value["pending"]==value["commandGuards"]==value["providerCalls"]==0

@@ -71,7 +71,7 @@ def seed(now):
             expires_at,restrictions,created_at) VALUES(?,?,'Synthetic retention','synthetic',?,?,NULL,?,?)""",
             (identifier,OWNER,hashlib.sha256(token.encode()).hexdigest(),
                 json.dumps(scopes,separators=(",",":")),json.dumps(restrictions,separators=(",",":")),now)))
-    # 101 current visible rows: archived-project rows count; removed-project and
+    # 301 current visible rows: archived-project rows count; removed-project and
     # already-soft-deleted rows do not. Distinct ties prove all three sort keys.
     rows=[("exp_native_cleanup","prj_native_active","2024-01-01","2024-01-01T00:00:00Z",None),
         ("exp_native_shared_a",None,"2025-01-01","2025-01-01T00:00:00Z",None),
@@ -82,8 +82,8 @@ def seed(now):
         ("exp_native_predeleted",None,"2023-01-01","2023-01-01T00:00:00Z","2025-01-01T00:00:00Z"),
         ("exp_native_removed_project","prj_native_removed","2023-01-01","2023-01-01T00:00:00Z",None)]
     rows.extend(("exp_native_fill_"+str(index).zfill(3),None,"2026-01-01","2026-01-01T00:00:00Z",None)
-        for index in range(95))
-    assert len(rows)==103
+        for index in range(295))
+    assert len(rows)==303
     for identifier,project,date,created,deleted in rows:
         values.append(("""INSERT INTO expenses(id,owner_id,target_kind,project_id,category_id,
             occurred_on,amount_minor,currency,purpose,revision,created_at,updated_at,deleted_at)
@@ -95,7 +95,7 @@ def seed(now):
     values.append(("""INSERT INTO ledger_plan_usage(owner_id,projects,records,month,writes,minute,
         minute_writes,jev_reserved_microusd,project_cap,record_cap,minute_cap,month_cap,jev_cap,
         project_delta,record_delta,jev_delta,previous_month,previous_minute)
-        VALUES(?,3,999,'2026-10',0,?,0,0,3,100,10,1000,0,0,0,0,'2026-10',?)""",
+        VALUES(?,3,999,'2026-10',0,?,0,0,3,300,10,1000,0,0,0,0,'2026-10',?)""",
         (OWNER,now//60,now//60)))
     return values
 
@@ -143,7 +143,7 @@ ENTRY = (BASE_ENTRY[:BASE_ENTRY.index("def seed(now):")] + SEED_AND_SNAPSHOT +
 ENTRY = ENTRY.replace("count<=50", "count<=100")
 ENTRY = ENTRY.replace("nativeRestParity", "nativeRetention")
 ENTRY = ENTRY.replace('await meter.batch([meter.prepare(sql).bind(*params) for sql,params in seed(FixtureClock.now)])',
-    'values=seed(FixtureClock.now)\n            assert len(values)<=130\n'
+    'values=seed(FixtureClock.now)\n            assert len(values)<=330\n'
     '            for offset in range(0,len(values),32):\n'
     '                await meter.batch([meter.prepare(sql).bind(*params) for sql,params in values[offset:offset+32]])')
 ENTRY = ENTRY.replace('"syntheticCookieAccounts":3', '"syntheticCookieAccounts":2')
@@ -164,12 +164,12 @@ def journey(call):
             "categoryId":"cat_native_retention","purpose":"Hosting",**changes}
     def usage(name, expected, projects=3):
         response=call(name,"GET","/api/v1/me",token=FULL_KEY)
-        assert response["ledgerUsage"]["expenseRecords"]=={"used":expected,"limit":100,"remaining":max(0,100-expected)}
+        assert response["ledgerUsage"]["expenseRecords"]=={"used":expected,"limit":300,"remaining":max(0,300-expected)}
         assert response["ledgerUsage"]["projects"]=={"used":projects,"limit":3,"remaining":max(0,3-projects)}
     call("setup","POST","/_fixture/setup",body={})
     assert call("default_off","GET",PREFERENCE,cookie="owner")=={"autoRemoveOldestExpense":False,"revision":1}
     call("bearer_preference_forbidden","GET",PREFERENCE,token=FULL_KEY,expected=401)
-    usage("legacy_usage_read_counts_active",101)
+    usage("legacy_usage_read_counts_active",301)
     off=call("off_over_capacity","POST","/api/v1/expenses",token=FULL_KEY,body=expense(),idempotency="native-off-over",expected=403)
     assert off["error"]["code"]=="RECORD_LIMIT"
     call("stale_preference","PATCH",PREFERENCE,cookie="owner",body={"autoRemoveOldestExpense":True},revision=2,expected=412)
@@ -184,13 +184,13 @@ def journey(call):
     over=call("enabled_over_capacity_requires_cleanup","POST","/api/v1/expenses",token=FULL_KEY,body=expense(),idempotency="native-on-over",expected=403)
     assert over["error"]["code"]=="RETENTION_CLEANUP_REQUIRED"
     call("manual_cleanup_to_capacity","DELETE","/api/v1/expenses/exp_native_cleanup",token=FULL_KEY,revision=1,expected=204)
-    usage("manual_cleanup_usage",100)
+    usage("manual_cleanup_usage",300)
     denied=call("restricted_key_cannot_skip_global_oldest","POST","/api/v1/expenses",token=PROJECT_KEY,body=expense(True),idempotency="native-project-forbidden",expected=403)
     assert denied["error"]["code"]=="RETENTION_TARGET_FORBIDDEN"
     call("invalid_create_no_retirement","POST","/api/v1/expenses",token=FULL_KEY,body=expense(categoryId="cat_missing"),idempotency="native-invalid",expected=422)
     saved=call("replace_oldest_id_tie","POST","/api/v1/expenses",token=FULL_KEY,body=expense(),idempotency="native-first-replacement",expected=201)
     assert call("replacement_idempotent_replay","POST","/api/v1/expenses",token=FULL_KEY,body=expense(),idempotency="native-first-replacement",expected=201)==saved
-    usage("replacement_keeps_capacity",100)
+    usage("replacement_keeps_capacity",300)
     assert call("disable_owner","PATCH",PREFERENCE,cookie="owner",body={"autoRemoveOldestExpense":False},revision=2)=={"autoRemoveOldestExpense":False,"revision":3}
     off=call("off_exact_capacity_rejects","POST","/api/v1/expenses",token=FULL_KEY,body=expense(),idempotency="native-off-full",expected=403)
     assert off["error"]["code"]=="RECORD_LIMIT"
@@ -204,11 +204,11 @@ def journey(call):
     assert call("recurring_create_no_extra_occurrence","POST","/_fixture/tick",body={})=={"ok":True,"scanned":0,"created":0,"blocked":0,"replayed":0}
     assert call("recurring_no_extra_occurrence","POST","/_fixture/tick",body={})=={"ok":True,"scanned":0,"created":0,"blocked":0,"replayed":0}
     call("replace_archived_project_expense","POST","/api/v1/expenses",token=FULL_KEY,body=expense(),idempotency="native-archived",expected=201)
-    usage("archived_replacement_keeps_capacity",100)
+    usage("archived_replacement_keeps_capacity",300)
     call("remove_project_frees_visible_expenses","DELETE","/api/v1/projects/prj_native_active",token=FULL_KEY,revision=1,expected=204)
-    usage("removed_project_frees_project_and_expense_capacity",99,projects=2)
+    usage("removed_project_frees_project_and_expense_capacity",299,projects=2)
     call("removed_project_slot_can_be_reused","POST","/api/v1/projects",token=FULL_KEY,body={"name":"Replacement project"},idempotency="native-replacement-project",expected=201)
-    usage("replacement_project_restores_capacity",99)
+    usage("replacement_project_restores_capacity",299)
     failed=call("project_limit_still_enforced_after_replacement","POST","/api/v1/projects",token=FULL_KEY,body={"name":"Fourth active project"},idempotency="native-fourth-project",expected=403)
     assert failed["error"]["code"]=="PROJECT_LIMIT"
     call("late_stale_preference_no_write","PATCH",PREFERENCE,cookie="owner",body={"autoRemoveOldestExpense":False},revision=3,expected=412)
@@ -234,22 +234,22 @@ def verify(cases, observations):
             assert current["tables"]==previous["tables"],case["name"]
         previous=current
     seeded=by_name["setup"]["integrity"]
-    assert seeded["activeExpenseCount"]==101 and seeded["tables"]["expenses"]["rows"]==103
+    assert seeded["activeExpenseCount"]==301 and seeded["tables"]["expenses"]["rows"]==303
     assert seeded["tables"]["ledger_projects"]["rows"]==4
     assert seeded["usage"]==[{"owner":OWNER,"projects":3,"records":999,"writes":0}]
     assert by_name["enabled_over_capacity_requires_cleanup"]["integrity"]["usage"]==seeded["usage"]
     cleanup=by_name["manual_cleanup_to_capacity"]["integrity"]
-    assert cleanup["activeExpenseCount"]==100 and cleanup["usage"][0]["records"]==100
+    assert cleanup["activeExpenseCount"]==300 and cleanup["usage"][0]["records"]==300
     assert cleanup["retiredSeedIds"]==["exp_native_cleanup","exp_native_predeleted"]
     replaced=by_name["replace_oldest_id_tie"]["integrity"]
     assert replaced["retiredSeedIds"]==cleanup["retiredSeedIds"]+["exp_native_shared_a"]
-    assert replaced["tables"]["expenses"]["rows"]==104 and replaced["activeExpenseCount"]==100
+    assert replaced["tables"]["expenses"]["rows"]==304 and replaced["activeExpenseCount"]==300
     assert replaced["tables"]["expense_events"]["rows"]==3
     assert replaced["tables"]["ledger_activity_events"]["rows"]==3
     refilled=by_name["off_refills_free_slot"]["integrity"]
-    assert refilled["activeExpenseCount"]==100 and refilled["tables"]["expenses"]["rows"]==105
+    assert refilled["activeExpenseCount"]==300 and refilled["tables"]["expenses"]["rows"]==305
     generated=by_name["recurring_rule_create_replaces_oldest_created_tie"]["integrity"]
-    assert generated["activeExpenseCount"]==100 and generated["tables"]["expenses"]["rows"]==106
+    assert generated["activeExpenseCount"]==300 and generated["tables"]["expenses"]["rows"]==306
     assert generated["tables"]["expense_recurring_occurrences"]["rows"]==1
     assert "exp_native_late_created" in generated["retiredSeedIds"]
     scheduled=[event for event in generated["expenseEvents"] if event["actorKind"]=="schedule"]
@@ -258,16 +258,16 @@ def verify(cases, observations):
     assert generated["rules"][0]["keyGrantPresent"]
     archived=by_name["replace_archived_project_expense"]["integrity"]
     assert "exp_native_archived" in archived["retiredSeedIds"]
-    assert archived["activeExpenseCount"]==100 and archived["tables"]["expenses"]["rows"]==107
+    assert archived["activeExpenseCount"]==300 and archived["tables"]["expenses"]["rows"]==307
     removed=by_name["remove_project_frees_visible_expenses"]["integrity"]
-    assert removed["activeExpenseCount"]==99 and removed["tables"]["expenses"]["rows"]==105
+    assert removed["activeExpenseCount"]==299 and removed["tables"]["expenses"]["rows"]==305
     assert removed["tables"]["ledger_projects"]["rows"]==3
     assert "exp_native_cleanup" not in removed["retiredSeedIds"]
-    assert removed["usage"][0]["records"]==99 and removed["usage"][0]["projects"]==2
+    assert removed["usage"][0]["records"]==299 and removed["usage"][0]["projects"]==2
     reused=by_name["removed_project_slot_can_be_reused"]["integrity"]
-    assert reused["activeExpenseCount"]==99 and reused["tables"]["expenses"]==removed["tables"]["expenses"]
+    assert reused["activeExpenseCount"]==299 and reused["tables"]["expenses"]==removed["tables"]["expenses"]
     assert reused["tables"]["ledger_projects"]["rows"]==4
-    assert reused["usage"][0]["records"]==99 and reused["usage"][0]["projects"]==3
+    assert reused["usage"][0]["records"]==299 and reused["usage"][0]["projects"]==3
 
 
 def main():
@@ -329,8 +329,8 @@ def main():
         "runtimeProvenance":{"workerdSha256":parity.sha256(binary),"runtimeBundleSha256":parity.BUNDLE_SHA256,
             "miniflareD1SourceSha256":parity.sha256(WORKER/"node_modules/miniflare/dist/src/workers/d1/database.worker.js")},
         "productMeterAndCommercialPlanAdapter":True,"nativeAttemptsFabricated":False,
-        "syntheticCookieAccounts":2,"syntheticKeysMaximum":2,"syntheticSeedPhysicalExpenses":103,
-        "syntheticSeedActiveExpenses":101,"syntheticPhysicalExpensesMaximum":107,
+        "syntheticCookieAccounts":2,"syntheticKeysMaximum":2,"syntheticSeedPhysicalExpenses":303,
+        "syntheticSeedActiveExpenses":301,"syntheticPhysicalExpensesMaximum":307,
         "remoteD1Operations":0,"remoteApplicationRequests":0,"realProviderRequests":0,"clientRetries":0,
         "fixedHttpJourney":FIXED_HTTP_COUNT,"localHttpCap":HTTP_CAP,
         "localReservedRowCaps":{"read":READ_CAP,"written":WRITE_CAP},"localIntegrityProbeReadCap":PROBE_READ_CAP,

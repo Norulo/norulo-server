@@ -1,5 +1,13 @@
 # Norulo Server
 
+## 2026-10-14 Free expense capacity
+
+Free defaults to 300 retained expenses per ledger Owner, combined across project,
+shared-pool and recurring-generated records, including archived projects.
+Keep default/example/local/production policies aligned; older 100-record release
+evidence is historical. Current configured entitlements remain authoritative.
+This allowance increase requires no migration or historical-record rewrite.
+
 ## 2026-10-14 REST frequency admission
 
 Production admits every request through four Workers rate-limit bindings before

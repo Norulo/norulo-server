@@ -15,7 +15,7 @@ from norulo_server.cloudflare_state_records import record_name
 def test_defaults_override_and_paid_plan_jev():
     policy = default_policy()
     assert [policy[p]["projects"] for p in ("free", "pro", "max")] == [3, 20, 100]
-    assert [policy[p]["records"] for p in ("free", "pro", "max")] == [100, 20_000, 100_000]
+    assert [policy[p]["records"] for p in ("free", "pro", "max")] == [300, 20_000, 100_000]
     assert [policy[p]["jevMonthlyBudgetUsd"] for p in ("free", "pro", "max")] == ["0.00", "3.00", "5.00"]
     changed = parse_policy(json.dumps({"free": {"projects": 4}}))
     assert changed["free"]["projects"] == 4 and default_policy()["free"]["projects"] == 3
@@ -113,6 +113,31 @@ def test_max_capacity_accepts_final_project_and_record_and_downgrade_keeps_histo
         assert db.execute("SELECT COUNT(*) FROM ledger_projects").fetchone()[0] == 100
         assert db.execute("SELECT COUNT(*) FROM expenses").fetchone()[0] == 100000
         assert db.execute("SELECT description FROM ledger_projects WHERE id='p1'").fetchone()[0] == "6"
+
+
+def test_free_accepts_300th_record_blocks_301st_and_reuses_removed_slot(setup):
+    fixture, _ = setup
+    frozen = account_plan(fixture, "free")
+    raw = D1ShapedSQLite(fixture.store)
+    limited = PlanLimitedD1(raw, now=fixture.now)
+    with fixture.store._immediate() as db:
+        db.execute("INSERT INTO expense_categories(id,owner_id,name,revision,created_at,updated_at) VALUES('category','owner','Hosting',1,'local','local')")
+        db.executemany("""INSERT INTO expenses(id,owner_id,target_kind,category_id,
+            occurred_on,amount_minor,currency,purpose,created_at,updated_at)
+            VALUES(?,'owner','shared','category','2026-10-14',1,'USD','boundary','local','local')""",
+            [(f"seed_{number}",) for number in range(299)])
+    write(limited, frozen, fixture, 300, kind="record")
+    calls = raw.batch_count
+    with pytest.raises(PlanLimitError, match="RECORD_LIMIT"):
+        write(limited, frozen, fixture, 301, kind="record")
+    assert raw.batch_count == calls
+    with fixture.store._immediate() as db:
+        assert db.execute("SELECT records,record_cap,writes FROM ledger_plan_usage").fetchone()[:] == (300, 300, 1)
+        db.execute("UPDATE expenses SET deleted_at='local' WHERE id='seed_0'")
+    write(limited, frozen, fixture, 301, kind="record")
+    with fixture.store.connect() as db:
+        assert db.execute("SELECT COUNT(*) FROM expenses WHERE deleted_at IS NULL").fetchone()[0] == 300
+        assert db.execute("SELECT records,record_cap,writes FROM ledger_plan_usage").fetchone()[:] == (300, 300, 2)
 
 
 def test_atomic_project_limit_and_config_change_do_not_reset_usage(setup):

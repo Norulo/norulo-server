@@ -202,7 +202,7 @@ def assert_free_catalog(payload, *, authenticated, records=0):
     assert set(plans) == {"free", "pro", "max"}
     free = plans["free"]
     assert free["prices"]["month"] == {"amount": "0", "currency": "USD", "interval": "month", "configured": True}
-    assert free["entitlements"]["limits"] == {"projects": 3, "expenseRecords": 100, "writesPerMinute": 10, "writesPerMonth": 1000}
+    assert free["entitlements"]["limits"] == {"projects": 3, "expenseRecords": 300, "writesPerMinute": 10, "writesPerMonth": 1000}
     assert free["entitlements"]["jev"]["eligible"] is False
     for plan in (plans["pro"], plans["max"]):
         for interval in ("month", "year"):
@@ -211,7 +211,7 @@ def assert_free_catalog(payload, *, authenticated, records=0):
     assert ("account" in payload) == ("ledgerUsage" in payload) == authenticated
     if authenticated:
         assert payload["account"]["plan"] == "free"
-        assert payload["ledgerUsage"]["expenseRecords"] == {"used": records, "limit": 100, "remaining": 100-records}
+        assert payload["ledgerUsage"]["expenseRecords"] == {"used": records, "limit": 300, "remaining": 300-records}
 
 
 def main():
@@ -256,6 +256,9 @@ def main():
             "database_id": "00000000-0000-0000-0000-000000000049", "remote": False,
             "migrations_dir": str(WORKER / "migrations")}]}
     config_path = directory / "wrangler.jsonc"
+    # Simulate the canonical production frequency bindings locally. These
+    # counters remain inside this loopback Workerd instance and never use D1.
+    config["ratelimits"] = json.loads((WORKER / "wrangler.production.jsonc").read_text())["ratelimits"]
     config_path.write_text(json.dumps(config, indent=2) + "\n")
     bundle = Path("/workspace/.cache/norulo-pyodide/pyodide_314.0.6_2026-08-17_6.capnp.bin")
     assert bundle.is_file() and parity.sha256(bundle) == parity.BUNDLE_SHA256
@@ -345,7 +348,7 @@ def main():
             assert_free_catalog(call("public_free_catalog", "/billing/plan"), authenticated=False)
             assert_free_catalog(call("cookie_free_catalog", "/billing/plan", cookie=True), authenticated=True)
             account = call("cookie_billing", "/billing", cookie=True)
-            assert account["account"]["plan"] == "free" and account["ledgerUsage"]["expenseRecords"] == {"used": 0, "limit": 100, "remaining": 100}
+            assert account["account"]["plan"] == "free" and account["ledgerUsage"]["expenseRecords"] == {"used": 0, "limit": 300, "remaining": 300}
             call("anonymous_billing_rejected", "/billing", expected=401)
             expense = call("expense_create", "/api/v1/expenses", method="POST", cookie=True, expected=201,
                 body={"target": {"kind": "shared"}, "categoryId": CATEGORY, "occurredOn": "2026-10-11",
@@ -366,7 +369,7 @@ def main():
             assert final["expenses"][0]["id"] == final["events"][0]["expense_id"] == expense["id"]
             usage = final["usage"][0]
             assert usage["records"] == usage["writes"] == usage["minute_writes"] == 1
-            assert (usage["record_cap"], usage["minute_cap"], usage["month_cap"], usage["jev_reserved_microusd"]) == (100, 10, 1000, 0)
+            assert (usage["record_cap"], usage["minute_cap"], usage["month_cap"], usage["jev_reserved_microusd"]) == (300, 10, 1000, 0)
             assert final["authority"] == [{"owner_id": OWNER, "plan": "free", "dirty": 0}]
             assert final["catalogRows"] == final["commandGuards"] == final["providerCalls"] == 0
             assert final["migrationNames"] == [path.name for path in sorted((WORKER / "migrations").glob("*.sql"))]

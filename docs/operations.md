@@ -42,7 +42,7 @@ journal must not be repeated to claim native Worker acceptance.
 Real payments are deferred. With explicitly empty Creem products, the reviewed
 /billing/plan implementation returns a public Free catalog without requiring a
 provider price row. Free is priced at zero and uses actual configured allowances:
-by default 3 projects, 100 expense records, 10 writes/minute, 1,000 writes/month
+by default 3 projects, 300 expense records, 10 writes/minute, 1,000 writes/month
 and a zero AI allowance. Pro/Max prices are null, their month/year products are
 unconfigured, provider billing is disabled and checkout is unavailable. It does
 not grant a paid identity or replace an existing account's payment facts/usage.

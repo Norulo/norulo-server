@@ -1557,7 +1557,7 @@ components:
           required: [projects, expenseRecords, writesPerMinute, writesPerMonth]
           properties:
             projects: {type: integer, minimum: 1, description: Current undeleted projects including archived projects}
-            expenseRecords: {type: integer, minimum: 1, description: Current undeleted expenses in Shared pool or nonremoved projects}
+            expenseRecords: {type: integer, minimum: 1, description: "Current undeleted expenses in Shared pool or nonremoved projects. Default limits are Free 300; Pro 20000; Max 100000. Read the current configured limit from the response."}
             writesPerMinute: {type: integer, minimum: 1, description: Fixed UTC minute bucket shared by the ledger owner's members and API keys}
             writesPerMonth: {type: integer, minimum: 1, description: UTC calendar month shared by the ledger owner's members and API keys}
         jev:

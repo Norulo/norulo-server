@@ -72,7 +72,7 @@ def test_production_free_catalog_ignores_absent_expired_and_fresh_paid_cache(
     assert free["prices"]["month"] == {
         "amount": "0", "currency": "USD", "interval": "month", "configured": True}
     assert free["entitlements"]["limits"] == {
-        "projects": 3, "expenseRecords": 100, "writesPerMinute": 10, "writesPerMonth": 1000}
+        "projects": 3, "expenseRecords": 300, "writesPerMinute": 10, "writesPerMonth": 1000}
     assert free["entitlements"]["jev"]["monthlyBudgetUsd"] == "0.00"
     assert free["entitlements"]["jev"]["eligible"] is False
     for plan in (pro, maximum):

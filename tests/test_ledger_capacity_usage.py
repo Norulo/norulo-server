@@ -105,7 +105,7 @@ def test_personal_billing_stays_personal_while_me_uses_selected_workspace(capaci
     binding = D1ShapedSQLite(fixture.store)
     status, personal = asyncio.run(read_public_plan(binding=binding, headers=headers, now=fixture.now))
     assert status == 200 and personal["ledgerUsage"]["workspaceId"] == "member"
-    assert personal["ledgerUsage"]["expenseRecords"] == {"used": 0, "limit": 100, "remaining": 100}
+    assert personal["ledgerUsage"]["expenseRecords"] == {"used": 0, "limit": 300, "remaining": 300}
     assert personal["ledgerUsage"]["jev"] is None
     status, selected = asyncio.run(read_ledger_me(binding=binding, headers=headers, now=fixture.now))
     assert status == 200 and selected["ledgerUsage"]["workspaceId"] == "owner"
@@ -144,5 +144,5 @@ def test_expired_paid_plan_reports_free_limits_without_truncating_existing_capac
         headers=COOKIE, now=fixture.now))
     assert status == 200
     assert payload["ledgerUsage"]["projects"] == {"used": 2, "limit": 3, "remaining": 1}
-    assert payload["ledgerUsage"]["expenseRecords"] == {"used": 2, "limit": 100, "remaining": 98}
+    assert payload["ledgerUsage"]["expenseRecords"] == {"used": 2, "limit": 300, "remaining": 298}
     assert payload["ledgerUsage"]["jev"] is None

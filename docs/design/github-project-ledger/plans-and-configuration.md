@@ -1,6 +1,6 @@
 # Ledger plan policy
 
-Current user decisions, 2026-10-09: Free has 3 projects and 100 expense records;
+Current user decisions, updated 2026-10-14: Free has 3 projects and 300 expense records;
 Pro has 20 projects and 20,000 records; Max has 100 projects and 100,000 records.
 Pro and Max include Jev, with respective $3/$5 provider-cost reservation budgets
 per ledger Owner per UTC calendar month, including annual subscriptions, without rollover.
@@ -17,7 +17,7 @@ Current evidence is in [local acceptance](../../validation/local-acceptance.md).
 | Allowance per ledger Owner (shared by members) | Free | Pro | Max |
 | --- | ---: | ---: | ---: |
 | Current undeleted projects (standalone or GitHub-linked) | 3 | 20 | 100 |
-| Current expense records | 100 | 20,000 | 100,000 |
+| Current expense records | 300 | 20,000 | 100,000 |
 | Successful protected write batches per UTC minute | 10 | 60 | 60 |
 | Successful protected write batches per UTC calendar month | 1,000 | 10,000 | 10,000 |
 | Jev provider-cost reservation per UTC calendar month | $0 | $3 | $5 |

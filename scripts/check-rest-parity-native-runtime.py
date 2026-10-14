@@ -454,7 +454,7 @@ def main():
                 body=expense(category="cat_native_free"),idempotency="native-free-guide",expected=201)
             assert guide["amount"]=="12.00"
             me=call("free_ledger_usage","GET","/api/v1/me",token=free["key"])
-            assert me["ledgerUsage"]["expenseRecords"]["used"]==1 and me["ledgerUsage"]["expenseRecords"]["limit"]==100
+            assert me["ledgerUsage"]["expenseRecords"]["used"]==1 and me["ledgerUsage"]["expenseRecords"]["limit"]==300
             shared=call("shared_expense_create","POST","/api/v1/expenses",token=mgmt,body=expense(),
                 idempotency="native-shared-expense",expected=201)
             ep="/api/v1/expenses/"+shared["id"]
