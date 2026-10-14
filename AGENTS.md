@@ -1,5 +1,17 @@
 # Norulo Server
 
+## 2026-10-14 REST frequency admission
+
+Production admits every request through four Workers rate-limit bindings before
+parsing, D1, email or provider work: per hashed IPv4/IPv6-/64 network 300/10s
+and 1,200/60s, per hashed presented credential 120/10s and 600/60s. There is no
+total request cap. Denials are 429 API_RATE_LIMIT with Retry-After 10 or 60;
+missing/uncertain bindings fail closed as 503 without retry. The deployment guard
+requires these exact bindings beside AUTH_RATE_LIMIT; keep their namespaces,
+which never use D1 or DO storage. Source is committed but not yet published;
+publication follows the usual inspected effective-config release process.
+
+
 ## 2026-10-13 expense last source
 
 Expense.lastSource is read-only and contains the last successful creation/edit

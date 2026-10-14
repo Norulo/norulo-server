@@ -10,6 +10,13 @@ info:
     Web uses its same-origin /api proxy; direct
     clients call these paths on the Server Worker. All private responses are
     Cache-Control: no-store. Money is grouped by currency without conversion.
+    Production admits every request through approximate per-Cloudflare-location
+    frequency windows before authentication or storage work: each client
+    IPv4 address or IPv6 /64 network may send 300 requests per 10 seconds and
+    1,200 per minute, and each presented session or API key 120 per 10 seconds
+    and 600 per minute. There is no total request quota. Exceeding a window
+    returns 429 API_RATE_LIMIT with Retry-After; wait instead of retrying in a
+    loop. Ledger owner write allowances are separate.
     Each user's existing personal ledger is an immutable workspace. Explicit
     invitations share all existing and future ledger data after the original
     inviter approves the authenticated applicant. Links do not require a named
@@ -1152,6 +1159,7 @@ components:
     NoStore: {description: Authentication responses are never cached, schema: {type: string, const: no-store}}
     AuthCookie: {description: "Secure HttpOnly cookie with Path / and the configured SameSite policy; nr_email_challenge lasts 600 seconds, nr_session lasts 604800 seconds, and explicit clearing uses Max-Age 0", schema: {type: string}}
     AuthRetryAfter: {description: Minimum whole seconds before another request is admitted, schema: {type: integer, minimum: 1}}
+    RateRetryAfter: {description: "Present on API_RATE_LIMIT: length in whole seconds of the exceeded window, 10 or 60; wait at least this long before retrying", schema: {type: integer, enum: [10, 60]}}
   requestBodies:
     InvitationToken:
       required: true
@@ -1184,7 +1192,10 @@ components:
     Conflict: {description: Idempotency conflict or a quota window changed; reload before retrying, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
     PreconditionFailed: {description: Revision does not match If-Match, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
     InvalidInput: {description: Invalid or missing field. CATEGORY_REQUIRED on ordinary expense or recurring rule create or complete edit may include top-level assistance when eligible Pro or Max inference is unavailable or cannot confidently select an existing active category. No expense or rule is created or updated in that case., content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
-    RateLimited: {description: Runtime request rate or ledger owner write allowance exhausted. Jev budget exhaustion falls back to manual completion for ordinary expense writes and does not block a write with an explicit category., content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    RateLimited:
+      description: API_RATE_LIMIT when a request-frequency window is exceeded, or a ledger owner write allowance code such as WRITE_RATE_LIMIT or MONTHLY_WRITE_LIMIT. Jev budget exhaustion falls back to manual completion for ordinary expense writes and does not block a write with an explicit category.
+      headers: {Retry-After: {$ref: '#/components/headers/RateRetryAfter'}}
+      content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}
   schemas:
     BillingPage:
       type: object

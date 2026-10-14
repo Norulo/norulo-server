@@ -13,7 +13,8 @@ from norulo_server.cloudflare_plan_limits import PlanLimitError
 from norulo_server.cloudflare_creem_gateway import CreemRequestRejected, catalog_product_bindings
 from norulo_server.cloudflare_ledger_reports import CsvExport
 from norulo_server.json_input import validate_json_unicode, decode_json_body
-from norulo_server.cloudflare_auth_admission import authorize_admission
+from norulo_server.cloudflare_auth_admission import api_admission, authorize_admission
+from rate_limit_fixture import admitting_api_rate_limits
 
 
 class Response:
@@ -53,7 +54,7 @@ def application(*, same_site="Lax", catalog_failure=None, billing_failure=None,
         "catalog_product_bindings": catalog_product_bindings,
         "handle_billing_mutation": billing, "validate_json_unicode": validate_json_unicode,
         "decode_json_body": decode_json_body,
-        "authorize_admission": authorize_admission,
+        "api_admission": api_admission, "authorize_admission": authorize_admission,
         "CsvExport": CsvExport,
         "WorkerGitHubGateway": lambda _: None, "WorkerCreemGateway": creem_gateway}
     target = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_request_target")
@@ -273,6 +274,8 @@ def test_production_github_rate_denial_precedes_identity_and_state_work(path):
         admitted.append(options["key"])
         return {"success": False}
     app.env.AUTH_RATE_LIMIT = SimpleNamespace(limit=limit)
+    for name, limiter in admitting_api_rate_limits().items():
+        setattr(app.env, name, limiter)
     async def forbidden_identity(**_):
         raise AssertionError("Rate-denied request reached state/provider work")
     app.fetch.__func__.__globals__["handle_identity_request"] = forbidden_identity

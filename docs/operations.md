@@ -65,6 +65,7 @@ their deployed state in the subsequent dated release readback.
 | System sender | EMAIL restricted to login@auth.norulo.com; authenticated sending domain and existing contact Email Routing retained |
 | Worker Secrets | NORULO_GITHUB_CLIENT_SECRET, NORULO_GITHUB_TOKEN_KEY, NORULO_EMAIL_CODE_SECRET, TYPESAFE_API_KEY, NORULO_CREEM_API_KEY and NORULO_CREEM_WEBHOOK_SECRET, inherited by name without reading values |
 | OAuth admission | AUTH_RATE_LIMIT, isolated namespace 1576996832, 20/60 per location; preserve browser-bound single-use state |
+| REST frequency admission | API_IP_BURST_RATE_LIMIT 1744429548 (300/10), API_IP_RATE_LIMIT 1820219268 (1,200/60), API_CREDENTIAL_BURST_RATE_LIMIT 1012765925 (120/10), API_CREDENTIAL_RATE_LIMIT 1009527699 (600/60); all four required once the admission source is published |
 | Environment credential | Existing CLOUDFLARE_API_TOKEN network binding; never clear or duplicate its value |
 | Activation | Runtime D1, email, both AI flags and recurrence enabled through all four reviewed activation overlays; checked-in five flags remain 0 |
 | Limits and schedule | cpu_ms=300000, subrequests=9000; exactly one cron, 10 16 * * * UTC |
@@ -78,6 +79,25 @@ the frozen Python dependencies are included. Never replay applied migrations as 
 check. Verify actual bindings, limits, flags, schedules and versions through
 finite read-only control-plane requests. Supported limits do not confirm Paid
 billing subscription status.
+
+## REST request frequency
+
+Every production request, including authentication, billing and webhook paths,
+passes Workers rate-limit admission before URL/body parsing, D1, email or
+provider work. Keys are SHA-256 digests of the client IPv4 address or IPv6 /64
+(from Cloudflare's CF-Connecting-IP, which Web forwards across its service
+binding) and of the first presented session/API-key credential. A 10-second
+burst window and a 60-second sustained window per subject behave like a token
+bucket: 300/10s and 1,200/min per network, 120/10s and 600/min per credential.
+There is no hourly, monthly or total request cap; ledger-owner write allowances,
+email admission and AUTH_RATE_LIMIT still apply separately.
+
+Denials return 429 API_RATE_LIMIT with Retry-After 10 or 60. A missing binding
+or uncertain native result fails closed as 503 API_ADMISSION_UNAVAILABLE without
+retry. Counters are approximate per Cloudflare location, not a strict global
+ceiling, and need no D1 or Durable Object storage writes. Changing a threshold
+means updating wrangler.production.jsonc, the deployment guard and the OpenAPI
+description together. Local and preview modes do not consult these bindings.
 
 ## Daily scheduling and monitoring
 

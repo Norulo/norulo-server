@@ -30,6 +30,19 @@ PRODUCTION_CPU_MS = 300_000
 PRODUCTION_SUBREQUESTS = 9_000
 AUTH_RATE_LIMITS = [{"name": "AUTH_RATE_LIMIT", "namespace_id": "1576996832",
                      "simple": {"limit": 20, "period": 60}}]
+# Per IPv4/IPv6-/64 network and per presented credential; 10-second burst and
+# 60-second sustained windows. Namespaces are independent of AUTH_RATE_LIMIT.
+API_RATE_LIMITS = [
+    {"name": "API_IP_BURST_RATE_LIMIT", "namespace_id": "1744429548",
+     "simple": {"limit": 300, "period": 10}},
+    {"name": "API_IP_RATE_LIMIT", "namespace_id": "1820219268",
+     "simple": {"limit": 1200, "period": 60}},
+    {"name": "API_CREDENTIAL_BURST_RATE_LIMIT", "namespace_id": "1012765925",
+     "simple": {"limit": 120, "period": 10}},
+    {"name": "API_CREDENTIAL_RATE_LIMIT", "namespace_id": "1009527699",
+     "simple": {"limit": 600, "period": 60}},
+]
+PRODUCTION_RATE_LIMITS = AUTH_RATE_LIMITS + API_RATE_LIMITS
 EMAIL_BINDINGS = [{"name": "EMAIL_ADMISSION", "class_name": "EmailAdmission"}]
 EMAIL_MIGRATIONS = [{"tag": "norulo-email-admission-v1", "new_sqlite_classes": ["EmailAdmission"]}]
 PRODUCTION_BINDINGS = EMAIL_BINDINGS + [{"name": "RECURRING_SCHEDULER", "class_name": "RecurringScheduler"}]
@@ -59,8 +72,8 @@ def _validated_config(environment: str, allow_placeholders: bool,
     if config.get("workers_dev") is not False or config.get("preview_urls") is not False:
         raise ValueError("unreviewed public Worker URL")
     if environment == "production":
-        if config.get("ratelimits") != AUTH_RATE_LIMITS:
-            raise ValueError("production requires the isolated GitHub authorization rate limit")
+        if config.get("ratelimits") != PRODUCTION_RATE_LIMITS:
+            raise ValueError("production requires the isolated GitHub authorization and API rate limits")
         limits = config.get("limits")
         if (not isinstance(limits, dict) or set(limits) != {"cpu_ms", "subrequests"}
                 or type(limits.get("cpu_ms")) is not int or limits["cpu_ms"] != PRODUCTION_CPU_MS

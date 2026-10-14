@@ -13,6 +13,7 @@ import pytest
 from test_cloudflare_github_identity_http import D1ShapedSQLite, Store
 from test_worker_application_security import Response, request
 from state_record_fixtures import normalize_legacy_state
+from rate_limit_fixture import admitting_api_rate_limits
 from norulo_server.cloudflare_state_records import record_name, encode_record
 
 
@@ -69,7 +70,8 @@ def runtime(tmp_path, monkeypatch):
     worker = entry.Default()
     worker.env = NoPreviewEnvironment(NORULO_MODE="production", NORULO_D1_ACCESS_ENABLED="1",
         NORULO_APP_URL=ORIGIN, NORULO_ALLOWED_ORIGINS=ORIGIN, DB=D1ShapedSQLite(store),
-        NORULO_JEV_SUGGESTIONS_ENABLED="0", NORULO_JEV_SUGGESTIONS_EVALUATED="0")
+        NORULO_JEV_SUGGESTIONS_ENABLED="0", NORULO_JEV_SUGGESTIONS_EVALUATED="0",
+        **admitting_api_rate_limits())
     return SimpleNamespace(entry=entry, worker=worker, store=store)
 
 
@@ -176,7 +178,7 @@ def test_production_never_initializes_a_missing_ledger_schema(tmp_path):
         before = [tuple(row) for row in db.execute("SELECT name,sql FROM sqlite_master ORDER BY name")]
     worker = entry.Default()
     worker.env = NoPreviewEnvironment(NORULO_MODE="production", NORULO_D1_ACCESS_ENABLED="1",
-        DB=D1ShapedSQLite(store))
+        DB=D1ShapedSQLite(store), **admitting_api_rate_limits())
     response = asyncio.run(worker.fetch(request("/health", method="GET")))
     assert response.status == 503 and response.payload == {"ok": False, "service": "norulo-server"}
     with store.connect() as db:

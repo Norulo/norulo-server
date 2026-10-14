@@ -16,7 +16,7 @@ from norulo_server.cloudflare_validation_budget import (
 
 from norulo_server.cloudflare_http_contract import handle_http_request
 from norulo_server.cloudflare_github_identity_http import handle_identity_request
-from norulo_server.cloudflare_auth_admission import authorize_admission
+from norulo_server.cloudflare_auth_admission import api_admission, authorize_admission
 from norulo_server.cloudflare_email_auth import handle_email_request
 from norulo_server.cloudflare_email_admission import (
     EMAIL_ADMISSION_SCOPE, production_email_admission_enabled,
@@ -117,6 +117,11 @@ class _Application:
         if str(getattr(self.env, "NORULO_D1_ACCESS_ENABLED", "0")) != "1":
             return Response.json({"error": {"code": "D1_ACCESS_PAUSED"}}, status=503,
                                  headers={"Cache-Control": "no-store"})
+        # Production frequency admission precedes parsing, bodies, D1 and providers.
+        admission = await api_admission(self.env, request)
+        if admission is not None:
+            status, payload, response_headers = admission
+            return Response.json(payload, status=status, headers=response_headers)
         target, invalid_target = _request_target(request)
         if invalid_target is not None:
             return invalid_target

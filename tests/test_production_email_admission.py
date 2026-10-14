@@ -13,6 +13,7 @@ from norulo_server.cloudflare_email_admission import (
     EMAIL_ADMISSION_SCOPE, email_ip_subject, require_email_admission,
 )
 from norulo_server.cloudflare_preview_rate import EmailRateLimit
+from rate_limit_fixture import admitting_api_rate_limits
 
 
 def subject(value):
@@ -279,6 +280,9 @@ def test_nonproduction_adapter_does_not_read_any_namespace(runtime, mode):
 @pytest.fixture
 def application(runtime, tmp_path, monkeypatch):
     binding, gateway = Binding(Store(tmp_path / "production-identity.sqlite")), Gateway()
+    for name, limiter in admitting_api_rate_limits().items():
+        # Workers rate-limit bindings are native; these tests cover email admission.
+        setattr(runtime.env, name, limiter)
     namespace = Namespace(runtime.do)
     runtime.env.NORULO_APP_URL = "https://norulo.com"
     runtime.env.NORULO_ALLOWED_ORIGINS = "https://norulo.com"

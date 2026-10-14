@@ -112,6 +112,38 @@
         "limit": 20,
         "period": 60
       }
+    },
+    {
+      "name": "API_IP_BURST_RATE_LIMIT",
+      "namespace_id": "1744429548",
+      "simple": {
+        "limit": 300,
+        "period": 10
+      }
+    },
+    {
+      "name": "API_IP_RATE_LIMIT",
+      "namespace_id": "1820219268",
+      "simple": {
+        "limit": 1200,
+        "period": 60
+      }
+    },
+    {
+      "name": "API_CREDENTIAL_BURST_RATE_LIMIT",
+      "namespace_id": "1012765925",
+      "simple": {
+        "limit": 120,
+        "period": 10
+      }
+    },
+    {
+      "name": "API_CREDENTIAL_RATE_LIMIT",
+      "namespace_id": "1009527699",
+      "simple": {
+        "limit": 600,
+        "period": 60
+      }
     }
   ]
 }
