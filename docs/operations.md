@@ -1,3 +1,44 @@
+# Rounded Jev call allowances, 2026-10-14
+
+Production is verified at 100% traffic. Server source
+`2fc9b48265e6cd4afff8f2b26457ddceb888af60` is Worker version
+`45411608-40ae-4dee-a389-80d3200f2a5e`; Web source
+`fdc1b012d3419f628e8d475bbb24025b203d9202` is Worker version
+`cfc1a4a5-fc60-4c25-882e-5f6bde9edbcc`. Subsequent release-evidence commits do not
+change application code.
+
+Pro now has 1,000 Jev calls per UTC month; Max has 4,000. Annual plans get
+the same monthly calls without rollover. Free retains 20 lifetime trials per
+Owner, shared with members and API keys. Prices, expense capacities and project
+capacities are unchanged. Billing displays used/total/remaining calls and all
+six-language guides and API artifacts describe the rounded limits.
+
+`jevMonthlyCalls` explicitly controls entitlements and atomic admission. Internal
+$3/$12 funding safeguards can only lower it; unused funding grants no extra
+calls. Prior paid usage and Free trial use are retained. Usage above the new
+limit permits ordinary manual writes but no further model dispatch. The local
+boundary tests cover the final permitted call, denial of the next attempt,
+existing usage and annual entitlements. No migration is required.
+
+The full Server run passed 3,293 tests and 107 subtests, with one
+local HTTP transport test denied by the initial process network sandbox. With
+loopback networking enabled, that test passed. All 3,294 Server cases are covered;
+the full Web run passed 1,929 with one cold Members-route DOM timeout.
+After adding a bounded ten-second asynchronous DOM wait, all 69 App tests passed
+with assertions retained. Together these cover all 1,930 Web cases. Lint, build, Worker configuration,
+OpenAPI synchronization and the 65-module upload audit passed. Chromium Billing
+verification passed 84 layout states in 24 contexts across six languages.
+All 32 public checks passed, including 14 byte-identical deployed assets.
+Direct and proxied catalogs confirm Free 20, Pro 1,000 and Max 4,000 with the
+unchanged verified prices. Fresh settings readback confirms only the intended
+plan-call policy changed among the 19 public variables; all six Secret names,
+resource bindings, limits and daily `10 16 * * *` cron are preserved.
+
+No authenticated production business mutation, provider model evaluation,
+email send, manual scheduler invocation or SQL verification request was used.
+Ordinary catalog cache refresh row metrics are not exposed and are not claimed
+as zero. Details are in [release evidence](validation/jev-rounded-calls-production-2026-10-14.json).
+
 # Jev call allowance production release, 2026-10-14
 
 Production publication is verified at 100% traffic. Server source
