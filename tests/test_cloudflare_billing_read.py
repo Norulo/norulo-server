@@ -98,7 +98,7 @@ def test_public_plan_uses_fresh_saved_catalog_and_cookie_account_snapshot(tmp_pa
     assert [plan["entitlements"]["limits"]["projects"] for plan in personal["plans"]] == [3, 20, 100]
     assert [plan["entitlements"]["limits"]["expenseRecords"] for plan in personal["plans"]] == [300, 20000, 200000]
     assert [plan["entitlements"]["jev"]["monthlyBudgetUsd"] for plan in personal["plans"]] == ["0.00", "3.00", "12.00"]
-    assert [plan["entitlements"]["jev"]["eligible"] for plan in personal["plans"]] == [False, True, True]
+    assert [plan["entitlements"]["jev"]["eligible"] for plan in personal["plans"]] == [True, True, True]
     assert binding.batch_count == 2
 
 

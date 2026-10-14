@@ -15,7 +15,6 @@ from .cloudflare_ledger_api import (
 )
 from .cloudflare_ledger_auth import ledger_principal, target_allowed
 from .cloudflare_principal import PrincipalAuthError, _header
-from .account_cycle_rules import PAID_PLAN_IDS, effective_user_plan
 from .cloudflare_jev_preferences import ensure_current_jev_authority, jev_enabled
 
 # ISO 4217 active alphabetic units; exponents are fixed here so Worker runtime
@@ -349,17 +348,14 @@ async def _write(binding, gateway, method, item_id, headers, data, now, suggesti
                     user["id"], data["category_id"], 1 if unchanged_category else 0).first()
             if category is None:
                 return _error(422, "INVALID_CATEGORY")
-        if effective_user_plan(user, timestamp=now) in PAID_PLAN_IDS:
-            assistance = await _automatic_assistance(binding, headers, data, now, suggestion_gateway, item_id, user)
-            await ensure_current_jev_authority(binding, headers, now, proof, scope="expenses:write",
-                target_kind=data["target_kind"], project_id=data["project_id"])
+        assistance = await _automatic_assistance(binding, headers, data, now, suggestion_gateway, item_id, user)
+        await ensure_current_jev_authority(binding, headers, now, proof, scope="expenses:write",
+            target_kind=data["target_kind"], project_id=data["project_id"])
+        if not data["category_id"]:
+            data = {**data, "category_id": assistance["suggestions"].get("categoryId")}
             if not data["category_id"]:
-                data = {**data, "category_id": assistance["suggestions"].get("categoryId")}
-                if not data["category_id"]:
-                    return 422, {"error": {"code": "CATEGORY_REQUIRED"}, "assistance": assistance}
-                assistance["categorySource"] = "jev"
-        elif not data["category_id"]:
-            return _error(422, "CATEGORY_REQUIRED")
+                return 422, {"error": {"code": "CATEGORY_REQUIRED"}, "assistance": assistance}
+            assistance["categorySource"] = "jev"
     stamp = _timestamp(now)
     from .cloudflare_ledger_activity import activity_commands
     actor_kind, actor_id = _actor(proof)

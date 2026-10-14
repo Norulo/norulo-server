@@ -107,8 +107,9 @@ def test_recurring_creation_and_later_human_edit_replace_source(app, start, back
 
 
 def test_v14_schema_matches_canonical_and_old_rows_stay_unknown():
+    from norulo_server.cloudflare_preview_schema import V14_SCHEMA_SQL as SCHEMA_SQL, V14_SCHEMA_OBJECTS as SCHEMA_OBJECTS, V14_SCHEMA_FINGERPRINT as SCHEMA_FINGERPRINT
     root = Path(__file__).resolve().parents[1]
-    paths = sorted((root / "cloudflare/server/migrations").glob("*.sql"))
+    paths = sorted(p for p in (root / "cloudflare/server/migrations").glob("*.sql") if p.name <= "0014_expense_last_source.sql")
     with closing(sqlite3.connect(":memory:")) as db, closing(sqlite3.connect(":memory:")) as compiled:
         for path in paths[:-1]: db.executescript(path.read_text())
         db.execute("INSERT INTO expense_categories(id,owner_id,name,created_at,updated_at) VALUES('cat','old','Hosting','old','old')")

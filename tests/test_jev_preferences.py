@@ -49,8 +49,9 @@ def test_legacy_get_is_read_only_and_expresses_stored_preference_separately(ledg
     set_plan(ledger, plan)
     ledger.binding.jev_available = runtime
     before, before_models = user_record(ledger), suggestion_rows(ledger)
-    assert account(ledger) == (200, {"enabled": True, "revision": 1, "eligible": plan != "free",
-        "available": runtime and plan != "free", "monthlyBudgetUsd": budget})
+    assert account(ledger) == (200, {"enabled": True, "revision": 1, "eligible": True,
+        "available": runtime, "monthlyBudgetUsd": budget, "monthlyCalls": {"free": 0, "pro": 1089, "max": 4358}[plan],
+        "trialCalls": 20 if plan == "free" else 0, "period": "lifetime" if plan == "free" else "utc-calendar-month"})
     assert user_record(ledger) == before and suggestion_rows(ledger) == before_models
 
 
@@ -63,7 +64,8 @@ def test_preference_cas_merges_full_raw_user_preserves_model_usage_and_counts_wr
     before, models, financial = json.loads(user_record(ledger)["payload"]), suggestion_rows(ledger), financial_rows(ledger)
     assert account(ledger, method="PATCH", body={"enabled": False}) == (200,
         {"enabled": False, "revision": 2, "eligible": True, "available": False,
-         "monthlyBudgetUsd": "3.00" if plan == "pro" else "12.00"})
+         "monthlyBudgetUsd": "3.00" if plan == "pro" else "12.00",
+         "monthlyCalls": 1089 if plan == "pro" else 4358, "trialCalls": 0, "period": "utc-calendar-month"})
     saved_user = json.loads(user_record(ledger)["payload"])
     assert saved_user == {**before, "jevEnabled": False, "jevPreferenceRevision": 2}
     assert "_actor" not in saved_user and "_workspace" not in saved_user
@@ -102,13 +104,12 @@ def test_patch_rejects_nonboolean_or_extra_fields_before_write(ledger, body):
 
 @pytest.mark.parametrize("changes", [{"billing": {"plan": "free", "status": "active"}},
     {"billing": {"plan": "pro", "status": "active", "currentPeriodEnd": 1}}])
-def test_free_or_expired_account_cannot_change_retained_preference(ledger, changes):
+def test_free_or_expired_account_can_control_trial_without_resetting_usage(ledger, changes):
     patch_user(ledger, {**changes, "jevEnabled": False, "jevPreferenceRevision": 5})
-    before, models = user_record(ledger), suggestion_rows(ledger)
-    assert account(ledger, method="PATCH", body={"enabled": True}, revision='"5"') == (
-        403, {"error": {"code": "JEV_PLAN_REQUIRED"}})
-    assert account(ledger)[1]["enabled"] is False and account(ledger)[1]["eligible"] is False
-    assert user_record(ledger) == before and suggestion_rows(ledger) == models
+    assert account(ledger, method="PATCH", body={"enabled": True}, revision='"5"')[0] == 200
+    assert account(ledger)[1]["enabled"] is True
+    assert account(ledger)[1]["eligible"] is True
+    assert account(ledger)[1]["trialCalls"] == 20
 
 
 @pytest.mark.parametrize("changes", [{"jevEnabled": "false"}, {"jevEnabled": 0},
@@ -206,7 +207,7 @@ def test_preference_does_not_change_public_plan_templates():
         private = entitlements({"jevEnabled": False, "billing": {"plan": plan, "status": "active"}},
             now=1, jev_available=True)["jev"]
         assert "enabled" not in template and template["monthlyBudgetUsd"] == private["monthlyBudgetUsd"] == budget
-        assert template["available"] is (plan != "free") and private["available"] is False
+        assert template["available"] is True and private["available"] is False
 
 
 def test_openapi_account_preference_is_cookie_only_strict_and_independently_versioned():

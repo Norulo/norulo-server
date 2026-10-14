@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 import uuid
 
-from .account_cycle_rules import PAID_PLAN_IDS, effective_user_plan
 from .cloudflare_ledger_api import _error, _revision, _timestamp, _valid_resource_id, _write_guard
 from .cloudflare_ledger_auth import ledger_principal, target_allowed
 from .cloudflare_ledger_expenses import _snapshot
@@ -46,8 +45,6 @@ async def _fresh_snapshot(binding, headers, now, source, proof, queries):
         project_id=source["project_id"], proof=fresh)
     parts = await binding.batch([*auth, _source_query(binding, source), *queries])
     validate([part.results for part in parts[:len(auth)]])
-    if effective_user_plan(user, timestamp=now) not in PAID_PLAN_IDS:
-        raise PrincipalAuthError(403, "JEV_PLAN_REQUIRED", "A current paid ledger plan is required.")
     if fresh != proof:
         raise PrincipalAuthError(403, "AUTHORIZATION_CHANGED", "Ledger authority changed.")
     if not _same_source(parts[len(auth)].results, source):
@@ -149,8 +146,6 @@ async def _review(binding, headers, item_id, expected, now, gateway):
         return _error(403, "TARGET_FORBIDDEN")
     if source["revision"] != expected:
         return _error(412, "PRECONDITION_FAILED")
-    if effective_user_plan(user, timestamp=now) not in PAID_PLAN_IDS:
-        return _error(403, "JEV_PLAN_REQUIRED")
     enabled = gateway is not None and gateway.enabled and jev_enabled(user)
     context_queries = [binding.prepare("""SELECT id,name FROM expense_categories
         WHERE owner_id=? AND archived_at IS NULL ORDER BY name,id LIMIT 30""").bind(user["id"])]

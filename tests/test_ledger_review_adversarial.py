@@ -173,7 +173,7 @@ def test_paid_owner_downgrade_during_provider_blocks_publication_but_retains_adm
 
     provider = automatic.Provider(on_call=downgrade_owner)
     status, result = review(ledger, source, provider)
-    assert status == 403 and result == {"error": {"code": "JEV_PLAN_REQUIRED"}}
+    assert status == 403 and result == {"error": {"code": "AUTHORIZATION_CHANGED"}}
     assert len(provider.calls) == 1 and financial_rows(ledger) == before
     after_usage = usage(ledger)
     assert_no_financial_charge(before_usage, after_usage)

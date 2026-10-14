@@ -198,7 +198,7 @@ def test_automatic_edit_retains_credential_and_owner_snapshot_fences_during_prov
     assert len(provider.calls) == 1 and financial_rows(ledger) == before
 
 
-@pytest.mark.parametrize("owner_plan,actor_plan,allowed", [("pro", "free", True), ("max", "free", True), ("free", "max", False)])
+@pytest.mark.parametrize("owner_plan,actor_plan,allowed", [("pro", "free", True), ("max", "free", True), ("free", "max", True)])
 def test_automatic_edit_uses_workspace_owner_plan_and_audits_the_actual_editor(ledger, owner_plan, actor_plan, allowed):
     set_plan(ledger, owner_plan)
     body, saved, chosen = setup_expense(ledger)

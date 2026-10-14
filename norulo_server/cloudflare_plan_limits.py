@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from .account_cycle_rules import PAID_PLAN_IDS, effective_user_plan
-from .ledger_plan_policy import default_policy, entitlements, usd_micros, JEV_RESERVATION_MICROUSD
+from .ledger_plan_policy import default_policy, entitlements, usd_micros, JEV_RESERVATION_MICROUSD, JEV_FREE_TRIAL_CALLS
 from .cloudflare_state_records import record_name
 
 
@@ -50,8 +50,9 @@ def capacity_usage_statement(binding, owner_id):
         (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=? AND deleted_at IS NULL) AS projects,
         (SELECT COUNT(*) FROM expenses WHERE owner_id=? AND """ + ACTIVE_EXPENSE_SQL + """ ) AS records,
         (SELECT month FROM ledger_plan_usage WHERE owner_id=?) AS jev_month,
-        (SELECT jev_reserved_microusd FROM ledger_plan_usage WHERE owner_id=?) AS jev_reserved_microusd""").bind(
-                owner_id, owner_id, owner_id, owner_id)
+        (SELECT jev_reserved_microusd FROM ledger_plan_usage WHERE owner_id=?) AS jev_reserved_microusd,
+        (SELECT jev_trial_calls FROM ledger_plan_usage WHERE owner_id=?) AS jev_trial_calls""").bind(
+                owner_id, owner_id, owner_id, owner_id, owner_id)
 
 
 def capacity_usage_payload(user, rows, *, now, policy=None):
@@ -82,8 +83,23 @@ def capacity_usage_payload(user, rows, *, now, policy=None):
                     or not 0 <= reserved <= 9007199254740991):
                 raise PlanLimitError(503, "USAGE_GUARD_UNAVAILABLE")
             used = reserved if saved_month == month else 0
-        payload["jev"] = {"month": month, "currency": "USD", "usedMicrousd": used,
-                          "limitMicrousd": usd_micros(entitlement["jev"]["monthlyBudgetUsd"])}
+        jev = entitlement["jev"]
+        if jev["period"] == "lifetime":
+            trial = rows[0]["jev_trial_calls"]
+            if trial is None and saved_month is None and reserved is None:
+                trial = 0
+            if type(trial) is not int or not 0 <= trial <= JEV_FREE_TRIAL_CALLS:
+                raise PlanLimitError(503, "USAGE_GUARD_UNAVAILABLE")
+            used_calls, limit_calls = trial, jev["trialCalls"]
+            used = 0  # Deprecated USD fields never represent a Free trial balance.
+        else:
+            used_calls = (used + JEV_RESERVATION_MICROUSD - 1) // JEV_RESERVATION_MICROUSD
+            limit_calls = jev["monthlyCalls"]
+        payload["jev"] = {"month": month if jev["period"] != "lifetime" else None,
+            "period": jev["period"], "usedCalls": used_calls, "limitCalls": limit_calls,
+            "remainingCalls": max(0, limit_calls - used_calls),
+            "currency": "USD", "usedMicrousd": used,
+            "limitMicrousd": usd_micros(jev["monthlyBudgetUsd"])}
     return payload
 
 
@@ -93,6 +109,7 @@ _ERRORS = {"plan_project_limit": (403, "PROJECT_LIMIT"),
            "plan_write_rate": (429, "WRITE_RATE_LIMIT"),
            "plan_monthly_write_limit": (429, "MONTHLY_WRITE_LIMIT"),
            "plan_max_required": (403, "JEV_PLAN_REQUIRED"),
+           "plan_jev_trial_limit": (429, "JEV_BUDGET_LIMIT"),
            "plan_jev_budget_limit": (429, "JEV_BUDGET_LIMIT")}
 _MUTATION = re.compile(r"^\s*(?:INSERT(?: OR \w+)? INTO|UPDATE|DELETE FROM)\s+"
     r"(ledger_projects|expense_categories|expenses|api_keys|expense_suggestion_budget|expense_suggestion_events|ledger_plan_usage|workspace_members|workspace_invites|workspace_events|workspace_join_requests|ledger_project_repositories|expense_recurring_rules|expense_recurring_occurrences|expense_recurring_pending|ledger_activity_events)\b", re.I)
@@ -158,12 +175,13 @@ def _account_preference_mutations(statements):
 
 _USAGE_SQL = """INSERT INTO ledger_plan_usage(owner_id,projects,records,month,writes,minute,
     minute_writes,jev_reserved_microusd,project_cap,record_cap,minute_cap,month_cap,jev_cap,
-    project_delta,record_delta,jev_delta,previous_month,previous_minute)
+    project_delta,record_delta,jev_delta,previous_month,previous_minute,jev_trial_calls)
     VALUES(?,
       (SELECT COUNT(*) FROM ledger_projects WHERE owner_id=? AND deleted_at IS NULL),
       (SELECT COUNT(*) FROM expenses WHERE owner_id=? AND """ + ACTIVE_EXPENSE_SQL + """),
-      ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(owner_id) DO UPDATE SET
+      jev_trial_calls=ledger_plan_usage.jev_trial_calls+excluded.jev_trial_calls,
       projects=excluded.projects,
       records=excluded.records,
       writes=CASE WHEN ledger_plan_usage.month=excluded.month
@@ -269,15 +287,14 @@ class PlanLimitedD1:
             r"^\s*UPDATE\s+expenses\s+SET\s+deleted_at\s*=\s*\?", item.sql, re.I) is not None
             for item, table in mutations)
         record_delta = record_insertions - record_removals
-        jev_delta = JEV_RESERVATION_MICROUSD if reserve_jev else 0
+        jev_delta = JEV_RESERVATION_MICROUSD if reserve_jev and plan in PAID_PLAN_IDS else 0
+        trial_delta = int(reserve_jev and plan == "free")
         write_delta = int(any(table not in {"expense_suggestion_budget", "expense_suggestion_events"}
                               for _, table in mutations))
-        if jev_delta and plan not in PAID_PLAN_IDS:
-            raise PlanLimitError(403, "JEV_PLAN_REQUIRED")
         period = datetime.fromtimestamp(self.now, timezone.utc).strftime("%Y-%m")
         minute = self.now // 60
         usage = await self.binding.prepare("""SELECT projects,records,month,writes,minute,
-            minute_writes,jev_reserved_microusd FROM ledger_plan_usage WHERE owner_id=?""").bind(owner).first()
+            minute_writes,jev_reserved_microusd,jev_trial_calls FROM ledger_plan_usage WHERE owner_id=?""").bind(owner).first()
         if usage and (period < usage["month"] or minute < usage["minute"]):
             raise PlanLimitError(409, "QUOTA_WINDOW_CHANGED")
         # Legacy usage rows can retain deleted project slots. Current rows,
@@ -299,8 +316,10 @@ class PlanLimitedD1:
             raise PlanLimitError(429, "WRITE_RATE_LIMIT")
         if write_delta and month_writes + write_delta > limits["writesPerMonth"]:
             raise PlanLimitError(429, "MONTHLY_WRITE_LIMIT")
+        if trial_delta and usage and usage["jev_trial_calls"] >= JEV_FREE_TRIAL_CALLS:
+            raise PlanLimitError(429, "JEV_BUDGET_LIMIT")
         if jev_delta:
-            cap = usd_micros(limits["jevMonthlyBudgetUsd"])
+            cap = usd_micros(limits["jevMonthlyBudgetUsd"]) // JEV_RESERVATION_MICROUSD * JEV_RESERVATION_MICROUSD
             if jev_delta > cap:
                 raise PlanLimitError(429, "JEV_BUDGET_LIMIT")
             if usage and usage["month"] == period and usage["jev_reserved_microusd"] + jev_delta > cap:
@@ -312,7 +331,7 @@ class PlanLimitedD1:
             limits["projects"], limits["records"],
             limits["writesPerMinute"] if write_delta else max(limits["writesPerMinute"], minute_writes),
             limits["writesPerMonth"] if write_delta else max(limits["writesPerMonth"], month_writes),
-            usd_micros(limits["jevMonthlyBudgetUsd"]), project_delta, record_insertions, jev_delta, period, minute)
+            usd_micros(limits["jevMonthlyBudgetUsd"]) // JEV_RESERVATION_MICROUSD * JEV_RESERVATION_MICROUSD, project_delta, record_insertions, jev_delta, period, minute, trial_delta)
         try:
             # Keep original result indexes; domain callers rely on batch offsets.
             # Recount after all domain mutations in the same transaction.

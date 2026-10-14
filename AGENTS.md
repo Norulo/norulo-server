@@ -1,6 +1,6 @@
 # Norulo Server
 
-## 2026-10-14 paid plan allowances
+## 2026-10-14 Jev calls and paid plan allowances
 
 Canonical Max defaults are now 200,000 retained expenses and $12 of Jev model
 allowance per UTC calendar month; Pro stays at 20,000 expenses and $3/month.
@@ -9,8 +9,16 @@ the same monthly model allowance, without rollover. Keep all runtime policies,
 examples, public contract, Web translations and boundary checks aligned.
 Prices remain verified Creem facts; the live catalog was checked at Pro
 $4.99/month or $49.99/year and Max $12.99/month or $129.99/year.
-This change needs no database migration or historical usage reset. See
+Count-based Jev adds the canonical 0015 migration for persistent Free trials; paid usage is preserved. See
 docs/subscription-policy.md for the capacity and cost reasoning.
+
+
+Jev is displayed and enforced by calls: Free 20 once per Owner lifetime, Pro
+1,089 per UTC month, Max 4,358 per UTC month. Members/API keys share the Owner
+pool. Billing shows used/total/remaining calls, never a dollar balance. v15
+adds a constrained lifetime trial column; old paid reservation data is retained.
+Annual plans keep monthly calls. Plan changes, preference toggles and deletion
+never renew Free trials. Old USD API fields are deprecated compatibility data.
 
 ## 2026-10-14 Free expense capacity
 
@@ -200,8 +208,10 @@ and the OpenAPI contract.
   permitted record at exact capacity. Failed/replayed operations do not retire
   records. Recurrence keeps calendar identity, actor/key/target/category/plan
   fences, bounded catch-up and at most ten unresolved failed occurrences.
-- Jev reserves only the current UTC-month USD allowance atomically before
-  dispatch: Free $0, Pro $3 and Max $12 under the current policy, with no rollover.
+- Jev atomically admits one call before dispatch: Free has 20 lifetime trials;
+  Pro has 1,089/month and Max 4,358/month, without paid rollover. The additive
+  v15 trial field survives month changes, plan changes and preference toggles.
+  Existing paid reservations remain internal compatibility accounting; UI shows counts.
   The stored ledger Owner's entitlement and opt-in apply; preserve historical
   daily rows without daily-cap reads/writes.
   Failed/unavailable model results permit ordinary explicit-category writes.

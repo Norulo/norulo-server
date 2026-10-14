@@ -53,7 +53,8 @@ def test_capacity_read_counts_current_projects_and_expenses_without_initializing
         "projects": {"used": 2, "limit": 20, "remaining": 18},
         "expenseRecords": {"used": 2, "limit": 20000, "remaining": 19998},
         "jev": {"month": datetime.fromtimestamp(fixture.now, timezone.utc).strftime("%Y-%m"),
-                "currency": "USD", "usedMicrousd": 0, "limitMicrousd": 3000000}}
+                "currency": "USD", "usedMicrousd": 0, "limitMicrousd": 3000000,
+                "period": "utc-calendar-month", "usedCalls": 0, "limitCalls": 1089, "remainingCalls": 1089}}
     assert binding.batch_count == 1
     with closing(fixture.store.connect()) as db:
         assert db.execute("SELECT COUNT(*) FROM ledger_plan_usage").fetchone()[0] == 0
@@ -86,7 +87,8 @@ def test_capacity_ignores_legacy_capacity_counters_and_keeps_configured_limits(c
         "projects": {"used": 3, "limit": 40, "remaining": 37},
         "expenseRecords": {"used": 2, "limit": 80, "remaining": 78},
         "jev": {"month": datetime.fromtimestamp(fixture.now, timezone.utc).strftime("%Y-%m"),
-                "currency": "USD", "usedMicrousd": 0, "limitMicrousd": 3000000}}
+                "currency": "USD", "usedMicrousd": 0, "limitMicrousd": 3000000,
+                "period": "utc-calendar-month", "usedCalls": 0, "limitCalls": 1089, "remainingCalls": 1089}}
     with closing(fixture.store.connect()) as db:
         assert tuple(db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()) == (legacy_projects, 90)
 
@@ -106,7 +108,8 @@ def test_personal_billing_stays_personal_while_me_uses_selected_workspace(capaci
     status, personal = asyncio.run(read_public_plan(binding=binding, headers=headers, now=fixture.now))
     assert status == 200 and personal["ledgerUsage"]["workspaceId"] == "member"
     assert personal["ledgerUsage"]["expenseRecords"] == {"used": 0, "limit": 300, "remaining": 300}
-    assert personal["ledgerUsage"]["jev"] is None
+    assert personal["ledgerUsage"]["jev"]["period"] == "lifetime"
+    assert personal["ledgerUsage"]["jev"]["limitCalls"] == 20
     status, selected = asyncio.run(read_ledger_me(binding=binding, headers=headers, now=fixture.now))
     assert status == 200 and selected["ledgerUsage"]["workspaceId"] == "owner"
     assert selected["ledgerUsage"]["expenseRecords"] == {"used": 2, "limit": 20000, "remaining": 19998}
@@ -145,4 +148,5 @@ def test_expired_paid_plan_reports_free_limits_without_truncating_existing_capac
     assert status == 200
     assert payload["ledgerUsage"]["projects"] == {"used": 2, "limit": 3, "remaining": 1}
     assert payload["ledgerUsage"]["expenseRecords"] == {"used": 2, "limit": 300, "remaining": 298}
-    assert payload["ledgerUsage"]["jev"] is None
+    assert payload["ledgerUsage"]["jev"]["period"] == "lifetime"
+    assert payload["ledgerUsage"]["jev"]["limitCalls"] == 20

@@ -64,7 +64,7 @@ def member(ledger, *, plan="free", enabled=True):
         "Origin": "https://app.example.test", "X-Norulo-Workspace": OWNER}
 
 
-@pytest.mark.parametrize("actor_plan,status", [("free", 403), ("pro", 200), ("max", 200)])
+@pytest.mark.parametrize("actor_plan,status", [("free", 200), ("pro", 200), ("max", 200)])
 def test_selected_paid_workspace_never_lends_owner_preference_authority(ledger, actor_plan, status):
     actor_id, headers = member(ledger, plan=actor_plan)
     owner_before = stored(ledger.store, OWNER)
@@ -76,7 +76,7 @@ def test_selected_paid_workspace_never_lends_owner_preference_authority(ledger, 
     if status == 200:
         assert stored(ledger.store, actor_id) == {**actor_before,
             "jevEnabled": False, "jevPreferenceRevision": 8}
-        assert result[1]["monthlyBudgetUsd"] == ("3.00" if actor_plan == "pro" else "12.00")
+        assert result[1]["monthlyBudgetUsd"] == {"free": "0.00", "pro": "3.00", "max": "12.00"}[actor_plan]
     else:
         assert result[1] == {"error": {"code": "JEV_PLAN_REQUIRED"}}
         assert stored(ledger.store, actor_id) == actor_before
@@ -125,16 +125,18 @@ def test_paid_member_personal_on_cannot_bypass_owner_off(ledger, entry):
 
 @pytest.mark.parametrize("stored_on", [False, True], ids=["legacy-missing-default-on", "explicit-saved-on"])
 @pytest.mark.parametrize("entry", ["draft", "create", "edit", "review"])
-def test_downgrade_to_free_cannot_use_retained_on_preference(ledger, stored_on, entry):
+def test_downgrade_to_free_with_exhausted_trial_cannot_use_retained_on_preference(ledger, stored_on, entry):
     body, saved, _ = setup_expense(ledger)
     if stored_on:
         replace_fields(ledger.store, OWNER, {"jevEnabled": True, "jevPreferenceRevision": 7})
     set_plan(ledger, "free")
+    with ledger.store.connect() as db:
+        db.execute("UPDATE ledger_plan_usage SET jev_trial_calls=20")
     current = stored(ledger.store, OWNER)
     assert current.get("jevEnabled", True) is True
     status, preference = preference_request(ledger, headers=ledger.headers)
     assert status == 200 and preference["enabled"] is True
-    assert preference["eligible"] is preference["available"] is False
+    assert preference["eligible"] is True
     before = financial_rows(ledger)
     with ledger.store.connect() as db:
         usage_before = [tuple(row) for row in db.execute("SELECT * FROM ledger_plan_usage")]
@@ -149,8 +151,8 @@ def test_downgrade_to_free_cannot_use_retained_on_preference(ledger, stored_on, 
         result = edit(ledger, saved, draft, provider)
     else:
         result = review(ledger, saved, provider)
-    assert result == ((403, {"error": {"code": "JEV_PLAN_REQUIRED"}})
-        if entry in {"draft", "review"} else (422, {"error": {"code": "CATEGORY_REQUIRED"}}))
+    assert result[0] == (429 if entry in {"draft", "review"} else 422)
+    assert result[1]["error"]["code"] == ("JEV_BUDGET_LIMIT" if entry in {"draft", "review"} else "CATEGORY_REQUIRED")
     assert provider.calls == [] and financial_rows(ledger) == before
     assert stored(ledger.store, OWNER) == current
     with ledger.store.connect() as db:
@@ -177,6 +179,7 @@ def test_cookie_and_restricted_key_inherit_owner_off_without_model_admission(led
         assert status == 200
         assert payload["entitlements"]["jev"] == {"eligible": True, "enabled": False,
             "available": False, "monthlyBudgetUsd": budget, "period": "utc-calendar-month",
+            "monthlyCalls": 1089 if plan == "pro" else 4358, "trialCalls": 0,
             "rollover": False}
     before = financial_rows(ledger)
     with ledger.store.connect() as db:

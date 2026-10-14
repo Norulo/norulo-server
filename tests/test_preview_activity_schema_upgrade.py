@@ -185,7 +185,7 @@ def test_fresh_schema_matches_canonical_migrations_within_original_batch_cap():
             canonical.executescript(migration.read_text())
         for sql in SCHEMA_SQL:
             compiled.execute(sql)
-        assert len(SCHEMA_SQL) == 57 <= 64
+        assert len(SCHEMA_SQL) == 58 <= 64
         assert schema(canonical) == schema(compiled) == SCHEMA_OBJECTS
         assert len(INDEX_COUNTS) == 23 and sum(INDEX_COUNTS.values()) == 54
 

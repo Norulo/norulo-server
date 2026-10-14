@@ -1,3 +1,7 @@
+# Current Jev count policy, 2026-10-14
+
+Free now has 20 lifetime calls per Owner; Pro has 1,089 per UTC month and Max 4,358 per UTC month. Members and API keys share the Owner pool. Billing, pricing, Settings and review show counts. v15 adds the persistent trial column without resetting paid reservations. The dated evidence below describes its tested release and must not be read as the current Free restriction or displayed USD policy. Current release evidence will be recorded in jev-calls-production-2026-10-14.json.
+
 > Imported source-service history, mechanically rebranded. This record does
 > not establish Norulo remote deployment, provider acceptance, resource ownership
 > or continuing user authorization. See [migration status](migration-2026-10-10.md).

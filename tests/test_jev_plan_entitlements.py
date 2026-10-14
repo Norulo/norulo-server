@@ -55,8 +55,9 @@ def test_cookie_and_key_profile_report_current_owner_budget_and_gateway_availabi
         status, payload = asyncio.run(read_ledger_me(binding=binding, headers=headers, now=fixture.now))
         assert status == 200 and payload["id"] == "owner"
         assert payload["entitlements"]["jev"] == {
-            "eligible": plan != "free", "enabled": True, "available": plan != "free" and enabled,
-            "monthlyBudgetUsd": budget, "period": "utc-calendar-month", "rollover": False}
+            "eligible": True, "enabled": True, "available": enabled,
+            "monthlyCalls": {"free": 0, "pro": 1089, "max": 4358}[plan], "trialCalls": 20 if plan == "free" else 0,
+            "monthlyBudgetUsd": budget, "period": "lifetime" if plan == "free" else "utc-calendar-month", "rollover": False}
     with fixture.store.connect() as db:
         assert db.execute("SELECT COUNT(*) FROM ledger_plan_usage").fetchone()[0] == 0
 
@@ -85,7 +86,7 @@ def test_shared_ledger_profile_qualifies_the_owner_instead_of_the_actual_actor(t
     assert status == 200 and payload["id"] == actor and payload["workspace"]["id"] == "owner"
     assert payload["entitlements"]["plan"] == owner_plan
     assert payload["entitlements"]["jev"]["monthlyBudgetUsd"] == budget
-    assert payload["entitlements"]["jev"]["available"] is (owner_plan != "free")
+    assert payload["entitlements"]["jev"]["available"] is True
 
 
 @pytest.mark.parametrize("plan", ["pro", "max"])
@@ -95,8 +96,8 @@ def test_annual_entitlements_remain_monthly_and_expiry_cannot_keep_paid_jev(plan
     assert current["available"] is True and current["period"] == "utc-calendar-month"
     assert current["monthlyBudgetUsd"] == ("3.00" if plan == "pro" else "12.00")
     assert entitlements(user, now=101, jev_available=True)["jev"] == {
-        "eligible": False, "enabled": True, "available": False, "monthlyBudgetUsd": "0.00",
-        "period": "utc-calendar-month", "rollover": False}
+        "eligible": True, "enabled": True, "available": True, "monthlyBudgetUsd": "0.00",
+        "monthlyCalls": 0, "trialCalls": 20, "period": "lifetime", "rollover": False}
 
 
 def test_public_catalog_projects_runtime_budget_overrides_without_changing_price_facts():
@@ -108,4 +109,4 @@ def test_public_catalog_projects_runtime_budget_overrides_without_changing_price
                                   "source_revision": 1}], 10, policy=policy, jev_available=True)
     assert [item["prices"] for item in projected["plans"]] == [item["prices"] for item in catalog["plans"]]
     assert [item["entitlements"]["jev"]["monthlyBudgetUsd"] for item in projected["plans"]] == ["0.00", "2.125000", "4.00"]
-    assert [item["entitlements"]["jev"]["available"] for item in projected["plans"]] == [False, True, True]
+    assert [item["entitlements"]["jev"]["available"] for item in projected["plans"]] == [True, True, True]

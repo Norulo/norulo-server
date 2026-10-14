@@ -16,6 +16,7 @@ _DEFAULT = {
     "max": {"projects": 100, "records": 200000, "writesPerMinute": 60,
             "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "12.00"},
 }
+JEV_FREE_TRIAL_CALLS = 20
 JEV_MODEL = "jev-1.13.0"
 JEV_INPUT_MICROUSD_PER_MILLION = 42000
 JEV_MAX_INPUT_TOKENS = 65536  # Conservative interpretation of documented 64k.
@@ -79,6 +80,8 @@ def plan_entitlements(plan, *, policy=None, jev_available=False):
     return {"plan": plan, "limits": {"projects": values["projects"],
         "expenseRecords": values["records"], "writesPerMinute": values["writesPerMinute"],
         "writesPerMonth": values["writesPerMonth"]},
-        "jev": {"eligible": plan in PAID_PLAN_IDS, "available": plan in PAID_PLAN_IDS and jev_available,
+        "jev": {"eligible": True, "available": jev_available,
+                "monthlyCalls": usd_micros(values["jevMonthlyBudgetUsd"]) // JEV_RESERVATION_MICROUSD,
+                "trialCalls": JEV_FREE_TRIAL_CALLS if plan == "free" else 0,
                 "monthlyBudgetUsd": values["jevMonthlyBudgetUsd"],
-                "period": "utc-calendar-month", "rollover": False}}
+                "period": "lifetime" if plan == "free" else "utc-calendar-month", "rollover": False}}

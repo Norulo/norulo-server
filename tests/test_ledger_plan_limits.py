@@ -219,19 +219,20 @@ def test_concurrent_creations_reuse_only_one_deleted_slot_with_archives_and_lega
         assert db.execute("SELECT status FROM ledger_projects WHERE id='p2'").fetchone()[0] == "archived"
 
 
-def test_free_jev_is_rejected_even_with_a_positive_unparsed_budget(setup):
+def test_free_jev_is_always_limited_to_twenty_lifetime_calls_even_with_unparsed_budget(setup):
     fixture, _ = setup
     frozen = account_plan(fixture, "free")
     policy = default_policy()
     policy["free"]["jevMonthlyBudgetUsd"] = "5.00"
     raw = D1ShapedSQLite(fixture.store)
     limited = PlanLimitedD1(raw, policy=policy, now=fixture.now)
-    with pytest.raises(PlanLimitError, match="JEV_PLAN_REQUIRED"):
-        write(limited, frozen, fixture, 1, kind="jev")
-    assert raw.batch_count == 0
+    for number in range(20): write(limited, frozen, fixture, number, kind="jev")
+    batches = raw.batch_count
+    with pytest.raises(PlanLimitError, match="JEV_BUDGET_LIMIT"):
+        write(limited, frozen, fixture, 21, kind="jev", now=fixture.now+40*86400)
+    assert raw.batch_count == batches
     with fixture.store.connect() as db:
-        assert db.execute("SELECT COUNT(*) FROM expense_suggestion_budget").fetchone()[0] == 0
-        assert db.execute("SELECT COUNT(*) FROM ledger_plan_usage").fetchone()[0] == 0
+        assert tuple(db.execute("SELECT jev_trial_calls,jev_reserved_microusd,writes FROM ledger_plan_usage").fetchone()) == (20,0,0)
 
 
 @pytest.mark.parametrize("plan,cap", [("pro", 3_000_000), ("max", 12_000_000)])
@@ -240,6 +241,7 @@ def test_paid_jev_exact_monthly_boundary_preserves_business_usage_and_denies_bef
     frozen = account_plan(fixture, plan)
     raw = D1ShapedSQLite(fixture.store)
     limited = PlanLimitedD1(raw, policy=default_policy(), now=fixture.now)
+    cap = cap // JEV_RESERVATION_MICROUSD * JEV_RESERVATION_MICROUSD
     write(limited, frozen, fixture, 1)
     write(limited, frozen, fixture, 1, kind="jev")
     with fixture.store._immediate() as db:
@@ -279,7 +281,7 @@ def test_concurrent_paid_jev_attempts_cannot_overfill_budget(setup, plan):
 
 @pytest.mark.parametrize("plan", ["pro", "max"])
 @pytest.mark.parametrize("invalid", ["expired", "future", "canceled", "pending"])
-def test_unearned_or_expired_paid_plan_does_not_reserve_jev(setup, plan, invalid):
+def test_unearned_or_expired_paid_plan_uses_free_trial_instead_of_paid_quota(setup, plan, invalid):
     fixture, _ = setup
     billing = ({"currentPeriodEnd": fixture.now} if invalid == "expired" else
                {"currentPeriodStart": fixture.now + 1} if invalid == "future" else
@@ -287,11 +289,9 @@ def test_unearned_or_expired_paid_plan_does_not_reserve_jev(setup, plan, invalid
                {"pendingChange": {"plan": plan}})
     frozen = account_plan(fixture, "free" if invalid == "pending" else plan, **billing)
     raw = D1ShapedSQLite(fixture.store)
-    with pytest.raises(PlanLimitError, match="JEV_PLAN_REQUIRED"):
-        write(PlanLimitedD1(raw, now=fixture.now), frozen, fixture, 1, kind="jev")
-    assert raw.batch_count == 0
+    write(PlanLimitedD1(raw, now=fixture.now), frozen, fixture, 1, kind="jev")
     with fixture.store.connect() as db:
-        assert db.execute("SELECT COUNT(*) FROM ledger_plan_usage").fetchone()[0] == 0
+        assert tuple(db.execute("SELECT jev_trial_calls,jev_reserved_microusd FROM ledger_plan_usage").fetchone()) == (1,0)
 
 
 @pytest.mark.parametrize("plan", ["pro", "max"])
@@ -328,7 +328,7 @@ def test_paid_downgrade_retains_spend_and_manual_writes_until_next_month(setup):
     assert raw.batch_count == batches
     write(limited, frozen, fixture, 1)
     with fixture.store.connect() as db:
-        assert tuple(db.execute("SELECT writes,jev_reserved_microusd,jev_cap FROM ledger_plan_usage").fetchone()) == (1, 4_000_000, 3_000_000)
+        assert tuple(db.execute("SELECT writes,jev_reserved_microusd,jev_cap FROM ledger_plan_usage").fetchone()) == (1, 4_000_000, 1089 * JEV_RESERVATION_MICROUSD)
     # Returning to Max does not refund the spend or create a fresh quota window.
     frozen = account_plan(fixture, "max")
     write(limited, frozen, fixture, 2, kind="jev")
@@ -572,7 +572,7 @@ def test_raw_native_adapter_also_reserves_monthly_budget_before_dispatch(setup):
         asyncio.run(reserve_jev_batch(binding, commands, now=fixture.now))
         assert tuple(db.execute("SELECT writes,jev_reserved_microusd FROM ledger_plan_usage").fetchone()) == (
             0, JEV_RESERVATION_MICROUSD)
-        db.execute("UPDATE ledger_plan_usage SET jev_reserved_microusd=12000000")
+        db.execute("UPDATE ledger_plan_usage SET jev_reserved_microusd=12000000,jev_delta=0")
         calls = len(native.batches)
         with pytest.raises(PlanLimitError, match="JEV_BUDGET_LIMIT"):
             asyncio.run(reserve_jev_batch(binding, commands, now=fixture.now))

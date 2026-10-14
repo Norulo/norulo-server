@@ -42,6 +42,8 @@ def test_paid_usage_uses_exact_configured_allowance_even_when_jev_unavailable(tm
     assert status == 200
     assert payload["ledgerUsage"]["jev"] == {
         "month": datetime.fromtimestamp(fixture.now, timezone.utc).strftime("%Y-%m"),
+        "period": "utc-calendar-month", "usedCalls": 449,
+        "limitCalls": 448 if plan == "pro" else 1543, "remainingCalls": 0 if plan == "pro" else 1094,
         "currency": "USD", "usedMicrousd": 1234567,
         "limitMicrousd": 1234567 if plan == "pro" else 4250001,
     }
@@ -63,7 +65,8 @@ def test_month_boundary_projects_zero_without_resetting_annual_or_monthly_usage(
     status, payload = asyncio.run(read_billing(binding=binding, headers=COOKIE, now=fixture.now + 1))
     assert status == 200
     assert payload["ledgerUsage"]["jev"] == {"month": "2026-11", "currency": "USD",
-        "usedMicrousd": 0, "limitMicrousd": 12000000}
+        "usedMicrousd": 0, "limitMicrousd": 12000000, "period": "utc-calendar-month",
+        "usedCalls": 0, "limitCalls": 4358, "remainingCalls": 4358}
     with closing(fixture.store.connect()) as db:
         assert tuple(db.execute("SELECT * FROM ledger_plan_usage").fetchone()) == before
 

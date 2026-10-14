@@ -74,7 +74,8 @@ def test_production_free_catalog_ignores_absent_expired_and_fresh_paid_cache(
     assert free["entitlements"]["limits"] == {
         "projects": 3, "expenseRecords": 300, "writesPerMinute": 10, "writesPerMonth": 1000}
     assert free["entitlements"]["jev"]["monthlyBudgetUsd"] == "0.00"
-    assert free["entitlements"]["jev"]["eligible"] is False
+    assert free["entitlements"]["jev"]["eligible"] is True
+    assert free["entitlements"]["jev"]["trialCalls"] == 20
     for plan in (pro, maximum):
         for interval in ("month", "year"):
             assert plan["prices"][interval] == {

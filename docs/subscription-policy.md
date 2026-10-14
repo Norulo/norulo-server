@@ -4,11 +4,11 @@ The user increased the existing Creem subscription prices and authorized the
 allowance changes and production publication. The anonymous production catalog
 confirmed all four prices before any application change.
 
-| Plan | Monthly price | Annual price | Retained expenses | Projects | Monthly Jev allowance |
+| Plan | Monthly price | Annual price | Retained expenses | Projects | Jev calls |
 | --- | --- | --- | --- | --- | --- |
-| Free | $0 | — | 300 | 3 | $0 |
-| Pro | $4.99 | $49.99 | 20,000 | 20 | $3 |
-| Max | $12.99 | $129.99 | 200,000 | 100 | $12 |
+| Free | $0 | — | 300 | 3 | 20 one-time trials |
+| Pro | $4.99 | $49.99 | 20,000 | 20 | 1,089/month |
+| Max | $12.99 | $129.99 | 200,000 | 100 | 4,358/month |
 
 Prices are provider facts, not hardcoded application defaults. Existing product
 bindings and signed-webhook entitlement controls remain authoritative. Catalog
@@ -69,6 +69,10 @@ allowance must not be described as a dollar payout or guaranteed provider spend.
 Local regression checks cover the final 200,000th record, denial of the next,
 downgrade history preservation, the exact $12 monthly model boundary, Owner/member
 authority, month reset, and monthly versus annual display of provider prices.
-Production verification reads the deployed settings and public catalog. No
-production fixture, database migration, manual scheduler invocation, email send,
+Production verification reads the deployed settings and public catalog. The only production database change is the additive 0015 lifetime counter migration; no
+production fixture, manual scheduler invocation, email send,
 paid inference or customer subscription mutation is needed.
+
+## Count-based Jev update
+
+Free receives 20 lifetime calls per Owner, shared by members and API keys. It may toggle Jev. One admitted model attempt consumes one call even on failure; unavailable/disabled paths do not reserve. Paid counts are floor(3000000/2753)=1089 and floor(12000000/2753)=4358 per UTC month. Internal legacy reservations are retained; nonmultiple historical usage rounds up for count projection and admission. A constrained v15 column in the existing atomic quota write persists Free use through months, upgrades/downgrades and project/expense deletion. Billing, pricing, settings, review and six locales display counts. Old USD contract fields remain deprecated compatibility metadata only.

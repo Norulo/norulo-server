@@ -96,7 +96,8 @@ def test_enabled_paid_production_owner_and_key_share_one_allowance_without_repla
     assert profile.status == 200
     assert profile.payload["entitlements"]["jev"] == {
         "eligible": True, "enabled": True, "available": True,
-        "monthlyBudgetUsd": budget, "period": "utc-calendar-month", "rollover": False}
+        "monthlyBudgetUsd": budget, "period": "utc-calendar-month",
+        "monthlyCalls": 1089 if plan == "pro" else 4358, "trialCalls": 0, "rollover": False}
     assert _usage(jev) is None and jev.provider.calls == []
 
     first = _write(jev)
@@ -137,16 +138,18 @@ def test_free_member_uses_owner_activation_and_shares_owner_allowance(jev, owner
     assert _usage(jev, "other") is None
 
 
-@pytest.mark.parametrize("owner_plan,enabled", [("free", True), ("pro", False)])
+@pytest.mark.parametrize("owner_plan,enabled", [("free", True), ("free", False), ("pro", False)])
 def test_paid_member_cannot_override_owner_entitlement_or_preference(jev, owner_plan, enabled):
     _user(jev, plan=owner_plan, enabled=enabled)
     headers = _member(jev, plan="max", enabled=True)
     profile = call(jev, "/api/v1/me", headers=headers)
-    assert profile.payload["entitlements"]["jev"]["available"] is False
+    assert profile.payload["entitlements"]["jev"]["available"] is enabled
     automatic = _write(jev, headers=headers)
-    assert automatic.status == 422 and automatic.payload["error"]["code"] == "CATEGORY_REQUIRED"
+    assert automatic.status == (201 if enabled else 422)
     assert _write(jev, headers=headers, key="manual", category="cat_owner").status == 201
-    assert jev.provider.calls == [] and _usage(jev)["jev_reserved_microusd"] == 0
+    assert len(jev.provider.calls) == (2 if enabled else 0)
+    assert _usage(jev)["jev_reserved_microusd"] == 0
+    assert _usage(jev)["jev_trial_calls"] == (2 if enabled else 0)
 
 
 @pytest.mark.parametrize("disabled", ["enabled", "evaluated", "secret", "preference", "expired", "future", "canceled"])
@@ -164,11 +167,14 @@ def test_production_admission_requires_all_activation_and_current_paid_entitleme
     else:
         _user(jev, status="canceled")
     profile = call(jev, "/api/v1/me", headers=cookie())
-    assert profile.payload["entitlements"]["jev"]["available"] is False
+    trial = disabled in {"expired", "future", "canceled"}
+    assert profile.payload["entitlements"]["jev"]["available"] is trial
     automatic = _write(jev)
-    assert automatic.status == 422 and automatic.payload["error"]["code"] == "CATEGORY_REQUIRED"
+    assert automatic.status == (201 if trial else 422)
     assert _write(jev, key="manual", category="cat_owner").status == 201
-    assert jev.provider.calls == [] and _usage(jev)["jev_reserved_microusd"] == 0
+    assert len(jev.provider.calls) == (2 if trial else 0)
+    assert _usage(jev)["jev_reserved_microusd"] == 0
+    assert _usage(jev)["jev_trial_calls"] == (2 if trial else 0)
 
 
 @pytest.mark.parametrize("origin", [None, "https://hostile.example.test"])

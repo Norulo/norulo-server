@@ -1,10 +1,10 @@
 # Ledger plan policy
 
 Current user decisions, updated 2026-10-14: Free has 3 projects and 300 expense records;
-Pro has 20 projects and 20,000 records; Max has 100 projects and 100,000 records.
-Pro and Max include Jev, with respective $3/$5 provider-cost reservation budgets
+Pro has 20 projects and 20,000 records; Max has 100 projects and 200,000 records.
+Pro and Max include Jev, with respective $3/$12 internal provider-cost reservation budgets
 per ledger Owner per UTC calendar month, including annual subscriptions, without rollover.
-This is an assistance limit, not a redeemable balance or a payment credit.
+Customer-facing entitlements are counts: Free 20 lifetime trials, Pro 1,089/month and Max 4,358/month. Internal USD reservation fields are deprecated public compatibility metadata, never a UI balance.
 Members of a shared ledger use its Owner's plan and combined allowances;
 their personal subscriptions remain separate. Core expense history remains separate from
 Creem platform payment facts. On 2026-10-06 the actual 36-case en/zh quality and
@@ -17,10 +17,10 @@ Current evidence is in [local acceptance](../../validation/local-acceptance.md).
 | Allowance per ledger Owner (shared by members) | Free | Pro | Max |
 | --- | ---: | ---: | ---: |
 | Current undeleted projects (standalone or GitHub-linked) | 3 | 20 | 100 |
-| Current expense records | 300 | 20,000 | 100,000 |
+| Current expense records | 300 | 20,000 | 200,000 |
 | Successful protected write batches per UTC minute | 10 | 60 | 60 |
 | Successful protected write batches per UTC calendar month | 1,000 | 10,000 | 10,000 |
-| Jev provider-cost reservation per UTC calendar month | $0 | $3 | $5 |
+| Jev calls | 20 once per lifetime | 1,089/month | 4,358/month |
 
 Project and record capacities are user requirements. Write defaults remain
 configurable engineering allowances, not validated production demand estimates.
@@ -104,7 +104,7 @@ integer capacities without storing financial data inside account JSON. Money
 reports use split integer aggregates proven through 1,000,000 records; project
 and expense lists retain bounded pagination and CSV retains its streaming path.
 This establishes compatibility of the configured capacity, not a load or latency
-benchmark at 100,000 records.
+benchmark at 200,000 records.
 
 This is an operator binding, not a public settings endpoint or browser variable.
 Editing an example file alone does not update Cloudflare. Any remote settings
@@ -135,15 +135,14 @@ a new month replaces the period counters; it does not add unused old credit.
 Annual subscriptions use the same monthly periods. A named constraint rejects
 late requests that would move counters back to an older month/minute.
 
-Jev has no daily attempt cap. The ledger Owner's shared UTC-month USD reservation
+Jev has no daily attempt cap. The ledger Owner's shared lifetime-trial or paid-month call allowance
 and request/response bounds remain the controls for model use. Historical daily
-attempt rows remain untouched and no longer gate or count new calls. Free cannot
-invoke Jev even with suggestions scope. Pro/Max eligibility does not imply that
+attempt rows remain untouched and no longer gate or count new calls. Free receives 20 one-time calls, tracked by the constrained v15 quota column. Trial/paid eligibility does not imply that
 Jev is active: public DTOs distinguish `eligible` and `available`. Preserve
 enable/evaluated flags at 0 in each environment until its quality, metering and provider gates pass.
-Those Preview gates passed on 2026-10-06; production activation remains separate.
+Those Preview gates passed on 2026-10-06. Production activation is now enabled in the reviewed live release; preserve the actual live configuration when publishing.
 
-Paid-plan assistance is part of ordinary `POST /api/v1/expenses` and expense PATCH,
+Free-trial and paid assistance is part of ordinary `POST /api/v1/expenses` and expense PATCH,
 including `expenses:write` API keys. No extra suggestion action or scope is
 required. A create may omit `categoryId`; confidence at least 0.80 selects an
 active existing category. Explicit category, amount, date and target are kept.

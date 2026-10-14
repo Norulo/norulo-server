@@ -1,0 +1,2045 @@
+{
+  "schemaVersion": 15,
+  "scope": "isolated workerd and local D1; synthetic Owner; no providers or production requests",
+  "httpRequests": 24,
+  "trialCallsAdmitted": 20,
+  "staleGuardCharged": false,
+  "twentyFirstDenied": true,
+  "monthResetRenewsTrials": false,
+  "results": [
+    {
+      "case": "initialize",
+      "success": true,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 12288,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 24576,
+          "rows_read": 1,
+          "rows_written": 4
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 32768,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 36864,
+          "rows_read": 1,
+          "rows_written": 2
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 45056,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 49152,
+          "rows_read": 1,
+          "rows_written": 2
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 61440,
+          "rows_read": 1,
+          "rows_written": 4
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 69632,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 77824,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 8,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 98304,
+          "rows_read": 1,
+          "rows_written": 4
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 114688,
+          "rows_read": 1,
+          "rows_written": 5
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 122880,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 2,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 131072,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 2,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 147456,
+          "rows_read": 1,
+          "rows_written": 4
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 155648,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 163840,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 180224,
+          "rows_read": 1,
+          "rows_written": 4
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 3,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 196608,
+          "rows_read": 1,
+          "rows_written": 5
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 204800,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 221184,
+          "rows_read": 1,
+          "rows_written": 4
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 233472,
+          "rows_read": 1,
+          "rows_written": 4
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 241664,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 245760,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 249856,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 253952,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 258048,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 262144,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 266240,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 270336,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 274432,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 282624,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 286720,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 290816,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 294912,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 299008,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 303104,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 307200,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 311296,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 315392,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": true,
+          "size_after": 319488,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 4,
+          "last_row_id": 4,
+          "changed_db": true,
+          "size_after": 319488,
+          "rows_read": 0,
+          "rows_written": 8
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 4,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": false,
+          "size_after": 319488,
+          "rows_read": 74,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": true,
+          "size_after": 323584,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 3,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": true,
+          "size_after": 327680,
+          "rows_read": 75,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": true,
+          "size_after": 339968,
+          "rows_read": 1,
+          "rows_written": 4
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": false,
+          "size_after": 339968,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 3,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": true,
+          "size_after": 327680,
+          "rows_read": 78,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 5,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": false,
+          "size_after": 327680,
+          "rows_read": 269,
+          "rows_written": 25
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": true,
+          "size_after": 339968,
+          "rows_read": 1,
+          "rows_written": 3
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": true,
+          "size_after": 344064,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 3,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": false,
+          "size_after": 344064,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 4,
+          "changed_db": false,
+          "size_after": 344064,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 3,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 344064,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 344064,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 348160,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 352256,
+          "rows_read": 2,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 4,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 352256,
+          "rows_read": 82,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 352256,
+          "rows_read": 82,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 5,
+          "changed_db": true,
+          "size_after": 352256,
+          "rows_read": 0,
+          "rows_written": 2
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 1,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 2,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 2
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 2,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 3,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 8,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 4,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 5,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 6,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 7,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 8,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 9,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 10,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 11,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 2,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 12,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 2,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 13,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 14,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 2,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 15,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 16,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 5,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 17,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 2,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 18,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 4,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 19,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "stale-guard",
+      "admitted": false,
+      "usage": {
+        "jev_trial_calls": 19,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 20,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "trial",
+      "admitted": false,
+      "usage": {
+        "jev_trial_calls": 20,
+        "jev_reserved_microusd": 0,
+        "month": "2026-10",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 3,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    },
+    {
+      "case": "roll-month",
+      "admitted": true,
+      "usage": {
+        "jev_trial_calls": 20,
+        "jev_reserved_microusd": 0,
+        "month": "2026-11",
+        "writes": 0
+      },
+      "guards": 0,
+      "meta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 1
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 1,
+          "last_row_id": 1,
+          "changed_db": true,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 1
+        }
+      ],
+      "readMeta": [
+        {
+          "served_by": "miniflare.db",
+          "duration": 0,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 1,
+          "rows_written": 0
+        },
+        {
+          "served_by": "miniflare.db",
+          "duration": 1,
+          "changes": 0,
+          "last_row_id": 1,
+          "changed_db": false,
+          "size_after": 356352,
+          "rows_read": 0,
+          "rows_written": 0
+        }
+      ]
+    }
+  ],
+  "compatibilityDate": "2026-09-23",
+  "wranglerVersion": "4.136.3",
+  "checkerSha256": "65a62ca49c6ee808bbd2cededa9730f69e2d5532a7d508bf3af10a6c59413eb4",
+  "migrationSha256": "129ccab453608923d2360a2069614273408fcb1172e27ca747f557dfaad75da4",
+  "failedBatchAccounting": "No native row metrics returned for the intentional failed CHECK batches; exact counter and empty guard readback verified rollback. No total rows claim is made."
+}

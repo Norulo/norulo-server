@@ -11,7 +11,6 @@ from .cloudflare_ledger_auth import ledger_principal
 from .cloudflare_principal import PrincipalAuthError
 from .cloudflare_ledger_expenses import _amount
 from .typesafe_client import DEFAULT_JEV_MODEL, build_request, validate_response
-from .account_cycle_rules import PAID_PLAN_IDS, effective_user_plan
 from .cloudflare_plan_limits import PlanLimitError, reserve_jev_batch
 from .cloudflare_jev_preferences import ensure_current_jev_authority, jev_enabled
 
@@ -109,8 +108,6 @@ async def handle_suggestion_request(*, binding, method, headers, body, now, gate
             scope=scope, now=now, target_kind=target_kind, project_id=project_id,
             proof=proof)
         enabled = gateway is not None and gateway.enabled and jev_enabled(user)
-        if enabled and effective_user_plan(user, timestamp=now) not in PAID_PLAN_IDS:
-            return _error(403, "JEV_PLAN_REQUIRED")
         commands = [binding.prepare("""SELECT id,name FROM expense_categories
             WHERE owner_id=? AND archived_at IS NULL ORDER BY name,id LIMIT 30""").bind(user["id"])]
         if project_id:

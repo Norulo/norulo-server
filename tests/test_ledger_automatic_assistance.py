@@ -104,7 +104,7 @@ def test_expense_write_key_gets_assistance_without_separate_model_scope(ledger):
         assert db.execute("SELECT actor_kind FROM expense_events").fetchone()[0] == "api_key"
 
 
-def test_free_tier_never_calls_model_and_requires_category(ledger):
+def test_free_tier_uses_shared_twenty_trial_calls_for_automatic_categories(ledger):
     chosen = category(ledger)
     with ledger.store.connect() as db:
         owner_id = "usr_github_77"
@@ -116,8 +116,10 @@ def test_free_tier_never_calls_model_and_requires_category(ledger):
     provider = Provider()
     assert call(ledger, expense(chosen), provider)[0] == 201
     status, failure = call(ledger, expense(), provider, key="missing-category")
-    assert status == 422 and failure["error"]["code"] == "CATEGORY_REQUIRED"
-    assert provider.calls == []
+    assert status == 201 and failure["categoryId"] == chosen
+    assert len(provider.calls) == 2
+    with ledger.store.connect() as db:
+        assert tuple(db.execute("SELECT jev_trial_calls,jev_reserved_microusd FROM ledger_plan_usage").fetchone()) == (2,0)
 
 
 @pytest.mark.parametrize("provider", [None, Provider(confidence=0.6), Provider(failure=TimeoutError())])
@@ -208,7 +210,7 @@ def test_invalid_access_never_calls_provider(ledger):
 
 
 @pytest.mark.parametrize("plan", ["pro", "max"])
-def test_expired_paid_plan_has_no_automatic_model_access(ledger, plan):
+def test_expired_paid_plan_uses_lifetime_trial_without_paid_quota(ledger, plan):
     chosen = category(ledger)
     with ledger.store.connect() as db:
         owner_id = "usr_github_77"
@@ -220,8 +222,8 @@ def test_expired_paid_plan_has_no_automatic_model_access(ledger, plan):
                    (encode_record("users", owner_id, user), name))
     provider = Provider()
     assert call(ledger, expense(chosen), provider)[0] == 201
-    assert call(ledger, expense(), provider, key="automatic-category")[1]["error"]["code"] == "CATEGORY_REQUIRED"
-    assert provider.calls == []
+    assert call(ledger, expense(), provider, key="automatic-category")[0] == 201
+    assert len(provider.calls) == 2
 
 
 def test_category_archived_during_inference_is_not_saved(ledger):

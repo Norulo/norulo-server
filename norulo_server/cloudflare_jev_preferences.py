@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 
-from .account_cycle_rules import PAID_PLAN_IDS, effective_user_plan
 from .cloudflare_principal import (
     PrincipalAuthError, _cookie_sessions, _header, _principal, _resource_auth_snapshot,
 )
@@ -46,7 +45,8 @@ def _payload(user, now, binding):
     jev = entitlements(user, now=now, policy=getattr(binding, "plan_policy", None),
         jev_available=getattr(binding, "jev_available", False))["jev"]
     return {"enabled": enabled, "revision": revision, "eligible": jev["eligible"],
-        "available": jev["available"], "monthlyBudgetUsd": jev["monthlyBudgetUsd"]}
+        "available": jev["available"], "monthlyBudgetUsd": jev["monthlyBudgetUsd"],
+        "monthlyCalls": jev["monthlyCalls"], "trialCalls": jev["trialCalls"], "period": jev["period"]}
 
 
 async def handle_jev_preference(*, binding, method, headers, body, now):
@@ -84,8 +84,6 @@ async def handle_jev_preference(*, binding, method, headers, body, now):
         return _error(503, "JEV_PREFERENCE_UNAVAILABLE")
     if method == "GET":
         return 200, payload
-    if effective_user_plan(user, timestamp=now) not in PAID_PLAN_IDS:
-        return _error(403, "JEV_PLAN_REQUIRED")
     if expected != payload["revision"]:
         return _error(412, "PRECONDITION_FAILED")
     if body["enabled"] == payload["enabled"]:

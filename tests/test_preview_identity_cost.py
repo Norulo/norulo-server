@@ -44,7 +44,7 @@ def test_identity_trace_replays_fresh_schema_and_keeps_providers_synthetic(tmp_p
             "session", "install_authorize", "install_callback", "repositories",
             "sign_out", "signed_out_session"} <= cases
     assert manifest["tables"] == 23 and manifest["indexes"] == 54
-    assert manifest["migrations"][-1]["name"] == "0014_expense_last_source.sql"
+    assert manifest["migrations"][-1]["name"] == "0015_jev_trial_calls.sql"
     assert manifest["http_cases"] == 9
     assert manifest["remote_admissible"] is False
     assert manifest["provider_mode"] == "synthetic"
@@ -55,4 +55,4 @@ def test_identity_trace_replays_fresh_schema_and_keeps_providers_synthetic(tmp_p
     # This is an offline trace, explicitly not an admitted remote plan.
     # Browser-bound callback preflight adds one finite read. Versioned new
     # session reads and collision checks bind only the storage fingerprint.
-    assert len(trace) == 138
+    assert len(trace) == 139
