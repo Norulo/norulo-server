@@ -87,7 +87,7 @@ def reserve_existing(preview, reserved, *, month=None):
     with preview.fixture.store.connect() as database:
         database.execute(_USAGE_SQL, (owner, owner, owner,
             month, 0, preview.now // 60, 0, reserved, limits["projects"], limits["records"],
-            limits["writesPerMinute"], limits["writesPerMonth"], 5_000_000,
+            limits["writesPerMinute"], limits["writesPerMonth"], 12_000_000,
             0, 0, reserved, month, preview.now // 60))
 
 
@@ -119,7 +119,7 @@ def save(preview, provider, *, category=True):
     return result
 
 
-@pytest.mark.parametrize("existing", [None, 5_000_000, 5_000_000 - JEV_RESERVATION_MICROUSD + 1])
+@pytest.mark.parametrize("existing", [None, 12_000_000, 12_000_000 - JEV_RESERVATION_MICROUSD + 1])
 @pytest.mark.parametrize("category", [True, False])
 def test_exhausted_optional_budget_preserves_manual_save_and_preview_journal(preview, existing, category):
     if existing is None:
@@ -147,13 +147,13 @@ def test_exhausted_optional_budget_preserves_manual_save_and_preview_journal(pre
 
 @pytest.mark.parametrize("prior_month", [False, True])
 def test_exact_remaining_or_new_month_reserves_atomically_before_provider(preview, prior_month):
-    reserved = 5_000_000 if prior_month else 5_000_000 - JEV_RESERVATION_MICROUSD
+    reserved = 12_000_000 if prior_month else 12_000_000 - JEV_RESERVATION_MICROUSD
     reserve_existing(preview, reserved, month="2000-01" if prior_month else None)
 
     def verify_reservation():
         with preview.fixture.store.connect() as database:
             usage = database.execute("SELECT writes,records,jev_reserved_microusd FROM ledger_plan_usage").fetchone()
-            assert tuple(usage) == (0, 0, JEV_RESERVATION_MICROUSD if prior_month else 5_000_000)
+            assert tuple(usage) == (0, 0, JEV_RESERVATION_MICROUSD if prior_month else 12_000_000)
             assert database.execute("SELECT count(*) FROM expense_suggestion_budget").fetchone()[0] == 0
 
     provider = Provider(on_call=verify_reservation)

@@ -63,7 +63,7 @@ def test_month_boundary_projects_zero_without_resetting_annual_or_monthly_usage(
     status, payload = asyncio.run(read_billing(binding=binding, headers=COOKIE, now=fixture.now + 1))
     assert status == 200
     assert payload["ledgerUsage"]["jev"] == {"month": "2026-11", "currency": "USD",
-        "usedMicrousd": 0, "limitMicrousd": 5000000}
+        "usedMicrousd": 0, "limitMicrousd": 12000000}
     with closing(fixture.store.connect()) as db:
         assert tuple(db.execute("SELECT * FROM ledger_plan_usage").fetchone()) == before
 

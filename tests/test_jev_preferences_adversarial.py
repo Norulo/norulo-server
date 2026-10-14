@@ -76,7 +76,7 @@ def test_selected_paid_workspace_never_lends_owner_preference_authority(ledger, 
     if status == 200:
         assert stored(ledger.store, actor_id) == {**actor_before,
             "jevEnabled": False, "jevPreferenceRevision": 8}
-        assert result[1]["monthlyBudgetUsd"] == ("3.00" if actor_plan == "pro" else "5.00")
+        assert result[1]["monthlyBudgetUsd"] == ("3.00" if actor_plan == "pro" else "12.00")
     else:
         assert result[1] == {"error": {"code": "JEV_PLAN_REQUIRED"}}
         assert stored(ledger.store, actor_id) == actor_before
@@ -159,7 +159,7 @@ def test_downgrade_to_free_cannot_use_retained_on_preference(ledger, stored_on, 
         assert db.execute("SELECT count(*) FROM expense_suggestion_events").fetchone()[0] == 0
 
 
-@pytest.mark.parametrize("plan,budget", [("pro", "3.00"), ("max", "5.00")])
+@pytest.mark.parametrize("plan,budget", [("pro", "3.00"), ("max", "12.00")])
 def test_cookie_and_restricted_key_inherit_owner_off_without_model_admission(ledger, plan, budget):
     body, saved, _ = setup_expense(ledger)
     set_plan(ledger, plan)

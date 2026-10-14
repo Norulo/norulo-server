@@ -89,7 +89,7 @@ def _member(runtime, *, plan="free", enabled=True):
             "x-norulo-workspace": "owner"}
 
 
-@pytest.mark.parametrize("plan,budget", [("pro", "3.00"), ("max", "5.00")])
+@pytest.mark.parametrize("plan,budget", [("pro", "3.00"), ("max", "12.00")])
 def test_enabled_paid_production_owner_and_key_share_one_allowance_without_replay(jev, plan, budget):
     _user(jev, plan=plan)
     profile = call(jev, "/api/v1/me", headers=cookie())

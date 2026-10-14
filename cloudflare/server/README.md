@@ -171,7 +171,7 @@ explicitly fail with JEV_RESPONSE_TOO_LARGE, rather than a schema error. This is
 local transport evidence, not real
 provider HTTPS or model-quality acceptance; no gateway source repair was needed.
 
-The current Owner policy admits Pro and Max only, with $3 and $5 respectively per
+The current Owner policy admits Pro and Max only, with $3 and $12 respectively per
 UTC calendar month under the configurable default policy, no rollover and atomic
 conservative reservation of 2,753 micro-USD before each dispatch. Free allowance is $0. Historical daily counters
 are preserved but no daily request cap is used. Explicit opt-in and manual

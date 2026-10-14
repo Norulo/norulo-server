@@ -39,7 +39,7 @@ def test_example_policy_matches_default_without_enabling_free_jev():
     assert parse_policy((ROOT / "config/ledger-plans.example.json").read_text()) == default_policy()
 
 
-@pytest.mark.parametrize("plan,budget", [("free", "0.00"), ("pro", "3.00"), ("max", "5.00")])
+@pytest.mark.parametrize("plan,budget", [("free", "0.00"), ("pro", "3.00"), ("max", "12.00")])
 @pytest.mark.parametrize("enabled", [False, True])
 def test_cookie_and_key_profile_report_current_owner_budget_and_gateway_availability(tmp_path, plan, budget, enabled):
     fixture, _, snapshot = seed(tmp_path / "profile.db")
@@ -62,7 +62,7 @@ def test_cookie_and_key_profile_report_current_owner_budget_and_gateway_availabi
 
 
 @pytest.mark.parametrize("owner_plan,actor_plan,budget", [
-    ("pro", "free", "3.00"), ("max", "free", "5.00"), ("free", "max", "0.00")])
+    ("pro", "free", "3.00"), ("max", "free", "12.00"), ("free", "max", "0.00")])
 def test_shared_ledger_profile_qualifies_the_owner_instead_of_the_actual_actor(tmp_path, owner_plan, actor_plan, budget):
     fixture, _, snapshot = seed(tmp_path / "member-profile.db")
     seed_auth(fixture)
@@ -93,7 +93,7 @@ def test_annual_entitlements_remain_monthly_and_expiry_cannot_keep_paid_jev(plan
     user = {"billing": {"plan": plan, "status": "active", "interval": "year", "currentPeriodEnd": 101}}
     current = entitlements(user, now=100, jev_available=True)["jev"]
     assert current["available"] is True and current["period"] == "utc-calendar-month"
-    assert current["monthlyBudgetUsd"] == ("3.00" if plan == "pro" else "5.00")
+    assert current["monthlyBudgetUsd"] == ("3.00" if plan == "pro" else "12.00")
     assert entitlements(user, now=101, jev_available=True)["jev"] == {
         "eligible": False, "enabled": True, "available": False, "monthlyBudgetUsd": "0.00",
         "period": "utc-calendar-month", "rollover": False}

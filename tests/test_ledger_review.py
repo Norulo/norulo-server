@@ -162,7 +162,7 @@ def test_review_validates_revision_before_model_or_budget(ledger, revision, stat
         assert db.execute("SELECT count(*) FROM expense_suggestion_events").fetchone()[0] == 0
 
 
-@pytest.mark.parametrize("plan,maximum", [("pro", 3_000_000), ("max", 5_000_000)])
+@pytest.mark.parametrize("plan,maximum", [("pro", 3_000_000), ("max", 12_000_000)])
 def test_review_reuses_existing_paid_monthly_budget(ledger, plan, maximum):
     set_plan(ledger, plan)
     _, saved, _ = setup_expense(ledger)

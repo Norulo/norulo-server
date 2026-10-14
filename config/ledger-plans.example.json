@@ -15,9 +15,9 @@
   },
   "max": {
     "projects": 100,
-    "records": 100000,
+    "records": 200000,
     "writesPerMinute": 60,
     "writesPerMonth": 10000,
-    "jevMonthlyBudgetUsd": "5.00"
+    "jevMonthlyBudgetUsd": "12.00"
   }
 }

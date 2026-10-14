@@ -81,7 +81,7 @@ def test_plan_save_infers_once_and_exact_replay_and_get_spend_nothing(app, proje
     assert len(provider.calls) == 1
 
 
-@pytest.mark.parametrize("plan,cap", [("pro", 3_000_000), ("max", 5_000_000)])
+@pytest.mark.parametrize("plan,cap", [("pro", 3_000_000), ("max", 12_000_000)])
 def test_exhausted_recurring_monthly_allowance_keeps_manual_creation_without_another_reservation(app, plan, cap):
     change_user(app, plan=plan)
     provider = Provider()

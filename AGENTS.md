@@ -1,5 +1,17 @@
 # Norulo Server
 
+## 2026-10-14 paid plan allowances
+
+Canonical Max defaults are now 200,000 retained expenses and $12 of Jev model
+allowance per UTC calendar month; Pro stays at 20,000 expenses and $3/month.
+Projects remain Free 3 / Pro 20 / Max 100. Monthly and annual subscriptions use
+the same monthly model allowance, without rollover. Keep all runtime policies,
+examples, public contract, Web translations and boundary checks aligned.
+Prices remain verified Creem facts; the live catalog was checked at Pro
+$4.99/month or $49.99/year and Max $12.99/month or $129.99/year.
+This change needs no database migration or historical usage reset. See
+docs/subscription-policy.md for the capacity and cost reasoning.
+
 ## 2026-10-14 Free expense capacity
 
 Free defaults to 300 retained expenses per ledger Owner, combined across project,
@@ -189,7 +201,7 @@ and the OpenAPI contract.
   records. Recurrence keeps calendar identity, actor/key/target/category/plan
   fences, bounded catch-up and at most ten unresolved failed occurrences.
 - Jev reserves only the current UTC-month USD allowance atomically before
-  dispatch: Free $0, Pro $3 and Max $5 under the current policy, with no rollover.
+  dispatch: Free $0, Pro $3 and Max $12 under the current policy, with no rollover.
   The stored ledger Owner's entitlement and opt-in apply; preserve historical
   daily rows without daily-cap reads/writes.
   Failed/unavailable model results permit ordinary explicit-category writes.

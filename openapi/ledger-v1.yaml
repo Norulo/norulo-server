@@ -910,7 +910,7 @@ paths:
         note and current active category names enter the model. Categories and
         target kinds are advice only; no expense, financial audit, recent activity,
         revision, record count or commercial write allowance is changed.
-        Model attempts share the Pro USD 3 / Max USD 5 per UTC month reservation,
+        Model attempts share the Pro USD 3 / Max USD 12 per UTC month reservation,
         without a daily attempt cap; admitted failures remain charged. With no active
         categories the model can still check target kind. Disabled, failed or invalid
         model context returns partial checks while the local duplicate rule remains
@@ -1137,7 +1137,7 @@ paths:
       parameters: [{$ref: '#/components/parameters/WorkspaceHeader'}]
       operationId: suggestExpense
       x-norulo-scope: suggestions:use
-      description: Advanced draft advice only; ordinary expense writes already attempt eligible Pro or Max assistance without this endpoint or its scope. Never writes an expense. Disabled unless evaluated and enabled. Requires the ledger owner's current paid plan, irrespective of the actor's personal plan. Shares the ledger owner's monthly Jev reservation with automatic assistance, without a daily attempt cap; defaults are USD 3 for Pro and USD 5 for Max per UTC calendar month, without rollover.
+      description: Advanced draft advice only; ordinary expense writes already attempt eligible Pro or Max assistance without this endpoint or its scope. Never writes an expense. Disabled unless evaluated and enabled. Requires the ledger owner's current paid plan, irrespective of the actor's personal plan. Shares the ledger owner's monthly Jev reservation with automatic assistance, without a daily attempt cap; defaults are USD 3 for Pro and USD 12 for Max per UTC calendar month, without rollover.
       requestBody: {required: true, content: {application/json: {schema: {type: object, required: [purpose, target], properties: {purpose: {type: string, maxLength: 500}, note: {type: string, maxLength: 4000}, occurredOn: {type: string, format: date}, amount: {type: string, description: Decimal amount in selected currency}, currency: {type: string, pattern: "^[A-Z]{3}$"}, target: {$ref: '#/components/schemas/Target'}}}}}}
       responses:
         '200': {description: "Status, optional suggestionId, candidates and probabilities; never an expense write", content: {application/json: {schema: {type: object, properties: {status: {type: string, enum: [available, uncertain, unavailable]}, suggestionId: {type: string}, questionVersion: {type: string}, modelVersion: {type: [string, 'null']}, suggestions: {type: object, properties: {categoryId: {type: string}, targetKind: {type: string}, duplicateExpenseId: {type: string}}}, probabilities: {type: object}}}}}}
@@ -1557,7 +1557,7 @@ components:
           required: [projects, expenseRecords, writesPerMinute, writesPerMonth]
           properties:
             projects: {type: integer, minimum: 1, description: Current undeleted projects including archived projects}
-            expenseRecords: {type: integer, minimum: 1, description: "Current undeleted expenses in Shared pool or nonremoved projects. Default limits are Free 300; Pro 20000; Max 100000. Read the current configured limit from the response."}
+            expenseRecords: {type: integer, minimum: 1, description: "Current undeleted expenses in Shared pool or nonremoved projects. Default limits are Free 300; Pro 20000; Max 200000. Read the current configured limit from the response."}
             writesPerMinute: {type: integer, minimum: 1, description: Fixed UTC minute bucket shared by the ledger owner's members and API keys}
             writesPerMonth: {type: integer, minimum: 1, description: UTC calendar month shared by the ledger owner's members and API keys}
         jev:

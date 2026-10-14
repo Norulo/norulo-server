@@ -13,8 +13,8 @@ _DEFAULT = {
              "writesPerMonth": 1000, "jevMonthlyBudgetUsd": "0.00"},
     "pro": {"projects": 20, "records": 20000, "writesPerMinute": 60,
             "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "3.00"},
-    "max": {"projects": 100, "records": 100000, "writesPerMinute": 60,
-            "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "5.00"},
+    "max": {"projects": 100, "records": 200000, "writesPerMinute": 60,
+            "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "12.00"},
 }
 JEV_MODEL = "jev-1.13.0"
 JEV_INPUT_MICROUSD_PER_MILLION = 42000

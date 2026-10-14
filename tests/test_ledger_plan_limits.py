@@ -15,8 +15,8 @@ from norulo_server.cloudflare_state_records import record_name
 def test_defaults_override_and_paid_plan_jev():
     policy = default_policy()
     assert [policy[p]["projects"] for p in ("free", "pro", "max")] == [3, 20, 100]
-    assert [policy[p]["records"] for p in ("free", "pro", "max")] == [300, 20_000, 100_000]
-    assert [policy[p]["jevMonthlyBudgetUsd"] for p in ("free", "pro", "max")] == ["0.00", "3.00", "5.00"]
+    assert [policy[p]["records"] for p in ("free", "pro", "max")] == [300, 20_000, 200_000]
+    assert [policy[p]["jevMonthlyBudgetUsd"] for p in ("free", "pro", "max")] == ["0.00", "3.00", "12.00"]
     changed = parse_policy(json.dumps({"free": {"projects": 4}}))
     assert changed["free"]["projects"] == 4 and default_policy()["free"]["projects"] == 3
     for raw in ({"free": {"jevMonthlyBudgetUsd": "1.00"}},
@@ -84,12 +84,12 @@ def test_max_capacity_accepts_final_project_and_record_and_downgrade_keeps_histo
     with fixture.store._immediate() as db:
         db.execute("INSERT INTO expense_categories(id,owner_id,name,color,archived_at,revision,created_at,updated_at) VALUES('category','owner','Hosting',NULL,NULL,1,'created','updated')")
         # Both capacity boundaries depend on current rows, not saved counters.
-        db.execute("UPDATE ledger_plan_usage SET projects=99,records=99999 WHERE owner_id='owner'")
+        db.execute("UPDATE ledger_plan_usage SET projects=99,records=199999 WHERE owner_id='owner'")
         db.executemany("""INSERT INTO ledger_projects(id,owner_id,name,description,status,
             revision,created_at,updated_at) VALUES(?,'owner',?,'','active',1,'local','local')""",
             [("seed_p" + str(number), "Project " + str(number)) for number in range(98)])
         db.execute("""WITH RECURSIVE numbers(n) AS (
-            SELECT 1 UNION ALL SELECT n+1 FROM numbers WHERE n<99999)
+            SELECT 1 UNION ALL SELECT n+1 FROM numbers WHERE n<199999)
             INSERT INTO expenses(id,owner_id,target_kind,category_id,occurred_on,
                 amount_minor,currency,purpose,created_at,updated_at)
             SELECT 'seed_' || n,'owner','shared','category','2026-09-28',1,
@@ -109,9 +109,9 @@ def test_max_capacity_accepts_final_project_and_record_and_downgrade_keeps_histo
     with pytest.raises(PlanLimitError, match="RECORD_LIMIT"):
         write(limited, frozen, fixture, 7, kind="record")
     with fixture.store._immediate() as db:
-        assert db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()[:] == (100, 100000)
+        assert db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()[:] == (100, 200000)
         assert db.execute("SELECT COUNT(*) FROM ledger_projects").fetchone()[0] == 100
-        assert db.execute("SELECT COUNT(*) FROM expenses").fetchone()[0] == 100000
+        assert db.execute("SELECT COUNT(*) FROM expenses").fetchone()[0] == 200000
         assert db.execute("SELECT description FROM ledger_projects WHERE id='p1'").fetchone()[0] == "6"
 
 
@@ -234,7 +234,7 @@ def test_free_jev_is_rejected_even_with_a_positive_unparsed_budget(setup):
         assert db.execute("SELECT COUNT(*) FROM ledger_plan_usage").fetchone()[0] == 0
 
 
-@pytest.mark.parametrize("plan,cap", [("pro", 3_000_000), ("max", 5_000_000)])
+@pytest.mark.parametrize("plan,cap", [("pro", 3_000_000), ("max", 12_000_000)])
 def test_paid_jev_exact_monthly_boundary_preserves_business_usage_and_denies_before_dispatch(setup, plan, cap):
     fixture, _ = setup
     frozen = account_plan(fixture, plan)
@@ -572,7 +572,7 @@ def test_raw_native_adapter_also_reserves_monthly_budget_before_dispatch(setup):
         asyncio.run(reserve_jev_batch(binding, commands, now=fixture.now))
         assert tuple(db.execute("SELECT writes,jev_reserved_microusd FROM ledger_plan_usage").fetchone()) == (
             0, JEV_RESERVATION_MICROUSD)
-        db.execute("UPDATE ledger_plan_usage SET jev_reserved_microusd=5000000")
+        db.execute("UPDATE ledger_plan_usage SET jev_reserved_microusd=12000000")
         calls = len(native.batches)
         with pytest.raises(PlanLimitError, match="JEV_BUDGET_LIMIT"):
             asyncio.run(reserve_jev_batch(binding, commands, now=fixture.now))

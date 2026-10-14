@@ -236,7 +236,7 @@ def test_paid_edit_monthly_exhaustion_preserves_automatic_draft_and_allows_expli
     body, saved, _ = setup_expense(ledger)
     before = financial_rows(ledger)
     with ledger.store.connect() as db:
-        budget = 3_000_000 if plan == "pro" else 5_000_000
+        budget = 3_000_000 if plan == "pro" else 12_000_000
         db.execute("UPDATE ledger_plan_usage SET jev_reserved_microusd=? WHERE owner_id='usr_github_77'", (budget,))
     draft = {key: value for key, value in body.items() if key != "categoryId"}
     provider = automatic.Provider()

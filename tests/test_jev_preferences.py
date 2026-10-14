@@ -43,7 +43,7 @@ def suggestion_rows(ledger):
                           "account_entitlement_authority", "d1_command_guard")}
 
 
-@pytest.mark.parametrize("plan,budget", [("free", "0.00"), ("pro", "3.00"), ("max", "5.00")])
+@pytest.mark.parametrize("plan,budget", [("free", "0.00"), ("pro", "3.00"), ("max", "12.00")])
 @pytest.mark.parametrize("runtime", [False, True])
 def test_legacy_get_is_read_only_and_expresses_stored_preference_separately(ledger, plan, budget, runtime):
     set_plan(ledger, plan)
@@ -63,7 +63,7 @@ def test_preference_cas_merges_full_raw_user_preserves_model_usage_and_counts_wr
     before, models, financial = json.loads(user_record(ledger)["payload"]), suggestion_rows(ledger), financial_rows(ledger)
     assert account(ledger, method="PATCH", body={"enabled": False}) == (200,
         {"enabled": False, "revision": 2, "eligible": True, "available": False,
-         "monthlyBudgetUsd": "3.00" if plan == "pro" else "5.00"})
+         "monthlyBudgetUsd": "3.00" if plan == "pro" else "12.00"})
     saved_user = json.loads(user_record(ledger)["payload"])
     assert saved_user == {**before, "jevEnabled": False, "jevPreferenceRevision": 2}
     assert "_actor" not in saved_user and "_workspace" not in saved_user
@@ -201,7 +201,7 @@ def test_off_prevents_all_model_admission_keeps_manual_and_local_review_and_reen
 
 
 def test_preference_does_not_change_public_plan_templates():
-    for plan, budget in (("free", "0.00"), ("pro", "3.00"), ("max", "5.00")):
+    for plan, budget in (("free", "0.00"), ("pro", "3.00"), ("max", "12.00")):
         template = plan_entitlements(plan, jev_available=True)["jev"]
         private = entitlements({"jevEnabled": False, "billing": {"plan": plan, "status": "active"}},
             now=1, jev_available=True)["jev"]

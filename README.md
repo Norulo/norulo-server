@@ -2,7 +2,7 @@
 
 The default Free ledger allowance is 3 projects and 300 retained expense records
 per Owner, combined across projects, the shared pool and generated recurring
-expenses, including archived projects. Pro and Max retain their 20,000/100,000
+expenses, including archived projects. Pro and Max retain their 20,000/200,000
 record defaults. `NORULO_PLAN_LIMITS_JSON` can override these defaults; clients
 must use current `entitlements` and `ledgerUsage` from the API.
 
@@ -161,7 +161,7 @@ for 2026-10-11 in Asia/Shanghai, separately from the earlier blocked snapshot an
 imported source history.
 The AI-stage local suite passed 2,777 tests after the activation-guard repair,
 and the canonical native gateway passed five loopback fake-provider cases; these do not establish real model quality or native
-provider HTTPS acceptance. Current Owner allowance is Pro $3 / Max $5 per UTC
+provider HTTPS acceptance. Current Owner allowance is Pro $3 / Max $12 per UTC
 calendar month under the configurable default policy, with no rollover; Free has
 no AI allowance. Stored Owner entitlement/opt-in and monthly fences passed local
 checks; native Worker real-provider HTTPS remains untested. The AI helper/guard
