@@ -1,5 +1,17 @@
 # Norulo production operations
 
+Free expense capacity increased to 300 on 2026-10-14. Server main `90801f8`
+is deployed as `645a2153-e946-4fe9-a733-eaa015c5e9f4`; Web main `98361a1`
+is deployed as `89e91178-074d-4e76-be3e-e9b07e30fb38`, both at 100% traffic.
+The anonymous catalog returns Free expenseRecords=300. No migration, existing
+record rewrite, remote fixture or SQL API operation was needed. All existing
+19 public variables except the intended Free record allowance, six Secret
+names, D1/DO identities, activation flags and daily cron were preserved.
+The latest main REST frequency admission also ships with its four declared
+rate-limit bindings; the existing OAuth rate limiter is retained.
+See the [Free 300 release record](validation/free-300-production-2026-10-14.json)
+for local tests/native checks, 731 matching upload files and production readback.
+
 The 2026-10-13 [expense source release](validation/expense-last-source-production-2026-10-13.json)
 is verified on both production domains at 100% traffic. Schema v14 adds only
 0014_expense_last_source.sql: a nullable latest-source snapshot on each expense.

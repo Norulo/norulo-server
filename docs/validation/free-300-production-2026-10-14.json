@@ -1,0 +1,123 @@
+{
+  "verifiedAtUTC": "2026-10-14T06:10:54.882975+00:00",
+  "sourceCommits": {
+    "web": "98361a1",
+    "server": "90801f8"
+  },
+  "versions": {
+    "norulo-web": "89e91178-074d-4e76-be3e-e9b07e30fb38",
+    "norulo-server-production": "645a2153-e946-4fe9-a733-eaa015c5e9f4"
+  },
+  "trafficPercent": 100,
+  "freeExpenseRecords": 300,
+  "configurationPreservedExceptFreeRecordLimitAndLatestMainFrequencyBindings": true,
+  "secretsPreserved": 6,
+  "publicVariablesPreserved": 19,
+  "dailyCron": "10 16 * * *",
+  "migrationNeeded": false,
+  "businessWrites": 0,
+  "SQLAPICalls": 0,
+  "publicChecks": [
+    {
+      "url": "https://norulo.com/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/developers/docs",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/developers/api",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/api/v1/me",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/billing/plan",
+      "status": 200,
+      "passed": true,
+      "freeExpenseRecords": 300
+    },
+    {
+      "url": "https://api.norulo.com/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/api/v1/me",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/assets/index-DKnFfHeI.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "6c6fc60f9ce1590a532c232b2814fd725be98e5c389c62b0762471c9cdeb4ba1"
+    },
+    {
+      "url": "https://norulo.com/assets/agent-setup-B2JZ1afh.css",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "d752636e08fc202b964e1510362044cf70f079dff8c23a46486f098a35a415d1"
+    },
+    {
+      "url": "https://norulo.com/assets/agent-setup-BrBDa-Q3.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "f332db45a63017aa26d750d7ebd5e14545fe690231549f3672746b81b1b4610e"
+    },
+    {
+      "url": "https://norulo.com/assets/api-docs-CygxCC1v.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "9fa4cbb25c075cfdd170bd130db26f1744a74079e6d3975a770b0ff348ad4c0e"
+    },
+    {
+      "url": "https://norulo.com/assets/index-DLSr3_IM.css",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "bec88b752b24d5455e3963a1d7b3170920d36b117ed36b99fc3a6b1151f0bf4b"
+    },
+    {
+      "url": "https://norulo.com/assets/docs--u7RT-Be.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "f3f7a06566a188e26bb095138873189c4c070ea2ac073ce61ca49d9310041880"
+    }
+  ],
+  "validation": {
+    "serverTests": 3280,
+    "serverSubtests": 107,
+    "webTests": 1905,
+    "finalWebFocusedTests": 149,
+    "billingBrowserStates": 72,
+    "browserEngine": "chromium",
+    "serverUploadFiles": 731,
+    "uploadByteIdenticalToDryRun": true,
+    "canonicalModules": 65,
+    "canonicalByteEqualityAndImportClosure": true,
+    "nativePassed": true,
+    "nativeLocalRequests": 12,
+    "nativeLocalRowsRead": 81,
+    "nativeLocalRowsWritten": 36,
+    "nativeLocalStatements": 79,
+    "nativeScope": "Local synthetic Free Owner and one created expense; no remote fixture or provider request."
+  }
+}
