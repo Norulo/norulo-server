@@ -50,7 +50,7 @@ def test_legacy_get_is_read_only_and_expresses_stored_preference_separately(ledg
     ledger.binding.jev_available = runtime
     before, before_models = user_record(ledger), suggestion_rows(ledger)
     assert account(ledger) == (200, {"enabled": True, "revision": 1, "eligible": True,
-        "available": runtime, "monthlyBudgetUsd": budget, "monthlyCalls": {"free": 0, "pro": 1089, "max": 4358}[plan],
+        "available": runtime, "monthlyBudgetUsd": budget, "monthlyCalls": {"free": 0, "pro": 1000, "max": 4000}[plan],
         "trialCalls": 20 if plan == "free" else 0, "period": "lifetime" if plan == "free" else "utc-calendar-month"})
     assert user_record(ledger) == before and suggestion_rows(ledger) == before_models
 
@@ -65,7 +65,7 @@ def test_preference_cas_merges_full_raw_user_preserves_model_usage_and_counts_wr
     assert account(ledger, method="PATCH", body={"enabled": False}) == (200,
         {"enabled": False, "revision": 2, "eligible": True, "available": False,
          "monthlyBudgetUsd": "3.00" if plan == "pro" else "12.00",
-         "monthlyCalls": 1089 if plan == "pro" else 4358, "trialCalls": 0, "period": "utc-calendar-month"})
+         "monthlyCalls": 1000 if plan == "pro" else 4000, "trialCalls": 0, "period": "utc-calendar-month"})
     saved_user = json.loads(user_record(ledger)["payload"])
     assert saved_user == {**before, "jevEnabled": False, "jevPreferenceRevision": 2}
     assert "_actor" not in saved_user and "_workspace" not in saved_user

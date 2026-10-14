@@ -30,7 +30,7 @@ def test_verified_catalog_binds_configured_ids_intervals_and_product_capacity():
     for index, budget in ((1, "3.00"), (2, "12.00")):
         assert projected["plans"][index]["entitlements"]["jev"] == {
             "eligible": True, "available": False, "monthlyBudgetUsd": budget,
-            "monthlyCalls": 1089 if index == 1 else 4358, "trialCalls": 0,
+            "monthlyCalls": 1000 if index == 1 else 4000, "trialCalls": 0,
             "period": "utc-calendar-month", "rollover": False}
     assert all("expense" in plan["description"] for plan in result["plans"])
 

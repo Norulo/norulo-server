@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ledger_d1_fixture import D1ShapedSQLite, seed, seed_auth
-from norulo_server.ledger_plan_policy import default_policy, parse_policy, entitlements, JEV_RESERVATION_MICROUSD
+from norulo_server.ledger_plan_policy import default_policy, parse_policy, entitlements, monthly_call_limit, JEV_RESERVATION_MICROUSD
 from norulo_server.cloudflare_plan_limits import PlanLimitedD1, PlanLimitError, reserve_jev_batch
 from norulo_server.cloudflare_state_records import record_name
 
@@ -17,6 +17,7 @@ def test_defaults_override_and_paid_plan_jev():
     assert [policy[p]["projects"] for p in ("free", "pro", "max")] == [3, 20, 100]
     assert [policy[p]["records"] for p in ("free", "pro", "max")] == [300, 20_000, 200_000]
     assert [policy[p]["jevMonthlyBudgetUsd"] for p in ("free", "pro", "max")] == ["0.00", "3.00", "12.00"]
+    assert [monthly_call_limit(policy[p]) for p in ("free", "pro", "max")] == [0, 1000, 4000]
     changed = parse_policy(json.dumps({"free": {"projects": 4}}))
     assert changed["free"]["projects"] == 4 and default_policy()["free"]["projects"] == 3
     for raw in ({"free": {"jevMonthlyBudgetUsd": "1.00"}},
@@ -33,6 +34,23 @@ def test_defaults_override_and_paid_plan_jev():
                 parse_policy(json.dumps({plan: {"jevMonthlyBudgetUsd": value}}))
         expired = {"billing": {"plan": plan, "status": "active", "currentPeriodEnd": 9}}
         assert entitlements(expired, now=10, policy=policy)["plan"] == "free"
+
+
+@pytest.mark.parametrize("invalid", [-1, True, 1.5, "1000", None, 1000001])
+def test_monthly_calls_reject_invalid_overrides(invalid):
+    with pytest.raises(ValueError, match="Jev calls"):
+        parse_policy(json.dumps({"pro": {"jevMonthlyCalls": invalid}}))
+
+
+def test_monthly_calls_and_funding_safeguard_share_one_entitlement_limit():
+    with pytest.raises(ValueError, match="lifetime trials"):
+        parse_policy('{"free":{"jevMonthlyCalls":1}}')
+    for calls, budget, expected in [(0, "3.00", 0), (2, "3.00", 2),
+                                    (5000, "3.00", 1089), (2, "0.002753", 1)]:
+        policy = parse_policy(json.dumps({"pro": {"jevMonthlyCalls": calls,
+                                                  "jevMonthlyBudgetUsd": budget}}))
+        user = {"billing": {"plan": "pro", "status": "active"}}
+        assert entitlements(user, now=1, policy=policy)["jev"]["monthlyCalls"] == expected
 
 
 @pytest.fixture
@@ -235,7 +253,7 @@ def test_free_jev_is_always_limited_to_twenty_lifetime_calls_even_with_unparsed_
         assert tuple(db.execute("SELECT jev_trial_calls,jev_reserved_microusd,writes FROM ledger_plan_usage").fetchone()) == (20,0,0)
 
 
-@pytest.mark.parametrize("plan,cap", [("pro", 3_000_000), ("max", 12_000_000)])
+@pytest.mark.parametrize("plan,cap", [("pro", 1000 * JEV_RESERVATION_MICROUSD), ("max", 4000 * JEV_RESERVATION_MICROUSD)])
 def test_paid_jev_exact_monthly_boundary_preserves_business_usage_and_denies_before_dispatch(setup, plan, cap):
     fixture, _ = setup
     frozen = account_plan(fixture, plan)
@@ -256,6 +274,28 @@ def test_paid_jev_exact_monthly_boundary_preserves_business_usage_and_denies_bef
         assert tuple(db.execute("SELECT projects,records,writes,minute_writes,jev_reserved_microusd,jev_cap FROM ledger_plan_usage").fetchone()) == (1, 0, 1, 1, cap, cap)
         assert db.execute("SELECT COUNT(*) FROM expense_suggestion_budget").fetchone()[0] == 0
         assert db.execute("SELECT COUNT(*) FROM d1_command_guard").fetchone()[0] == 0
+
+
+@pytest.mark.parametrize("plan,old_calls,new_calls", [("pro", 1089, 1000), ("max", 4358, 4000)])
+def test_rounded_cap_retains_old_usage_and_trials_and_allows_manual_writes(setup, plan, old_calls, new_calls):
+    fixture, _ = setup
+    frozen = account_plan(fixture, plan)
+    raw = D1ShapedSQLite(fixture.store)
+    limited = PlanLimitedD1(raw, now=fixture.now)
+    write(limited, frozen, fixture, 1)
+    old_reserved = old_calls * JEV_RESERVATION_MICROUSD
+    with fixture.store._immediate() as db:
+        db.execute("UPDATE ledger_plan_usage SET jev_cap=?,jev_reserved_microusd=?,jev_trial_calls=7",
+                   (old_reserved, old_reserved))
+    batches = raw.batch_count
+    with pytest.raises(PlanLimitError, match="JEV_BUDGET_LIMIT"):
+        write(limited, frozen, fixture, 2, kind="jev")
+    assert raw.batch_count == batches
+    write(limited, frozen, fixture, 2, kind="edit")
+    with fixture.store.connect() as db:
+        assert tuple(db.execute("SELECT jev_cap,jev_reserved_microusd,jev_trial_calls,writes FROM ledger_plan_usage").fetchone()) == (
+            new_calls * JEV_RESERVATION_MICROUSD, old_reserved, 7, 2)
+        assert db.execute("SELECT description FROM ledger_projects WHERE id='p1'").fetchone()[0] == "2"
 
 
 @pytest.mark.parametrize("plan", ["pro", "max"])
@@ -328,7 +368,7 @@ def test_paid_downgrade_retains_spend_and_manual_writes_until_next_month(setup):
     assert raw.batch_count == batches
     write(limited, frozen, fixture, 1)
     with fixture.store.connect() as db:
-        assert tuple(db.execute("SELECT writes,jev_reserved_microusd,jev_cap FROM ledger_plan_usage").fetchone()) == (1, 4_000_000, 1089 * JEV_RESERVATION_MICROUSD)
+        assert tuple(db.execute("SELECT writes,jev_reserved_microusd,jev_cap FROM ledger_plan_usage").fetchone()) == (1, 4_000_000, 1000 * JEV_RESERVATION_MICROUSD)
     # Returning to Max does not refund the spend or create a fresh quota window.
     frozen = account_plan(fixture, "max")
     write(limited, frozen, fixture, 2, kind="jev")

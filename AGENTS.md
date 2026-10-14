@@ -14,7 +14,7 @@ docs/subscription-policy.md for the capacity and cost reasoning.
 
 
 Jev is displayed and enforced by calls: Free 20 once per Owner lifetime, Pro
-1,089 per UTC month, Max 4,358 per UTC month. Members/API keys share the Owner
+1,000 per UTC month, Max 4,000 per UTC month. Members/API keys share the Owner
 pool. Billing shows used/total/remaining calls, never a dollar balance. v15
 adds a constrained lifetime trial column; old paid reservation data is retained.
 Annual plans keep monthly calls. Plan changes, preference toggles and deletion
@@ -209,7 +209,7 @@ and the OpenAPI contract.
   records. Recurrence keeps calendar identity, actor/key/target/category/plan
   fences, bounded catch-up and at most ten unresolved failed occurrences.
 - Jev atomically admits one call before dispatch: Free has 20 lifetime trials;
-  Pro has 1,089/month and Max 4,358/month, without paid rollover. The additive
+  Pro has 1,000/month and Max 4,000/month, without paid rollover. The additive
   v15 trial field survives month changes, plan changes and preference toggles.
   Existing paid reservations remain internal compatibility accounting; UI shows counts.
   The stored ledger Owner's entitlement and opt-in apply; preserve historical

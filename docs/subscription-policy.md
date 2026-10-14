@@ -7,8 +7,8 @@ confirmed all four prices before any application change.
 | Plan | Monthly price | Annual price | Retained expenses | Projects | Jev calls |
 | --- | --- | --- | --- | --- | --- |
 | Free | $0 | — | 300 | 3 | 20 one-time trials |
-| Pro | $4.99 | $49.99 | 20,000 | 20 | 1,089/month |
-| Max | $12.99 | $129.99 | 200,000 | 100 | 4,358/month |
+| Pro | $4.99 | $49.99 | 20,000 | 20 | 1,000/month |
+| Max | $12.99 | $129.99 | 200,000 | 100 | 4,000/month |
 
 Prices are provider facts, not hardcoded application defaults. Existing product
 bindings and signed-webhook entitlement controls remain authoritative. Catalog
@@ -45,9 +45,10 @@ pricing constant. No paid inference was needed for this investigation.
 
 The application reserves 2,753 micro-USD before each model dispatch, using the
 conservative 65,536-token interpretation. It retains the reservation rather than
-refunding it from an estimated response cost. Pro's unchanged $3 cap therefore
-admits at most 1,089 fresh calls from an unused month; Max's $12 cap admits at most
-4,358. Save assistance, automatic category selection and explicit review share
+refunding it from an estimated response cost. Pro's explicit cap admits at most
+1,000 fresh calls from an unused month; Max's admits at most 4,000. The unchanged
+$3/$12 internal funding safeguards can only lower these configured call caps.
+Save assistance, automatic category selection and explicit review share
 the Owner's allowance. These are reservation-based bounds, not promised successful
 expenses or measurements of the provider's final bill.
 
@@ -75,4 +76,8 @@ paid inference or customer subscription mutation is needed.
 
 ## Count-based Jev update
 
-Free receives 20 lifetime calls per Owner, shared by members and API keys. It may toggle Jev. One admitted model attempt consumes one call even on failure; unavailable/disabled paths do not reserve. Paid counts are floor(3000000/2753)=1089 and floor(12000000/2753)=4358 per UTC month. Internal legacy reservations are retained; nonmultiple historical usage rounds up for count projection and admission. A constrained v15 column in the existing atomic quota write persists Free use through months, upgrades/downgrades and project/expense deletion. Billing, pricing, settings, review and six locales display counts. Old USD contract fields remain deprecated compatibility metadata only.
+Free receives 20 lifetime calls per Owner, shared by members and API keys. It may toggle Jev. One admitted model attempt consumes one call even on failure; unavailable/disabled paths do not reserve. Paid counts are explicitly configured at 1,000 for Pro and 4,000 for Max per UTC month. Internal legacy reservations are retained; nonmultiple historical usage rounds up for count projection and admission. A constrained v15 column in the existing atomic quota write persists Free use through months, upgrades/downgrades and project/expense deletion. Billing, pricing, settings, review and six locales display counts. Old USD contract fields remain deprecated compatibility metadata only.
+
+## Rounded monthly calls
+
+The current configured call caps are Pro 1,000 and Max 4,000 per UTC month, also for annual subscriptions. `jevMonthlyCalls` is now explicit in the canonical policies. A single shared helper supplies both entitlements/Billing limits and atomic admission caps. The unchanged $3/$12 internal funding safeguards can only lower an explicitly configured cap; unused funding does not grant extra calls. Existing paid reservations are retained, even if usage exceeds the new cap; ordinary manual writes remain available. Free keeps 20 lifetime trials. This configuration/source change needs no schema migration.

@@ -56,7 +56,7 @@ def test_cookie_and_key_profile_report_current_owner_budget_and_gateway_availabi
         assert status == 200 and payload["id"] == "owner"
         assert payload["entitlements"]["jev"] == {
             "eligible": True, "enabled": True, "available": enabled,
-            "monthlyCalls": {"free": 0, "pro": 1089, "max": 4358}[plan], "trialCalls": 20 if plan == "free" else 0,
+            "monthlyCalls": {"free": 0, "pro": 1000, "max": 4000}[plan], "trialCalls": 20 if plan == "free" else 0,
             "monthlyBudgetUsd": budget, "period": "lifetime" if plan == "free" else "utc-calendar-month", "rollover": False}
     with fixture.store.connect() as db:
         assert db.execute("SELECT COUNT(*) FROM ledger_plan_usage").fetchone()[0] == 0
@@ -94,6 +94,7 @@ def test_annual_entitlements_remain_monthly_and_expiry_cannot_keep_paid_jev(plan
     user = {"billing": {"plan": plan, "status": "active", "interval": "year", "currentPeriodEnd": 101}}
     current = entitlements(user, now=100, jev_available=True)["jev"]
     assert current["available"] is True and current["period"] == "utc-calendar-month"
+    assert current["monthlyCalls"] == {"pro": 1000, "max": 4000}[plan]
     assert current["monthlyBudgetUsd"] == ("3.00" if plan == "pro" else "12.00")
     assert entitlements(user, now=101, jev_available=True)["jev"] == {
         "eligible": True, "enabled": True, "available": True, "monthlyBudgetUsd": "0.00",

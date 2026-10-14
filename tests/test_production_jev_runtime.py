@@ -97,7 +97,7 @@ def test_enabled_paid_production_owner_and_key_share_one_allowance_without_repla
     assert profile.payload["entitlements"]["jev"] == {
         "eligible": True, "enabled": True, "available": True,
         "monthlyBudgetUsd": budget, "period": "utc-calendar-month",
-        "monthlyCalls": 1089 if plan == "pro" else 4358, "trialCalls": 0, "rollover": False}
+        "monthlyCalls": 1000 if plan == "pro" else 4000, "trialCalls": 0, "rollover": False}
     assert _usage(jev) is None and jev.provider.calls == []
 
     first = _write(jev)

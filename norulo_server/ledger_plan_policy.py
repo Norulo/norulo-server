@@ -10,11 +10,11 @@ from .cloudflare_jev_preferences import jev_enabled
 
 _DEFAULT = {
     "free": {"projects": 3, "records": 300, "writesPerMinute": 10,
-             "writesPerMonth": 1000, "jevMonthlyBudgetUsd": "0.00"},
+             "writesPerMonth": 1000, "jevMonthlyBudgetUsd": "0.00", "jevMonthlyCalls": 0},
     "pro": {"projects": 20, "records": 20000, "writesPerMinute": 60,
-            "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "3.00"},
+            "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "3.00", "jevMonthlyCalls": 1000},
     "max": {"projects": 100, "records": 200000, "writesPerMinute": 60,
-            "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "12.00"},
+            "writesPerMonth": 10000, "jevMonthlyBudgetUsd": "12.00", "jevMonthlyCalls": 4000},
 }
 JEV_FREE_TRIAL_CALLS = 20
 JEV_MODEL = "jev-1.13.0"
@@ -40,6 +40,12 @@ def usd_micros(value):
         raise ValueError("invalid USD budget") from None
 
 
+def monthly_call_limit(values):
+    """Configured calls are capped by the existing internal funding safeguard."""
+    funded = usd_micros(values["jevMonthlyBudgetUsd"]) // JEV_RESERVATION_MICROUSD
+    return min(values["jevMonthlyCalls"], funded)
+
+
 def parse_policy(raw=None):
     policy = default_policy()
     if raw is not None and raw != "":
@@ -61,6 +67,11 @@ def parse_policy(raw=None):
         for key in ("projects", "records", "writesPerMinute", "writesPerMonth"):
             if type(values[key]) is not int or not 1 <= values[key] <= 1000000:
                 raise ValueError("allowance must be a positive bounded integer")
+        calls = values["jevMonthlyCalls"]
+        if type(calls) is not int or not 0 <= calls <= 1000000:
+            raise ValueError("Jev calls must be a nonnegative bounded integer")
+        if plan not in PAID_PLAN_IDS and calls:
+            raise ValueError("Free Jev uses lifetime trials only")
         budget = usd_micros(values["jevMonthlyBudgetUsd"])
         if plan not in PAID_PLAN_IDS and budget:
             raise ValueError("Jev requires a paid plan")
@@ -81,7 +92,7 @@ def plan_entitlements(plan, *, policy=None, jev_available=False):
         "expenseRecords": values["records"], "writesPerMinute": values["writesPerMinute"],
         "writesPerMonth": values["writesPerMonth"]},
         "jev": {"eligible": True, "available": jev_available,
-                "monthlyCalls": usd_micros(values["jevMonthlyBudgetUsd"]) // JEV_RESERVATION_MICROUSD,
+                "monthlyCalls": monthly_call_limit(values),
                 "trialCalls": JEV_FREE_TRIAL_CALLS if plan == "free" else 0,
                 "monthlyBudgetUsd": values["jevMonthlyBudgetUsd"],
                 "period": "lifetime" if plan == "free" else "utc-calendar-month", "rollover": False}}

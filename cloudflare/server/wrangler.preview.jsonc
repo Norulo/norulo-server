@@ -39,7 +39,7 @@
     "NORULO_CREEM_PRODUCT_IDS_JSON": "{}",
     "NORULO_ALLOWED_ORIGINS": "https://preview.norulo.com",
     "NORULO_COOKIE_SAME_SITE": "None",
-    "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":300,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\"},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\"},\"max\":{\"projects\":100,\"records\":200000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"12.00\"}}",
+    "NORULO_PLAN_LIMITS_JSON": "{\"free\":{\"projects\":3,\"records\":300,\"writesPerMinute\":10,\"writesPerMonth\":1000,\"jevMonthlyBudgetUsd\":\"0.00\",\"jevMonthlyCalls\":0},\"pro\":{\"projects\":20,\"records\":20000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"3.00\",\"jevMonthlyCalls\":1000},\"max\":{\"projects\":100,\"records\":200000,\"writesPerMinute\":60,\"writesPerMonth\":10000,\"jevMonthlyBudgetUsd\":\"12.00\",\"jevMonthlyCalls\":4000}}",
     "NORULO_JEV_SUGGESTIONS_ENABLED": "0",
     "NORULO_JEV_SUGGESTIONS_EVALUATED": "0"
   },

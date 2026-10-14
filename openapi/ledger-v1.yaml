@@ -1137,7 +1137,7 @@ paths:
       parameters: [{$ref: '#/components/parameters/WorkspaceHeader'}]
       operationId: suggestExpense
       x-norulo-scope: suggestions:use
-      description: Advanced draft advice only; ordinary expense writes already attempt Free trial or paid assistance without this endpoint or its scope. Never writes an expense. Disabled unless evaluated and enabled. Shares the ledger Owner's call allowance with automatic assistance and review, irrespective of the actor's personal plan. Defaults are Free 20 one-time lifetime trials, Pro 1089/month, Max 4358/month. Paid calls reset by UTC calendar month even on annual subscriptions, without rollover. Each admitted model attempt consumes one call including failures; disabling Jev or changing plans never renews Free trials.
+      description: Advanced draft advice only; ordinary expense writes already attempt Free trial or paid assistance without this endpoint or its scope. Never writes an expense. Disabled unless evaluated and enabled. Shares the ledger Owner's call allowance with automatic assistance and review, irrespective of the actor's personal plan. Defaults are Free 20 one-time lifetime trials, Pro 1000/month, Max 4000/month. Paid calls reset by UTC calendar month even on annual subscriptions, without rollover. Each admitted model attempt consumes one call including failures; disabling Jev or changing plans never renews Free trials.
       requestBody: {required: true, content: {application/json: {schema: {type: object, required: [purpose, target], properties: {purpose: {type: string, maxLength: 500}, note: {type: string, maxLength: 4000}, occurredOn: {type: string, format: date}, amount: {type: string, description: Decimal amount in selected currency}, currency: {type: string, pattern: "^[A-Z]{3}$"}, target: {$ref: '#/components/schemas/Target'}}}}}}
       responses:
         '200': {description: "Status, optional suggestionId, candidates and probabilities; never an expense write", content: {application/json: {schema: {type: object, properties: {status: {type: string, enum: [available, uncertain, unavailable]}, suggestionId: {type: string}, questionVersion: {type: string}, modelVersion: {type: [string, 'null']}, suggestions: {type: object, properties: {categoryId: {type: string}, targetKind: {type: string}, duplicateExpenseId: {type: string}}}, probabilities: {type: object}}}}}}
@@ -1522,7 +1522,7 @@ components:
         month: {type: [string, 'null'], pattern: '^[0-9]{4}-[0-9]{2}$', description: UTC month for paid calls; null for the lifetime Free trial}
         period: {type: string, enum: [lifetime, utc-calendar-month]}
         usedCalls: {type: integer, minimum: 0, maximum: 9007199254740991, description: Admitted model attempts including failed or ambiguous outcomes; historical partial reservations round up}
-        limitCalls: {type: integer, minimum: 0, maximum: 9007199254740991, description: "Current count allowance; Free 20 lifetime trials, Pro 1089/month, Max 4358/month by default"}
+        limitCalls: {type: integer, minimum: 0, maximum: 9007199254740991, description: "Current count allowance; Free 20 lifetime trials, Pro 1000/month, Max 4000/month by default"}
         remainingCalls: {type: integer, minimum: 0, maximum: 9007199254740991}
         currency: {type: string, const: USD, deprecated: true}
         usedMicrousd: {deprecated: true, type: integer, minimum: 0, maximum: 9007199254740991, description: 'Conservative pre-call reservation in millionths of USD, including admitted failed or ambiguous attempts; not actual invoiced usage'}

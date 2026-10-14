@@ -66,7 +66,7 @@ def test_month_boundary_projects_zero_without_resetting_annual_or_monthly_usage(
     assert status == 200
     assert payload["ledgerUsage"]["jev"] == {"month": "2026-11", "currency": "USD",
         "usedMicrousd": 0, "limitMicrousd": 12000000, "period": "utc-calendar-month",
-        "usedCalls": 0, "limitCalls": 4358, "remainingCalls": 4358}
+        "usedCalls": 0, "limitCalls": 4000, "remainingCalls": 4000}
     with closing(fixture.store.connect()) as db:
         assert tuple(db.execute("SELECT * FROM ledger_plan_usage").fetchone()) == before
 

@@ -4,7 +4,7 @@ Current user decisions, updated 2026-10-14: Free has 3 projects and 300 expense 
 Pro has 20 projects and 20,000 records; Max has 100 projects and 200,000 records.
 Pro and Max include Jev, with respective $3/$12 internal provider-cost reservation budgets
 per ledger Owner per UTC calendar month, including annual subscriptions, without rollover.
-Customer-facing entitlements are counts: Free 20 lifetime trials, Pro 1,089/month and Max 4,358/month. Internal USD reservation fields are deprecated public compatibility metadata, never a UI balance.
+Customer-facing entitlements are counts: Free 20 lifetime trials, Pro 1,000/month and Max 4,000/month. Internal USD reservation fields are deprecated public compatibility metadata, never a UI balance.
 Members of a shared ledger use its Owner's plan and combined allowances;
 their personal subscriptions remain separate. Core expense history remains separate from
 Creem platform payment facts. On 2026-10-06 the actual 36-case en/zh quality and
@@ -20,7 +20,7 @@ Current evidence is in [local acceptance](../../validation/local-acceptance.md).
 | Current expense records | 300 | 20,000 | 200,000 |
 | Successful protected write batches per UTC minute | 10 | 60 | 60 |
 | Successful protected write batches per UTC calendar month | 1,000 | 10,000 | 10,000 |
-| Jev calls | 20 once per lifetime | 1,089/month | 4,358/month |
+| Jev calls | 20 once per lifetime | 1,000/month | 4,000/month |
 
 Project and record capacities are user requirements. Write defaults remain
 configurable engineering allowances, not validated production demand estimates.

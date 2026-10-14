@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from .account_cycle_rules import PAID_PLAN_IDS, effective_user_plan
-from .ledger_plan_policy import default_policy, entitlements, usd_micros, JEV_RESERVATION_MICROUSD, JEV_FREE_TRIAL_CALLS
+from .ledger_plan_policy import default_policy, entitlements, usd_micros, monthly_call_limit, JEV_RESERVATION_MICROUSD, JEV_FREE_TRIAL_CALLS
 from .cloudflare_state_records import record_name
 
 
@@ -319,7 +319,7 @@ class PlanLimitedD1:
         if trial_delta and usage and usage["jev_trial_calls"] >= JEV_FREE_TRIAL_CALLS:
             raise PlanLimitError(429, "JEV_BUDGET_LIMIT")
         if jev_delta:
-            cap = usd_micros(limits["jevMonthlyBudgetUsd"]) // JEV_RESERVATION_MICROUSD * JEV_RESERVATION_MICROUSD
+            cap = monthly_call_limit(limits) * JEV_RESERVATION_MICROUSD
             if jev_delta > cap:
                 raise PlanLimitError(429, "JEV_BUDGET_LIMIT")
             if usage and usage["month"] == period and usage["jev_reserved_microusd"] + jev_delta > cap:
@@ -331,7 +331,7 @@ class PlanLimitedD1:
             limits["projects"], limits["records"],
             limits["writesPerMinute"] if write_delta else max(limits["writesPerMinute"], minute_writes),
             limits["writesPerMonth"] if write_delta else max(limits["writesPerMonth"], month_writes),
-            usd_micros(limits["jevMonthlyBudgetUsd"]) // JEV_RESERVATION_MICROUSD * JEV_RESERVATION_MICROUSD, project_delta, record_insertions, jev_delta, period, minute, trial_delta)
+            monthly_call_limit(limits) * JEV_RESERVATION_MICROUSD, project_delta, record_insertions, jev_delta, period, minute, trial_delta)
         try:
             # Keep original result indexes; domain callers rely on batch offsets.
             # Recount after all domain mutations in the same transaction.

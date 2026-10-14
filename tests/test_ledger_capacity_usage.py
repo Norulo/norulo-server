@@ -54,7 +54,7 @@ def test_capacity_read_counts_current_projects_and_expenses_without_initializing
         "expenseRecords": {"used": 2, "limit": 20000, "remaining": 19998},
         "jev": {"month": datetime.fromtimestamp(fixture.now, timezone.utc).strftime("%Y-%m"),
                 "currency": "USD", "usedMicrousd": 0, "limitMicrousd": 3000000,
-                "period": "utc-calendar-month", "usedCalls": 0, "limitCalls": 1089, "remainingCalls": 1089}}
+                "period": "utc-calendar-month", "usedCalls": 0, "limitCalls": 1000, "remainingCalls": 1000}}
     assert binding.batch_count == 1
     with closing(fixture.store.connect()) as db:
         assert db.execute("SELECT COUNT(*) FROM ledger_plan_usage").fetchone()[0] == 0
@@ -88,7 +88,7 @@ def test_capacity_ignores_legacy_capacity_counters_and_keeps_configured_limits(c
         "expenseRecords": {"used": 2, "limit": 80, "remaining": 78},
         "jev": {"month": datetime.fromtimestamp(fixture.now, timezone.utc).strftime("%Y-%m"),
                 "currency": "USD", "usedMicrousd": 0, "limitMicrousd": 3000000,
-                "period": "utc-calendar-month", "usedCalls": 0, "limitCalls": 1089, "remainingCalls": 1089}}
+                "period": "utc-calendar-month", "usedCalls": 0, "limitCalls": 1000, "remainingCalls": 1000}}
     with closing(fixture.store.connect()) as db:
         assert tuple(db.execute("SELECT projects,records FROM ledger_plan_usage").fetchone()) == (legacy_projects, 90)
 

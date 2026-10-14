@@ -179,7 +179,7 @@ def test_cookie_and_restricted_key_inherit_owner_off_without_model_admission(led
         assert status == 200
         assert payload["entitlements"]["jev"] == {"eligible": True, "enabled": False,
             "available": False, "monthlyBudgetUsd": budget, "period": "utc-calendar-month",
-            "monthlyCalls": 1089 if plan == "pro" else 4358, "trialCalls": 0,
+            "monthlyCalls": 1000 if plan == "pro" else 4000, "trialCalls": 0,
             "rollover": False}
     before = financial_rows(ledger)
     with ledger.store.connect() as db:
