@@ -1,0 +1,219 @@
+{
+  "verifiedAtUTC": "2026-10-14T10:12:04.569113+00:00",
+  "sourceCommits": {
+    "server": "704c2a14825446b820471e37a40b0638edd33043",
+    "web": "56d81c0bb2a35b9608448ef8b318ee86aba6a14d"
+  },
+  "versions": {
+    "norulo-server-production": "e04c7335-dd0d-4431-ab26-ffe5815ac955",
+    "norulo-web": "bed26335-f197-444f-8098-56fff3b0915b"
+  },
+  "trafficPercent": 100,
+  "publicChecks": [
+    {
+      "url": "https://norulo.com/",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/pricing",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/developers/docs",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/developers/api",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "url": "https://api.norulo.com/api/v1/me",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://norulo.com/api/api/v1/me",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "url": "https://www.norulo.com/pricing?lang=zh",
+      "status": 308,
+      "passed": true,
+      "location": "https://norulo.com/pricing?lang=zh"
+    },
+    {
+      "url": "https://api.norulo.com/billing/plan",
+      "status": 200,
+      "passed": true,
+      "pricesAndAllowancesVerified": true
+    },
+    {
+      "url": "https://norulo.com/api/billing/plan",
+      "status": 200,
+      "passed": true,
+      "pricesAndAllowancesVerified": true
+    },
+    {
+      "url": "https://norulo.com/assets/index-DkjNunFd.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "aea62fabaa9075c8d0ac3815ded98ee8282598f45e7d3d591c0767a2891571e3"
+    },
+    {
+      "url": "https://norulo.com/assets/docs-DDojj05B.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "8c2e87195ced4fef258e4357999f44650d51de0594ac713e5d5a0e3084b5e8b0"
+    },
+    {
+      "url": "https://norulo.com/assets/api-docs-Bow8ASvf.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "d5ddd70cd5faa54da65d7411d428b9d0e2af0ae6f5fc06374b7d3c681ec13bee"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-C6aClYfk.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "7645975c4af1cffebd92e980976215032b59560cd52fae3864bc3d03732373eb"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-CecbuQgf.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "224403cedb64b157a1d868f4c9319c63aedce6e7985c1bbb329d0c82f9eb9f07"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-cFtP2pid.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "b6db4738e4899984be1b0c71c618bbf418cb855c677d76d257f71c707a649faf"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-pbPrpBuU.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "83a3bdf76527ca05a4349b2b1e2099732f0437a106074b07151f3f04560899f3"
+    },
+    {
+      "url": "https://norulo.com/assets/catalog-w1wtg6hc.js",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "ac487bd9d8ab08e474a5f5dbfb376275b885db4ea4970871ff51519e1b3040ca"
+    },
+    {
+      "url": "https://norulo.com/openapi/ledger-v1.json",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "c17b71d11c9fe564d5dbcc937d73501f4d61a5a9ea309f62a4ec4dc3f10080ab"
+    },
+    {
+      "url": "https://norulo.com/norulo-logo.png",
+      "status": 200,
+      "passed": true,
+      "byteIdentical": true,
+      "sha256": "a9632acbd7a5ad48ad5ff25d6269f617c7655446365344c9db42d504213c710f"
+    }
+  ],
+  "configurationPreservedExceptRequestedMaxAllowances": true,
+  "migrationNeeded": false,
+  "productionBusinessMutationRequests": 0,
+  "SQLAPICalls": 0,
+  "D1Accounting": "No SQL API calls or business mutation requests. Public catalog GET can refresh an expired provider cache; its native row metrics are not exposed, so total D1 rows are not claimed to be zero.",
+  "validation": {
+    "serverFullSuite": {
+      "passed": 3279,
+      "failed": 1,
+      "subtestsPassed": 107,
+      "failure": "Loopback socket creation denied by execution sandbox; corrected by granting network access to the same local-only test."
+    },
+    "serverLocalTransportRecheck": {
+      "passed": 1,
+      "durationSeconds": 0.68
+    },
+    "serverFinalContractRecheck": {
+      "passed": 27,
+      "subtestsPassed": 28
+    },
+    "webInitialFullSuite": {
+      "passed": 1922,
+      "failed": 7,
+      "reason": "Existing UI tests exceeded default waits/timeouts under concurrent execution."
+    },
+    "webSingleWorkerFullRecheck": {
+      "passed": 1928,
+      "failed": 1,
+      "testTimeoutMs": 15000,
+      "remainingFailure": "Contract checksum test read a cached contract while the final documentation artifact was regenerated during the run."
+    },
+    "webFinalFocused": {
+      "passed": 239,
+      "files": 4,
+      "includes": "Billing prices/allowances, Docs, API and contract source hash. Run after final contract generation; remaining checksum failure passed."
+    },
+    "lintPassed": true,
+    "productionBuildPassed": true,
+    "contractSyncCheckPassed": true,
+    "offlineWorkerChecksPassed": true,
+    "serverImportClosurePassed": true,
+    "serverCanonicalModules": 65,
+    "serverUploadFiles": 731,
+    "allServerUploadFilesByteIdenticalToReviewedDryRun": true,
+    "browserEngine": "chromium",
+    "billingBrowserContexts": 24,
+    "billingBrowserStates": 72,
+    "serverWrangler": "4.136.3",
+    "webWrangler": "4.149.0",
+    "referencePython": "3.10.12",
+    "workerBuilderPython": "3.14.2"
+  },
+  "livePlanPolicy": {
+    "free": {
+      "projects": 3,
+      "expenseRecords": 300,
+      "jevMonthlyBudgetUsd": "0.00"
+    },
+    "pro": {
+      "projects": 20,
+      "expenseRecords": 20000,
+      "jevMonthlyBudgetUsd": "3.00",
+      "monthlyPriceUsd": "4.99",
+      "annualPriceUsd": "49.99"
+    },
+    "max": {
+      "projects": 100,
+      "expenseRecords": 200000,
+      "jevMonthlyBudgetUsd": "12.00",
+      "monthlyPriceUsd": "12.99",
+      "annualPriceUsd": "129.99"
+    }
+  },
+  "dailyCron": "10 16 * * *",
+  "secretNamesPreserved": 6,
+  "publicVariablesPreserved": 19,
+  "mainPublishedBeforeDeploy": true
+}

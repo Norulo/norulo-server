@@ -1,5 +1,32 @@
 # Norulo production operations
 
+The paid allowance release was verified on 2026-10-14. Server main source
+`704c2a14825446b820471e37a40b0638edd33043` is deployed as
+`e04c7335-dd0d-4431-ab26-ffe5815ac955`; Web main source
+`56d81c0bb2a35b9608448ef8b318ee86aba6a14d` is deployed as
+`bed26335-f197-444f-8098-56fff3b0915b`, both at 100% traffic.
+Direct and proxied public catalogs confirm Pro $4.99/month or $49.99/year with
+20,000 expenses and $3/month Jev; Max $12.99/month or $129.99/year with
+200,000 expenses and $12/month Jev. Projects remain 3/20/100. Annual subscriptions
+retain the monthly UTC model allowance without rollover. No migration or usage
+reset was needed; configured prices remain verified provider facts.
+
+Local validation covered all 3,280 Server test cases and 107 subtests; the sole
+sandbox-denied loopback test passed after the appropriate execution permission.
+A final 27-test contract check plus 28 subtests passed. Web's initial timeout
+failures were resolved by a single-worker, 15-second-timeout full recheck; its
+remaining contract checksum failure occurred while regenerating that artifact.
+All 239 final Billing/Docs/API/contract tests then passed against stable final
+artifacts. Lint, build, contract sync, offline checks and 72 Chromium billing
+layout states passed. All 731 Server upload files match the reviewed dry-run,
+including the 65 canonical modules and checked import closure. Twenty-one bounded
+public GET checks passed and final assets matched byte-for-byte. Existing bindings,
+Secret names, public variables other than the requested Max policy, observability,
+limits and daily cron were preserved. No business mutation, migration or SQL API
+call was made. Catalog GETs can refresh an expired provider cache; native D1 row
+metrics are unavailable for those HTTP reads, so zero total D1 writes is not
+claimed. See the [actual allowance release readback](validation/subscription-allowances-production-2026-10-14.json).
+
 Free expense capacity increased to 300 on 2026-10-14. Server main `90801f8`
 is deployed as `645a2153-e946-4fe9-a733-eaa015c5e9f4`; Web main `98361a1`
 is deployed as `89e91178-074d-4e76-be3e-e9b07e30fb38`, both at 100% traffic.
