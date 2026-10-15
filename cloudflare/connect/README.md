@@ -22,6 +22,26 @@ bound to browser, actor and selected ledger, and explicitly selects projects,
 shared access and read/write scopes. New OAuth connections do not inherit any
 previous API-key connection's permissions.
 
+The native plugin connects directly to the MCP resource with OAuth; it does not
+need a Sites connection page or an App view. ChatGPT/Codex owns its connection,
+account selection and disconnect controls. Every tool declares its OAuth scopes
+in `securitySchemes` (with the compatibility `_meta` mirror). The stable catalog
+includes tools beyond the current grant so the host can discover a needed
+permission; execution checks the exact grant before dispatch. Missing scopes
+return the native `mcp/www_authenticate` challenge, retaining existing granted
+scopes without adding unrelated permissions. A write is never retried during
+authorization. Current role, project and shared-pool restrictions remain backend
+decisions; a target/role denial does not trigger an authorization upgrade.
+
+The read-only `get_profile` tool uses the standard `openai/profile` marker and
+response schema to label native connected accounts. Its immutable ID comes from
+the authenticated Norulo actor, with the current ledger name as an optional
+display nickname. It omits name/email because `/api/v1/me` does not expose them;
+it never uses the Sites/ChatGPT account as the Norulo identity. The existing
+`connection_status` text response remains compatible with saved Sites clients.
+The resource keeps its five read scopes as the default initial request; write
+scopes are requested only for the corresponding operation and explicit consent.
+
 The backend API key is created only after explicit user consent and stored
 inside library-encrypted props. Never log tokens, cookies, authorization codes,
 request bodies or raw exception messages. Redirects to upstream API URLs are
