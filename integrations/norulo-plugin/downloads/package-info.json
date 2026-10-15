@@ -1,0 +1,10 @@
+{
+  "name": "Norulo",
+  "label": "Offline plugin",
+  "version": "1.0.0",
+  "file": "norulo-plugin.zip",
+  "bytes": 15078,
+  "sha256": "a11b56dbd1932270d0669e542273980aa7c2165c49a2390fa106dd5c3a3ba964",
+  "publicDirectoryStatus": "not_submitted",
+  "requiresInternetForNoruloTools": true
+}
