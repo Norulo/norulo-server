@@ -34,7 +34,7 @@ async function begin(env,ctx){
   assert.equal(r.status,200,await r.clone().text());assert.match(r.headers.get('Content-Security-Policy'),/form-action 'self' https:\/\/client\.example;/);assert(!r.headers.get('Content-Security-Policy').includes('*'));assert.equal(r.headers.get('Referrer-Policy'),'same-origin','native consent POST must preserve same-origin Origin without cross-origin referrers');const html=await r.text();assert(!html.includes('<script>bad</script>'));assert(html.includes('Review &#60;script&#62;'));
   const handle=html.match(/name="handle" value="([^"]+)"/)[1];
   const consentCookies=r.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
-  return {handler,u,client,verifier,handle,cookies:cookie+'; '+consentCookies};
+  return {handler,u,client,verifier,handle,html,cookies:cookie+'; '+consentCookies};
 }
 async function approve(env,ctx){
   const b=await begin(env,ctx),form=new URLSearchParams({handle:b.handle,decision:'approve',project:'project_demo'});for(const s of ['profile:read','projects:read','expenses:read'])form.append('scope',s);
@@ -57,6 +57,23 @@ test('Resource discovery keeps read-only defaults while the issuer supports expl
   response=await worker.fetch(new Request(RESOURCE,{method:'POST',body:'{}'}),env,ctx);
   assert.match(response.headers.get('WWW-Authenticate'),new RegExp('scope="'+initial.join(' ')+'"'));
   assert(!response.headers.get('WWW-Authenticate').includes(':write'));assert.equal(calls.length,0);
+});
+test('OAuth pages use English interface copy while preserving user-provided ledger names',async()=>{
+  const {env,ctx}=setup(),consent=await begin(env,ctx);
+  assert.match(consent.html,/<html lang="en">/);
+  assert.match(consent.html,/<h1>Authorize Norulo<\/h1>/);
+  assert.match(consent.html,/Authorize and return/);assert.match(consent.html,/Privacy policy/);
+  assert.doesNotMatch(consent.html,/\p{Script=Han}/u,'English fixtures must render English built-in copy');
+  const response=await worker.fetch(new Request('https://mcp.norulo.com/'),env,ctx);
+  assert.equal(response.status,200);const landing=await response.text();
+  assert.match(landing,/<html lang="en">/);assert.match(landing,/Authentication: OAuth/);assert.doesNotMatch(landing,/\p{Script=Han}/u);
+  const original=env.NORULO_SERVER.fetch;
+  env.NORULO_SERVER.fetch=async request=>{
+    const reply=await original(request);
+    if(new URL(request.url).pathname!=='/api/v1/me')return reply;
+    const account=await reply.json();account.workspace.name='研发账本';return Response.json(account);
+  };
+  const named=await begin(env,ctx);assert(named.html.includes('研发账本'),'ledger names must not be translated or rewritten');
 });
 test('PKCE code flow, encrypted delegated credential, token refresh, scoped MCP and revocation',async()=>{
   const {env,ctx,calls}=setup(),b=await approve(env,ctx);
@@ -89,7 +106,7 @@ test('A second consent submission reports used or expired without issuing anothe
   const {env,ctx,calls}=setup(),b=await approve(env,ctx);
   const before=calls.filter(c=>c.method==='POST').length;
   const r=await b.handler.fetch(new Request(b.u,{method:'POST',headers:{Cookie:b.cookies,Origin:'https://norulo.com'},body:new URLSearchParams({handle:b.handle,decision:'approve'})}));
-  assert.equal(r.status,400);assert.match(await r.text(),/已提交或已过期/);
+  assert.equal(r.status,400);assert.match(await r.text(),/already submitted or has expired/);
   assert.equal(calls.filter(c=>c.method==='POST').length,before);
 });
 test('Consent remains bound to its original actor and ledger',async()=>{

@@ -22,7 +22,7 @@ export class Authorization extends WorkerEntrypoint {
     try{return await handleAuthorization(request,this.env,authorizationServer.getOAuthApi(this.env));}
     catch(error){
       if(error instanceof AuthorizationError&&error.redirectTo&&request.method==='GET')return new Response(null,{status:303,headers:{Location:error.redirectTo,'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
-      if(error instanceof AuthorizationError||error instanceof CimdFetchError)return html('<h1>无法完成授权</h1><p>'+escape(error instanceof AuthorizationError?error.description:'无法验证此客户端。')+'</p><p>请返回 ChatGPT 或 Codex，重新发起连接。</p>');
+      if(error instanceof AuthorizationError||error instanceof CimdFetchError)return html('<h1>Unable to authorize</h1><p>'+escape(error instanceof AuthorizationError?error.description:'This client could not be verified.')+'</p><p>Return to ChatGPT or Codex and start a new connection.</p>');
       console.error(JSON.stringify({code:'NORULO_AUTHORIZATION_FAILED'}));
       return json({error:'Authorization unavailable. Restart the connection from your client.'},503);
     }
@@ -35,7 +35,7 @@ export default {
     try{
       if(u.pathname==='/mcp'||u.pathname.startsWith('/mcp/')||u.pathname.startsWith('/.well-known/oauth-protected-resource'))return await resourceServer.fetch(request,env,ctx);
       if(u.pathname==='/health')return json({ok:true,service:'Norulo OAuth MCP',version:'2.0.0'});
-      if(u.pathname==='/')return html('<h1>Norulo for ChatGPT &amp; Codex</h1><p>在插件中点击连接，登录 Norulo 后选择允许访问的账本、项目和权限。</p><section><h2>添加 MCP 连接</h2><p><code>https://mcp.norulo.com/mcp</code></p><p>认证方式：OAuth。无需复制 API Key。</p></section><p><a href="https://norulo.com/api-keys">在 Norulo 管理已授权连接</a>：撤销对应 OAuth 密钥可停止其访问。</p>');
+      if(u.pathname==='/')return html('<h1>Norulo for ChatGPT &amp; Codex</h1><p>Click Connect in the plugin, sign in to Norulo, and choose the ledger, projects and permissions to allow.</p><section><h2>Add an MCP connection</h2><p><code>https://mcp.norulo.com/mcp</code></p><p>Authentication: OAuth. No API key to copy.</p></section><p><a href="https://norulo.com/api-keys">Manage authorized connections in Norulo</a>. Revoke the corresponding OAuth key to stop its access.</p>');
       return await authorizationServer.fetch(request,env,ctx);
     }catch{console.error(JSON.stringify({code:'NORULO_OAUTH_REQUEST_FAILED'}));return json({error:'Service unavailable'},503);}
   },
