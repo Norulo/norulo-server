@@ -30,7 +30,7 @@ async function begin(env,ctx){
   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));const challenge=Buffer.from(digest).toString('base64url');
   const u=new URL(AUTHORIZE);u.search=new URLSearchParams({client_id:client.client_id,redirect_uri:'https://client.example/callback',response_type:'code',scope:'profile:read projects:read expenses:read',resource:RESOURCE,state:'state-bound',code_challenge:challenge,code_challenge_method:'S256'});
   const handler=new Authorization(ctx,env),r=await handler.fetch(new Request(u,{headers:{Cookie:cookie}}));
-  assert.equal(r.status,200,await r.clone().text());assert.equal(r.headers.get('Referrer-Policy'),'same-origin','native consent POST must preserve same-origin Origin without cross-origin referrers');const html=await r.text();assert(!html.includes('<script>bad</script>'));assert(html.includes('Review &#60;script&#62;'));
+  assert.equal(r.status,200,await r.clone().text());assert.match(r.headers.get('Content-Security-Policy'),/form-action 'self' https:\/\/client\.example;/);assert(!r.headers.get('Content-Security-Policy').includes('*'));assert.equal(r.headers.get('Referrer-Policy'),'same-origin','native consent POST must preserve same-origin Origin without cross-origin referrers');const html=await r.text();assert(!html.includes('<script>bad</script>'));assert(html.includes('Review &#60;script&#62;'));
   const handle=html.match(/name="handle" value="([^"]+)"/)[1];
   const consentCookies=r.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
   return {handler,u,client,verifier,handle,cookies:cookie+'; '+consentCookies};
@@ -70,3 +70,20 @@ test('Foreign, null and missing origins cannot create a delegated key',async()=>
 test('Cannot grant unknown projects or viewer writes',()=>{const me={workspace:{id:'w',role:'viewer'}};assert.throws(()=>authorizationSelection(new URLSearchParams('scope=profile:read&scope=expenses:write&project=p'),me,[{id:'p'}]),/ROLE_FORBIDDEN/);assert.throws(()=>authorizationSelection(new URLSearchParams('scope=profile:read&project=other'),me,[{id:'p'}]),/INVALID_TARGET/);});
 test('MCP cannot dispatch an ungranted mutation',async()=>{const {env,calls}=setup();const r=await handleMcp(new Request(RESOURCE,{method:'POST',body:JSON.stringify({id:1,method:'tools/call',params:{name:'createExpense',arguments:{body:{}}}})}),env,{auth:{scope:['profile:read','expenses:read']},props:{apiKey:key}});assert.equal((await r.json()).result.isError,true);assert.equal(calls.length,0);});
 test('Authorization code replay is refused',async()=>{const {env,ctx}=setup(),b=await approve(env,ctx);const body={grant_type:'authorization_code',client_id:b.client.client_id,code:b.code,redirect_uri:'https://client.example/callback',code_verifier:b.verifier};assert.equal((await token(env,ctx,body)).status,200);assert.equal((await token(env,ctx,body)).status,400);});
+
+
+test('A second consent submission reports used or expired without issuing another credential',async()=>{
+  const {env,ctx,calls}=setup(),b=await approve(env,ctx);
+  const before=calls.filter(c=>c.method==='POST').length;
+  const r=await b.handler.fetch(new Request(b.u,{method:'POST',headers:{Cookie:b.cookies,Origin:'https://norulo.com'},body:new URLSearchParams({handle:b.handle,decision:'approve'})}));
+  assert.equal(r.status,400);assert.match(await r.text(),/已提交或已过期/);
+  assert.equal(calls.filter(c=>c.method==='POST').length,before);
+});
+test('Consent remains bound to its original actor and ledger',async()=>{
+  for(const saved of [{userId:'other_user',workspaceId:'workspace_test'},{userId:'user_test',workspaceId:'other_workspace'}]){
+    const {env,ctx,calls}=setup(),b=await begin(env,ctx);
+    await env.OAUTH_KV.put('norulo-consent:'+b.handle,JSON.stringify(saved));
+    const r=await b.handler.fetch(new Request(b.u,{method:'POST',headers:{Cookie:cookie,Origin:'https://norulo.com'},body:new URLSearchParams({handle:b.handle,decision:'approve'})}));
+    assert.equal(r.status,403);assert(!calls.some(c=>c.method==='POST'));
+  }
+});

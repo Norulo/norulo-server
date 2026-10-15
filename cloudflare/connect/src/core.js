@@ -62,10 +62,11 @@ export async function handleMcp(request,env,ctx){
 }
 
 const STYLE='body{font:16px/1.6 system-ui;background:#f6f7f9;color:#111827;margin:0}main{max-width:720px;margin:5vh auto;padding:28px}section{background:white;border:1px solid #dce1e8;padding:24px;margin:20px 0}h1{line-height:1.2}label{display:block;margin:10px 0}button{font:inherit;padding:12px 20px;border:1px solid #111;background:#111;color:white;cursor:pointer}button.secondary{background:white;color:#111;margin-left:12px}a{color:#185bce}small{color:#64748b}input{margin-right:8px}img{vertical-align:middle;margin-right:12px}select{font:inherit;max-width:100%}fieldset{border:0;padding:0}';
-export function html(body,headers={}){
+const HTML_CSP="default-src 'none'; style-src 'unsafe-inline'; img-src https://norulo.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'";
+export function html(body,headers={},status=200){
   // Native form POSTs serialize Origin as null under no-referrer. Keep the
   // same-origin consent POST verifiable without sending referrers off-site.
-  return new Response('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>连接 Norulo</title><style>'+STYLE+'</style><main><a href="https://norulo.com"><img src="https://norulo.com/brand-mark.png" width="40" height="40" alt="">Norulo</a>'+body+'<footer><a href="https://norulo.com/privacy">隐私政策</a> · <a href="https://norulo.com/terms">服务条款</a> · <a href="mailto:contact@norulo.com">联系支持</a></footer></main></html>',{headers:{'Content-Type':'text/html;charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; img-src https://norulo.com; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",'X-Frame-Options':'DENY','Referrer-Policy':'same-origin','X-Content-Type-Options':'nosniff',...headers}});
+  return new Response('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>连接 Norulo</title><style>'+STYLE+'</style><main><a href="https://norulo.com"><img src="https://norulo.com/brand-mark.png" width="40" height="40" alt="">Norulo</a>'+body+'<footer><a href="https://norulo.com/privacy">隐私政策</a> · <a href="https://norulo.com/terms">服务条款</a> · <a href="mailto:contact@norulo.com">联系支持</a></footer></main></html>',{status,headers:{'Content-Type':'text/html;charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':HTML_CSP,'X-Frame-Options':'DENY','Referrer-Policy':'same-origin','X-Content-Type-Options':'nosniff',...headers}});
 }
 
 export function authorizationSelection(form,me,projects){
@@ -114,14 +115,19 @@ export async function handleAuthorization(request,env,oauth){
     const projectChoices=projects.data.items.map(p=>'<label><input type="checkbox" name="project" value="'+escape(p.id)+'">'+escape(p.name)+'</label>').join('');
     const scopes=(authRequest.scope.includes('offline_access')?'<input type="hidden" name="scope" value="offline_access">':'')+SCOPES.filter(s=>me.scopes.includes(s)).map(s=>'<label><input type="checkbox" name="scope" value="'+s+'" '+(authRequest.scope.includes(s)?'checked':'')+' '+(s==='profile:read'?'checked':'')+'>'+escape(s)+'</label>').join('');
     const body='<h1>连接 Norulo</h1><p><strong>'+escape(details.clientName)+'</strong> 请求访问你的 Norulo 账本。</p><p>授权将返回 <strong>'+escape(details.redirectHost)+'</strong>。'+(details.redirectIsLoopback?'这是本机应用，请确认由你发起。':'')+'</p><small>'+(details.clientDomain?'客户端域名：'+escape(details.clientDomain):'客户端名称由注册方声明，请核对回调域名。')+'</small><section><h2>选择账本</h2><ul>'+choices+'</ul><p>当前：<strong>'+escape(me.workspace.name)+'</strong> · '+escape(me.workspace.role)+'</p></section><form method="POST"><input type="hidden" name="handle" value="'+escape(consent.handle)+'"><section><h2>选择项目与公共费用</h2>'+projectChoices+(projects.data.nextCursor?'<p>这里只列出前 100 个项目。可选择整个账本，或在 Norulo 中管理项目后重新授权。</p>':'')+'<label><input type="checkbox" name="allProjects" value="yes">授权此账本的所有现有和未来项目</label><label><input type="checkbox" name="shared" value="yes">允许访问公共费用</label><small>审核建议仅选测试项目，不勾选公共费用。</small></section><section><h2>允许的操作</h2>'+scopes+'<small>费用记录不代表实际付款。写入与删除仍需由你在对话中提出。</small></section><button name="decision" value="approve">授权并返回</button><button class="secondary" name="decision" value="deny">取消</button></form>';
-    const response=html(body);for(const [k,v]of consent.headers){if(k.toLowerCase()==='set-cookie')response.headers.append(k,v);}
+    // Chromium applies form-action to the POST's redirect chain too. Allow
+    // only the callback origin already validated against the registered client.
+    const callbackOrigin=new URL(authRequest.redirectUri).origin;
+    const response=html(body,{'Content-Security-Policy':HTML_CSP.replace("form-action 'self';","form-action 'self' "+callbackOrigin+";")});
+    for(const [k,v]of consent.headers){if(k.toLowerCase()==='set-cookie')response.headers.append(k,v);}
     return response;
   }
   const raw=await request.text();if(raw.length>16384)return json({error:'Too large'},413);
   const form=new URLSearchParams(raw),handle=form.get('handle');
   if(!handle||handle.length>512)return json({error:'Invalid consent'},400);
   const saved=await env.OAUTH_KV.get('norulo-consent:'+handle,'json');
-  if(!saved||saved.userId!==me.id||saved.workspaceId!==me.workspace.id)return json({error:'Account or ledger changed; restart authorization.'},403);
+  if(!saved)return html('<h1>请重新开始授权</h1><p>这次授权已提交或已过期。若未返回连接器，请回到 ChatGPT 或 Codex 重新发起连接。</p>',{},400);
+  if(saved.userId!==me.id||saved.workspaceId!==me.workspace.id)return json({error:'Account or ledger changed; restart authorization.'},403);
   if(form.get('decision')!=='approve'){
     const denied=await oauth.denyConsent(request,handle);await env.OAUTH_KV.delete('norulo-consent:'+handle);
     return new Response(null,{status:303,headers:denied.headers});
