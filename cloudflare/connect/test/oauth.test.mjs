@@ -30,7 +30,7 @@ async function begin(env,ctx){
   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier));const challenge=Buffer.from(digest).toString('base64url');
   const u=new URL(AUTHORIZE);u.search=new URLSearchParams({client_id:client.client_id,redirect_uri:'https://client.example/callback',response_type:'code',scope:'profile:read projects:read expenses:read',resource:RESOURCE,state:'state-bound',code_challenge:challenge,code_challenge_method:'S256'});
   const handler=new Authorization(ctx,env),r=await handler.fetch(new Request(u,{headers:{Cookie:cookie}}));
-  assert.equal(r.status,200,await r.clone().text());const html=await r.text();assert(!html.includes('<script>bad</script>'));assert(html.includes('Review &#60;script&#62;'));
+  assert.equal(r.status,200,await r.clone().text());assert.equal(r.headers.get('Referrer-Policy'),'same-origin','native consent POST must preserve same-origin Origin without cross-origin referrers');const html=await r.text();assert(!html.includes('<script>bad</script>'));assert(html.includes('Review &#60;script&#62;'));
   const handle=html.match(/name="handle" value="([^"]+)"/)[1];
   const consentCookies=r.headers.getSetCookie().map(c=>c.split(';')[0]).join('; ');
   return {handler,u,client,verifier,handle,cookies:cookie+'; '+consentCookies};
@@ -59,7 +59,14 @@ test('PKCE code flow, encrypted delegated credential, token refresh, scoped MCP 
   r=await worker.fetch(new Request(RESOURCE,{method:'POST',headers:{Authorization:'Bearer '+t.access_token},body:'{}'}),env,ctx);assert.equal(r.status,401);
 });
 test('Wrong PKCE verifier cannot exchange a code',async()=>{const {env,ctx}=setup(),b=await approve(env,ctx);const r=await token(env,ctx,{grant_type:'authorization_code',client_id:b.client.client_id,code:b.code,redirect_uri:'https://client.example/callback',code_verifier:'b'.repeat(64)});assert.equal(r.status,400);});
-test('No consent or wrong origin cannot create a delegated key',async()=>{const {env,ctx,calls}=setup(),h=new Authorization(ctx,env);const r=await h.fetch(new Request(AUTHORIZE,{method:'POST',headers:{Cookie:cookie,Origin:'https://evil.example'},body:'decision=approve'}));assert.equal(r.status,403);assert(!calls.some(c=>c.method==='POST'));});
+test('Foreign, null and missing origins cannot create a delegated key',async()=>{
+  for(const origin of ['https://evil.example','null',undefined]){
+    const {env,ctx,calls}=setup(),h=new Authorization(ctx,env),headers={Cookie:cookie};
+    if(origin!==undefined)headers.Origin=origin;
+    const r=await h.fetch(new Request(AUTHORIZE,{method:'POST',headers,body:'decision=approve'}));
+    assert.equal(r.status,403);assert(!calls.some(c=>c.method==='POST'));
+  }
+});
 test('Cannot grant unknown projects or viewer writes',()=>{const me={workspace:{id:'w',role:'viewer'}};assert.throws(()=>authorizationSelection(new URLSearchParams('scope=profile:read&scope=expenses:write&project=p'),me,[{id:'p'}]),/ROLE_FORBIDDEN/);assert.throws(()=>authorizationSelection(new URLSearchParams('scope=profile:read&project=other'),me,[{id:'p'}]),/INVALID_TARGET/);});
 test('MCP cannot dispatch an ungranted mutation',async()=>{const {env,calls}=setup();const r=await handleMcp(new Request(RESOURCE,{method:'POST',body:JSON.stringify({id:1,method:'tools/call',params:{name:'createExpense',arguments:{body:{}}}})}),env,{auth:{scope:['profile:read','expenses:read']},props:{apiKey:key}});assert.equal((await r.json()).result.isError,true);assert.equal(calls.length,0);});
 test('Authorization code replay is refused',async()=>{const {env,ctx}=setup(),b=await approve(env,ctx);const body={grant_type:'authorization_code',client_id:b.client.client_id,code:b.code,redirect_uri:'https://client.example/callback',code_verifier:b.verifier};assert.equal((await token(env,ctx,body)).status,200);assert.equal((await token(env,ctx,body)).status,400);});
