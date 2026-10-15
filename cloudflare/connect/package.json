@@ -1,0 +1,16 @@
+{
+  "name": "norulo-connect",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --import ./test/worker-loader.mjs test/oauth.test.mjs",
+    "build": "esbuild src/index.js --bundle --format=esm --platform=browser --external:cloudflare:workers --outfile=dist/index.js"
+  },
+  "dependencies": {
+    "@cloudflare/workers-oauth-provider": "1.2.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

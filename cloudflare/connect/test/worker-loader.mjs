@@ -1,0 +1,2 @@
+import {registerHooks} from 'node:module';
+registerHooks({resolve(specifier,context,next){if(specifier==='cloudflare:workers')return {url:'norulo-test:workers',shortCircuit:true};return next(specifier,context);},load(url,context,next){if(url==='norulo-test:workers')return {format:'module',source:'export class WorkerEntrypoint { constructor(ctx,env){this.ctx=ctx;this.env=env;} }',shortCircuit:true};return next(url,context);}});
