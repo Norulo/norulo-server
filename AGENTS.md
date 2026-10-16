@@ -183,7 +183,10 @@ and the OpenAPI contract.
   intersect scopes, current role and explicit target/shared-pool restrictions.
 - Reads never initialize/repair counters, migrate schemas, rotate provider
   tokens, dispatch models, or write billing facts. GitHub refresh is a separate
-  actual-account cookie/Origin-protected POST with durable rotation claims.
+  actual-actor POST with durable rotation claims. Browser refresh retains its
+  cookie/Origin fence; /api/v1/integrations/github/refresh accepts a current
+  projects:read delegated key and atomically fences its scopes, restrictions,
+  actor and ledger membership. It never borrows the ledger owner's credentials.
   Unknown provider outcomes cannot consume the same refresh token again.
 - Validate all decoded JSON strings/keys with json_input.validate_json_unicode
   before auth/provider/write work. Keep bounded integer/text/JSON admission;

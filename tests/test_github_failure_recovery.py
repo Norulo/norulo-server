@@ -201,12 +201,31 @@ def test_worker_distinguishes_typed_identity_failures_without_raw_diagnostics(co
     assert 'synthetic-private' not in json.dumps(payload) + capsys.readouterr().out
 
 
-def test_production_failure_contains_only_error_code_and_does_not_log(capsys):
+def test_production_failure_logs_safe_correlated_diagnostics_without_private_details(capsys):
     entry = load_entry()
     status, payload = entry._identity_failure(SimpleNamespace(NORULO_MODE='production'),
                                              RuntimeError('synthetic-private-secret'))
-    assert status == 503 and payload == {'error': {'code': 'IDENTITY_UNAVAILABLE'}}
-    assert capsys.readouterr().out == ''
+    assert status == 503 and payload['error']['code'] == 'IDENTITY_UNAVAILABLE'
+    assert set(payload['error']) == {'code', 'requestId'}
+    assert len(payload['error']['requestId']) == 32
+    diagnostic = json.loads(capsys.readouterr().out)
+    assert diagnostic == {'code': 'NORULO_IDENTITY_FAILURE', 'errorCode': 'IDENTITY_UNAVAILABLE',
+        'requestId': payload['error']['requestId'], 'status': 503, 'exceptionType': 'RuntimeError'}
+    assert 'synthetic-private' not in json.dumps(payload) + json.dumps(diagnostic)
+
+
+def test_production_diagnostic_records_only_safe_code_location_and_provider_status(capsys):
+    from norulo_server.cloudflare_github_gateway import GitHubFailure
+    entry = load_entry()
+    try:
+        raise GitHubFailure('GITHUB_UNAVAILABLE', 503)
+    except GitHubFailure as error:
+        status, payload = entry._identity_failure(SimpleNamespace(NORULO_MODE='production'), error)
+    diagnostic = json.loads(capsys.readouterr().out)
+    assert status == 503 and diagnostic['requestId'] == payload['error']['requestId']
+    assert diagnostic['site'] == 'test_production_diagnostic_records_only_safe_code_location_and_provider_status'
+    assert diagnostic['providerStatus'] == 503
+    assert set(payload['error']) == {'code', 'requestId'}
 
 
 def test_repository_authentication_precedes_provider_access(tmp_path):

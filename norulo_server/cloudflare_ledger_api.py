@@ -156,11 +156,6 @@ async def _project_repos(user: dict, gateway: Any, now: int | None = None):
         return {}, "unavailable", [], False
 
 
-def _browser_refresh(headers: Mapping[str, object]) -> bool:
-    # Only a cookie-authenticated browser can call the fenced refresh route.
-    return not (_header(headers, "Authorization") or _header(headers, "X-Norulo-Api-Key"))
-
-
 async def handle_ledger_request(*, binding: Any, gateway: Any, method: str, path: str,
                                 headers: Mapping[str, object], params: Mapping[str, object],
                                 body: object, now: int, suggestion_gateway=None) -> tuple[int, object] | None:
@@ -169,6 +164,10 @@ async def handle_ledger_request(*, binding: Any, gateway: Any, method: str, path
         validate_json_unicode(body)
     except UnicodeError:
         return _error(422, "INVALID_INPUT")
+    if path == "/api/v1/integrations/github/refresh":
+        from .cloudflare_github_refresh import handle_key_github_refresh
+        return await handle_key_github_refresh(binding=binding, gateway=gateway,
+            method=method, headers=headers, body=body, now=now)
     if path == "/api/v1/account/jev":
         from .cloudflare_jev_preferences import handle_jev_preference
         return await handle_jev_preference(binding=binding, method=method,
@@ -202,22 +201,31 @@ async def handle_ledger_request(*, binding: Any, gateway: Any, method: str, path
             page = items[:limit]
             if page:
                 project_ids = restrictions.get("projectIds")
-                visibility = "" if project_ids is None else (
-                    " AND project_id IN (" + ",".join("?" for _ in project_ids) + ")"
-                    if project_ids else " AND 0")
-                linked = binding.prepare("""SELECT github_repo_id FROM ledger_project_repositories
-                    WHERE owner_id=? AND github_repo_id IN (""" + ",".join("?" for _ in page) + ")"
-                    + visibility + " LIMIT 100").bind(user["id"], *(item["githubRepoId"] for item in page),
-                                                     *(project_ids or []))
-                linked_snapshot = await binding.batch([*auth, linked])
+                project_groups = [None] if project_ids is None else [
+                    project_ids[start:start + 50] for start in range(0, len(project_ids), 50)]
+                linked = []
+                for group in project_groups:
+                    # Owner + repository IDs + optional project IDs must fit
+                    # D1's 100-variable ceiling. At most six scalar SELECTs
+                    # share one batch with the authorization snapshot.
+                    size = 99 - len(group or [])
+                    visibility = "" if group is None else (
+                        " AND project_id IN (" + ",".join("?" for _ in group) + ")")
+                    for start in range(0, len(page), size):
+                        chunk = page[start:start + size]
+                        linked.append(binding.prepare("""SELECT github_repo_id FROM ledger_project_repositories
+                            WHERE owner_id=? AND github_repo_id IN (""" + ",".join("?" for _ in chunk) + ")"
+                            + visibility + " LIMIT 100").bind(user["id"],
+                                *(item["githubRepoId"] for item in chunk), *(group or [])))
+                linked_snapshot = await binding.batch([*auth, *linked])
                 validate([part.results for part in linked_snapshot[:len(auth)]])
-                bound = {item["github_repo_id"] for item in linked_snapshot[-1].results}
+                bound = {item["github_repo_id"] for result in linked_snapshot[len(auth):] for item in result.results}
                 page = [{**item, "isBound": item["githubRepoId"] in bound} for item in page]
             return 200, {"items": page,
                          "nextCursor": str(page[-1]["githubRepoId"]) if len(items) > limit else None,
                          "githubAccess": access["githubAccess"],
                          "organizations": access.get("organizations", []),
-                         **({"githubRefreshRequired": True} if access.get("githubRefreshRequired") and _browser_refresh(headers) else {})}
+                         **({"githubRefreshRequired": True} if access.get("githubRefreshRequired") else {})}
         except PrincipalAuthError as exc:
             return _error(exc.status, exc.code)
         except GitHubFailure as exc:
@@ -325,7 +333,6 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
                 return _error(404, "NOT_FOUND")
             repos, state, organizations, refresh = ({}, "not_linked", [], False) if standalone_project(
                 project_rows[0], bindings) else await _project_repos(user, gateway, now)
-            refresh = refresh and _browser_refresh(headers)
             return 200, _project(project_rows[0], repos, totals, state, bindings, organizations, refresh)
         try:
             limit, cursor = _page_inputs(params)
@@ -372,7 +379,6 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
             by_binding.setdefault(row["project_id"], []).append(row)
         repos, state, organizations, refresh = ({}, "not_linked", [], False) if all(standalone_project(
             row, by_binding.get(row["id"], [])) for row in page) else await _project_repos(user, gateway, now)
-        refresh = refresh and _browser_refresh(headers)
         return 200, {"items": [_project(row, repos, by_project.get(row["id"], []), state,
             by_binding.get(row["id"], []), organizations, refresh) for row in page],
                      "nextCursor": page[-1]["id"] if len(projects) > limit else None,
@@ -505,7 +511,6 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
     bindings = [{"github_repo_id": value} for value in selected] if selected is not None else current_bindings
     repos, state, organizations, refresh = ({}, "not_linked", [], False) if standalone_project(
         updated, bindings) else await _project_repos(user, gateway, now)
-    refresh = refresh and _browser_refresh(headers)
     return 200, _project(updated, repos, result[-1].results, state, bindings, organizations, refresh)
 
 

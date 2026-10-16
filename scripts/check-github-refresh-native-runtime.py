@@ -57,6 +57,7 @@ class FixtureClock:
     @classmethod
     def time(cls): return cls.now
 canonical.time=FixtureClock
+DELEGATED_FIXTURE = False
 
 class SyntheticTransport(WorkerGitHubGateway):
     async def _json(self,url,*,method="GET",token="",body=""):
@@ -86,7 +87,11 @@ class SyntheticTransport(WorkerGitHubGateway):
                 "account":{"id":810003,"login":"SyntheticOrg","type":"Organization"}}]}
         assert url.startswith("https://api.github.com/user/installations/810002/repositories?")
         provider_calls.append("repositories")
-        return {"total_count":1,"repositories":[{"id":810004,"full_name":"SyntheticOrg/native"}]}
+        count=100 if DELEGATED_FIXTURE else 1
+        start=(int(parse_qs(urlsplit(url).query)["page"][0])-1)*100
+        return {"total_count":count,"repositories":[{"id":810004+index,
+            "full_name":"SyntheticOrg/native"+("-"+str(index) if index else "")}
+            for index in range(start,min(start+100,count))]}
 
 class ForbiddenGateway:
     def __init__(self,env): pass
@@ -141,6 +146,11 @@ def seed(now):
     session="github-refresh-native-owner"
     return [("INSERT INTO app_state(name,payload,updated_at) VALUES(?,?,?)",
         (record_name("users",OWNER),payload,now)),
+        ("""INSERT INTO api_keys(id,user_id,name,key_prefix,key_hash,scopes,expires_at,
+            restrictions,created_at,last_used_at,revoked_at)
+            VALUES('key-native-refresh',?,'Local renewal','nrk_synthetic',?,
+            '["projects:read"]',NULL,'{"shared":false}',?,NULL,NULL)""",
+            (OWNER,hashlib.sha256(b'nrk_synthetic_native_refresh').hexdigest(),now)),
         ("INSERT INTO app_state(name,payload,updated_at) VALUES(?,?,?)",
         (record_name("sessions",session),encode_record("sessions",session,
             {"id":session,"userId":OWNER,"expiresAt":now+7*86400}),now)),
@@ -349,6 +359,8 @@ def main():
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--port", type=int, default=8941)
+    parser.add_argument("--delegated", action="store_true",
+                        help="Exercise delegated-key rotation and a full 100-repository page")
     args = parser.parse_args()
     directory = args.run_dir.resolve()
     if not directory.is_relative_to(Path("/workspace")) or not 1024 <= args.port <= 63535:
@@ -356,7 +368,8 @@ def main():
     directory.mkdir(parents=True, exist_ok=False)
     source = directory / "src"
     source.mkdir()
-    (source / "entry.py").write_text(ENTRY, encoding="utf-8")
+    (source / "entry.py").write_text(ENTRY.replace("DELEGATED_FIXTURE = False",
+        "DELEGATED_FIXTURE = " + str(args.delegated)), encoding="utf-8")
     shutil.copy2(WORKER / "src/entry.py", source / "application_entry.py")
     shutil.copytree(ROOT / "norulo_server", source / "norulo_server", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copytree(WORKER / "python_modules", directory / "python_modules", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
@@ -452,7 +465,7 @@ def main():
         start()
         opener = build_opener(ProxyHandler({}), NoRedirect())
 
-        def call(name, method, path, *, cookie=True, bearer=False, trusted=True, expected=200):
+        def call(name, method, path, *, cookie=True, bearer=False, delegated=False, trusted=True, expected=200):
             nonlocal attempted
             attempted += 1
             assert attempted <= HTTP_CAP
@@ -462,6 +475,9 @@ def main():
                 headers["Cookie"] = "nr_session=github-refresh-native-owner"
             if bearer:
                 headers["Authorization"] = "Bearer synthetic-bearer"
+            if delegated:
+                headers.pop("Cookie", None)
+                headers["Authorization"] = "Bearer nrk_synthetic_native_refresh"
             request = Request(base + path, method=method, headers=headers, data=b"{}" if method == "POST" else None)
             try:
                 response = opener.open(request, timeout=60)
@@ -483,34 +499,37 @@ def main():
         authorization = call("authorize_link", "GET", "/auth/github/authorize?intent=link&redirectTo=/projects")
         state = parse_qs(urlsplit(authorization["url"]).query)["state"][0]
         call("callback_saves_encrypted_pair", "GET", "/auth/github/callback?" + urlencode({"state": state, "code": "synthetic-code"}), expected=302)
-        first = call("read_before_expiry", "GET", "/api/v1/repositories")
-        assert first["githubAccess"] == "authorized" and len(first["items"]) == 1
+        repositories_path="/api/v1/repositories"+("?limit=100" if args.delegated else "")
+        first = call("read_before_expiry", "GET", repositories_path, delegated=args.delegated)
+        assert first["githubAccess"] == "authorized" and len(first["items"]) == (100 if args.delegated else 1)
         call("advance_to_expiry", "POST", "/_fixture/advance-clock", cookie=False)
-        expired = call("expired_read_signals_refresh", "GET", "/api/v1/repositories")
+        expired = call("expired_read_signals_refresh", "GET", repositories_path, delegated=args.delegated)
         assert expired.get("githubRefreshRequired") is True and not expired["items"]
         call("untrusted_origin", "POST", "/integrations/github/refresh", trusted=False, expected=403)
         call("cookie_with_bearer_rejected", "POST", "/integrations/github/refresh", bearer=True, expected=401)
         call("anonymous_rejected", "POST", "/integrations/github/refresh", cookie=False, expected=401)
-        result = call("rotate_once", "POST", "/integrations/github/refresh")
+        refresh_path="/api/v1/integrations/github/refresh" if args.delegated else "/integrations/github/refresh"
+        result = call("rotate_once", "POST", refresh_path, delegated=args.delegated)
         assert result == {"ok": True, "refreshed": True}
-        result = call("repeat_refresh_no_rotation", "POST", "/integrations/github/refresh")
+        result = call("repeat_refresh_no_rotation", "POST", refresh_path, delegated=args.delegated)
         assert result == {"ok": True, "refreshed": False}
-        current = call("read_after_rotation", "GET", "/api/v1/repositories")
+        current = call("read_after_rotation", "GET", repositories_path, delegated=args.delegated)
         assert current["githubAccess"] == "authorized" and current["items"] == first["items"]
         assert call("stale_session_snapshot_cas", "POST", "/_fixture/rejected-cas", cookie=False) == {"fenced": True}
         assert call("stale_user_snapshot_cas", "POST", "/_fixture/rejected-cas", cookie=False) == {"fenced": True}
         stop(); start()
-        recovered = call("restart_reads_rotated_pair", "GET", "/api/v1/repositories")
+        recovered = call("restart_reads_rotated_pair", "GET", repositories_path, delegated=args.delegated)
         assert recovered == current
         call("advance_rotated_token_to_expiry", "POST", "/_fixture/advance-clock", cookie=False)
         call("persist_interrupted_claim", "POST", "/_fixture/pending-claim", cookie=False)
-        pending = call("pending_claim_denied", "POST", "/integrations/github/refresh", expected=409)
+        pending = call("pending_claim_denied", "POST", refresh_path, delegated=args.delegated, expected=409)
         assert pending["error"]["code"] == "GITHUB_REFRESH_PENDING"
         stop(); start()
         call("advance_claim_beyond_ambiguity_window", "POST", "/_fixture/advance-clock", cookie=False)
-        unknown = call("unknown_claim_after_restart_denied", "POST", "/integrations/github/refresh", expected=403)
+        unknown = call("unknown_claim_after_restart_denied", "POST", refresh_path, delegated=args.delegated, expected=403)
         assert unknown["error"]["code"] == "GITHUB_REAUTHORIZATION_REQUIRED"
         call("final_journal", "GET", "/_fixture/final", cookie=False)
+        evidence["delegatedKeyRefreshAndFullRepositoryPage"] = args.delegated
         evidence["passed"] = True
     except Exception as error:
         evidence["failure"] = str(error)

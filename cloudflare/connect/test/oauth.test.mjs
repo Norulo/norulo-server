@@ -129,6 +129,42 @@ function backendResult(status,data){
   };return fixture;
 }
 
+test('GitHub renewal is an explicit delegated POST and repository reads stay read-only',async()=>{
+  const {env,calls}=setup();
+  env.NORULO_SERVER.fetch=async request=>{
+    calls.push({url:request.url,method:request.method});
+    assert.equal(request.headers.get('Authorization'),'Bearer '+key);
+    assert.equal(request.headers.get('Cookie'),null);
+    if(request.method==='POST'){
+      assert.equal(new URL(request.url).pathname,'/api/v1/integrations/github/refresh');
+      assert.deepEqual(await request.json(),{});
+      return Response.json({ok:true,refreshed:true});
+    }
+    return Response.json({items:[],githubAccess:'reauthorization_required',githubRefreshRequired:true});
+  };
+  const read=await mcp(env,'tools/call',{name:'listLedgerRepositories',arguments:{limit:100}});
+  assert.equal(JSON.parse(read.result.content[0].text).data.githubRefreshRequired,true);
+  assert.equal(calls.length,1);assert.equal(calls[0].method,'GET');
+  const renewed=await mcp(env,'tools/call',{name:'refreshLedgerGitHubAccess',arguments:{}});
+  assert.equal(JSON.parse(renewed.result.content[0].text).data.refreshed,true);
+  assert.equal(calls.length,2);
+  const tool=(await mcp(env,'tools/list')).result.tools.find(x=>x.name==='refreshLedgerGitHubAccess');
+  assert.equal(tool.annotations.readOnlyHint,false);
+  assert.equal(tool.annotations.idempotentHint,false);
+  assert.deepEqual(tool.securitySchemes[0].scopes,['profile:read','projects:read']);
+});
+
+test('A failed or uncertain GitHub renewal is returned once without business replay or Norulo reconnect',async()=>{
+  for(const [status,code] of [[409,'GITHUB_REFRESH_PENDING'],[503,'GITHUB_UNAVAILABLE'],[403,'GITHUB_REAUTHORIZATION_REQUIRED']]){
+    const {env,calls}=backendResult(status,{error:{code}});
+    const response=await mcp(env,'tools/call',{name:'refreshLedgerGitHubAccess',arguments:{}});
+    assert.equal(response.result.isError,true);
+    assert.equal(JSON.parse(response.result.content[0].text).error.code,code);
+    assert.equal(calls.length,1);assert.equal(calls[0].method,'POST');
+    assert.equal(response.result._meta,undefined);
+  }
+});
+
 test('Every stable tool descriptor advertises its exact OAuth requirements',async()=>{
   const {env,calls}=setup();
   const minimal=(await mcp(env,'tools/list',{},['profile:read'])).result.tools;

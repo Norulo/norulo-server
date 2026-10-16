@@ -580,14 +580,14 @@ def expiring_ledger():
 
 
 @pytest.mark.parametrize("authentication", ["cookie", "key"])
-def test_real_ledger_repository_and_project_reads_only_signal_cookie_refresh_and_preserve_history(expiring_ledger, authentication):
+def test_ledger_reads_signal_explicit_refresh_to_cookie_and_key_clients_and_preserve_history(expiring_ledger, authentication):
     ledger, linked, standalone, expense, key_headers = expiring_ledger
     headers = ledger.headers if authentication == "cookie" else key_headers
     before = database_snapshot(ledger.store)
     for path in ("/api/v1/repositories", "/api/v1/projects", "/api/v1/projects/" + linked["id"]):
         status, payload = ledger.call("GET", path, headers=headers, gateway=ledger.gateway)
         assert status == 200
-        assert (payload.get("githubRefreshRequired") is True) == (authentication == "cookie")
+        assert payload.get("githubRefreshRequired") is True
         assert_no_credentials(payload)
         if path == "/api/v1/repositories":
             assert payload["items"] == [] and payload["githubAccess"] == "reauthorization_required"
@@ -595,7 +595,7 @@ def test_real_ledger_repository_and_project_reads_only_signal_cookie_refresh_and
             items = {item["id"]: item for item in payload["items"]}
             assert items[linked["id"]]["totals"] == [{"currency": "USD", "amountMinor": 1234}]
             assert items[linked["id"]]["githubAccess"] == "reauthorization_required"
-            assert (items[linked["id"]].get("githubRefreshRequired") is True) == (authentication == "cookie")
+            assert items[linked["id"]].get("githubRefreshRequired") is True
             assert "githubRefreshRequired" not in items[standalone["id"]]
         else:
             assert payload["totals"] == [{"currency": "USD", "amountMinor": 1234}]

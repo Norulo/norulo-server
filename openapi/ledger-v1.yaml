@@ -491,6 +491,7 @@ paths:
         accounts without saved refresh credentials require one explicit GitHub
         reconnection. A read with githubRefreshRequired true may be followed
         by this POST and one repeated read; business writes must not be replayed.
+        API-key clients use the separate /api/v1/integrations/github/refresh route.
       responses:
         '200': {description: Credential renewed or already current, headers: {Cache-Control: {$ref: '#/components/headers/NoStore'}}, content: {application/json: {schema: {type: object, required: [ok, refreshed], properties: {ok: {type: boolean, const: true}, refreshed: {type: boolean}}}}}}
         '401': {$ref: '#/components/responses/Unauthorized'}
@@ -698,7 +699,36 @@ paths:
         '401': {$ref: '#/components/responses/Unauthorized'}
         '403': {$ref: '#/components/responses/Forbidden'}
         '502': {description: Invalid bounded GitHub response; error code GITHUB_RESPONSE_INVALID, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
-        '503': {description: "GitHub temporarily unavailable, rate limited, or credential decryption/configuration failure; no automatic retry or token refresh", content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+        '503': {description: "GitHub temporarily unavailable, rate limited, credential failure or an internal failure; no automatic retry. Internal failures include an opaque requestId for private diagnostics", content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+  /api/v1/integrations/github/refresh:
+    post:
+      operationId: refreshLedgerGitHubAccess
+      x-norulo-scope: projects:read
+      security: [{bearerKey: []}]
+      tags: [Authentication]
+      parameters: [{$ref: '#/components/parameters/WorkspaceHeader'}]
+      description: |
+        Explicitly renew the API key actor's existing GitHub App credential.
+        Requires projects:read in the key's bound ledger and current membership;
+        refreshes the actor's own credentials, never the ledger owner's.
+        Uses the same durable rotation claim as the browser refresh endpoint.
+        Rechecks the key, scopes, restrictions, membership and token generation
+        atomically before the provider exchange and credential publication.
+        No token is returned and no new GitHub permission is granted. When a
+        read returns githubRefreshRequired true, make this POST once and repeat
+        the read once after success. Never retry an uncertain exchange or replay
+        a business write. A pending claim returns 409 GITHUB_REFRESH_PENDING;
+        missing, expired, revoked or uncertain refresh credentials require
+        explicit GitHub reconnection on the Web.
+      requestBody: {required: true, content: {application/json: {schema: {type: object, additionalProperties: false, maxProperties: 0}}}}
+      responses:
+        '200': {description: Credential renewed or already current, content: {application/json: {schema: {type: object, required: [ok, refreshed], properties: {ok: {type: boolean, const: true}, refreshed: {type: boolean}}}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {description: GITHUB_REFRESH_PENDING or ACCOUNT_CHANGED; no provider retry, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+        '422': {$ref: '#/components/responses/InvalidInput'}
+        '502': {description: Invalid GitHub credential response; no retry, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+        '503': {description: Provider or internal failure; no retry of an uncertain exchange, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
   /api/v1/projects:
     get:
       operationId: listLedgerProjects
@@ -1356,6 +1386,7 @@ components:
           required: [code]
           properties:
             code: {type: string, minLength: 1}
+            requestId: {type: string, pattern: '^[a-f0-9]{32}$', description: Opaque correlation ID for private Server diagnostics; no request or credential data}
             message: {type: string, description: Optional human-readable detail; branch client logic on code}
         assistance: {$ref: '#/components/schemas/ExpenseAssistance'}
       examples: [{error: {code: PRECONDITION_FAILED}}, {error: {code: CATEGORY_REQUIRED}, assistance: {status: unavailable, categorySource: null, suggestions: {}}}]
@@ -1635,8 +1666,8 @@ components:
         githubAccess:
           type: string
           enum: [authorized, not_connected, lost, reauthorization_required]
-          description: Expired or revoked credentials never revoke the Norulo session or write on a GET. When githubRefreshRequired is true, cookie clients may POST /integrations/github/refresh and repeat this read once. Otherwise reconnect requires explicit GitHub login. Unavailable/unknown grants return an error rather than a successful empty page.
-        githubRefreshRequired: {type: boolean, description: A saved refresh credential permits one separate cookie-authenticated refresh attempt; no token material is returned}
+          description: Expired or revoked credentials never revoke the Norulo session or write on a GET. When githubRefreshRequired is true, cookie clients may POST /integrations/github/refresh and API keys may POST /api/v1/integrations/github/refresh, then repeat this read once after success. Otherwise reconnect requires explicit GitHub login. Unavailable/unknown grants return an error rather than a successful empty page.
+        githubRefreshRequired: {type: boolean, description: A saved refresh credential permits one separate authenticated refresh attempt; no token material is returned}
     Target:
       oneOf:
         - {type: object, required: [kind, projectId], additionalProperties: false, properties: {kind: {const: project}, projectId: {type: string, pattern: '^[A-Za-z0-9_-]{1,120}$'}}}
@@ -1742,7 +1773,7 @@ components:
         productUrl: {$ref: '#/components/schemas/ProjectUrl'}
         status: {type: string, enum: [active, archived]}
         githubAccess: {type: string, enum: [not_linked, authorized, partial, lost, reauthorization_required, unavailable], description: "not_linked identifies an explicitly standalone project, with null GitHub anchor and organization and empty repository arrays; loss or unavailability of a bound grant never implicitly disconnects a project."}
-        githubRefreshRequired: {type: boolean, description: The actual actor may renew their own GitHub credential through the separate cookie-authenticated refresh endpoint}
+        githubRefreshRequired: {type: boolean, description: The actual actor may renew their own GitHub credential through the separate cookie or API-key authenticated refresh endpoint}
         canCreateExpense: {type: boolean, description: "Active standalone project, or an active repository-backed project with at least one bound repository currently authorized to the actor. Ledger role, key target scopes and plan limits still apply. Historical edits and deletion do not require a live GitHub grant."}
         revision: {type: integer, minimum: 1}
         totals: {type: array, items: {$ref: '#/components/schemas/MoneyTotal'}}

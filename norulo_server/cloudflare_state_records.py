@@ -277,7 +277,32 @@ def record_parameter_limits(sql, params):
     if source.startswith(("insert into app_state", "update app_state")):
         if not names or "json_set(" in source:
             raise ValueError("state writes require exact typed records")
-        candidates = [value for value in params if isinstance(value, str) and value.lstrip().startswith("{")]
+        credential_json = set()
+        # Delegated GitHub rotation compares the key's exact JSON grants in a
+        # scalar EXISTS fence. Those are API-key metadata, not app_state record
+        # payloads. Recognize and validate only this complete credential fence;
+        # their ordinary parameter byte/cardinality limits remain unchanged.
+        fence = re.compile(r"EXISTS\(SELECT 1 FROM api_keys WHERE key_hash=\? AND user_id=\?\s+"
+            r"AND scopes=(\?) AND restrictions=(\?) AND revoked_at IS NULL\s+"
+            r"AND \(expires_at IS NULL OR expires_at>=\?\)\)", re.I)
+        if source.startswith("update app_state"):
+            from .api_key_dto_rules import ALLOWED_SCOPES, parse_api_key_restrictions
+            for match in fence.finditer(sql):
+                scope_index = sql[:match.start(1)].count("?")
+                restriction_index = sql[:match.start(2)].count("?")
+                try:
+                    scopes = json.loads(params[scope_index])
+                    restrictions = json.loads(params[restriction_index])
+                    if (not isinstance(scopes, list) or not scopes or len(scopes) > len(ALLOWED_SCOPES)
+                            or any(not isinstance(item, str) or item not in ALLOWED_SCOPES for item in scopes)
+                            or "projects:read" not in scopes
+                            or parse_api_key_restrictions(restrictions) != restrictions):
+                        raise ValueError("invalid delegated credential fence")
+                except (TypeError, IndexError, ValueError):
+                    raise ValueError("invalid delegated credential fence") from None
+                credential_json.update((scope_index, restriction_index))
+        candidates = [value for index, value in enumerate(params) if index not in credential_json
+                      and isinstance(value, str) and value.lstrip().startswith("{")]
         if not candidates:
             raise ValueError("state write has no typed payload")
         name_index, payload_index = (0, 1) if source.startswith("insert") else (2, 0)

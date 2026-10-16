@@ -1,0 +1,250 @@
+{
+  "scope": "Local synthetic GitHub transport; real provider and browser acceptance separate",
+  "localOnly": true,
+  "passed": true,
+  "nativePythonFFI": true,
+  "nativeDurableObjectSQLite": true,
+  "nativeWebCryptoAesGcm": true,
+  "canonicalDefaultAndValidationBudget": true,
+  "canonicalApplicationEntrySha256": "d101bbc8488766e1ad33086e0a208bbe19ef9821a8d979f17281166b95506219",
+  "canonicalSourceTreeSha256": "8b754c1268a5207fb21d4a59735d039799137e875aa7ccca989a8d402c4ac752",
+  "sourceSha256": {
+    "norulo_server/__init__.py": "952d1875f327f6b12ea85416380c1e207895ee7015967865a46e39e1ddbb35b4",
+    "norulo_server/account_cycle_rules.py": "f0cc61223ce05a3075461a81bff1469eca656fa003bdee121031cd9258ad8e7c",
+    "norulo_server/api_key_dto_rules.py": "4940c03b93444d700930040975c56758c190fc826314a526ff93b4b29598d9e7",
+    "norulo_server/billing_account_rules.py": "50e1b5ca2a9e397b66721f0c155ebf5cfdd3e8e211c1fd236c8871bd194df2a2",
+    "norulo_server/billing_catalog_rules.py": "f26d684fd9ca1fa0419ac7659d6edfd1a9217706315d507585bea94a0d778033",
+    "norulo_server/billing_projection.py": "3f27425363762fffcafcd9046b405f8f3c4d1be582683dc484eb29dfbc7f54a9",
+    "norulo_server/cloudflare_account_adapter.py": "c7c0378da2982510671bea8fa027954194662c17201c663424cebee3fd086e46",
+    "norulo_server/cloudflare_api_key_read.py": "58239552eb7dfc729e70d749b7d3bdb4c288fcb7bdb4de6be4d979ac44d1af9e",
+    "norulo_server/cloudflare_api_key_write.py": "42f4bfe2978c73048c8fdc8b512326a41aef03d7c847abe4b10ac110f6dc36f5",
+    "norulo_server/cloudflare_auth_admission.py": "0cf2bbea26f538c3815dbd11d7a4555b75d35f6983f537386da938919b700fe1",
+    "norulo_server/cloudflare_billing_catalog.py": "f32d596f0c5caacb203f3eb131c3389dbd92b6573ec6c8aa0b1d8f7c015df154",
+    "norulo_server/cloudflare_billing_catalog_refresh.py": "c75ac1a745e7f03f1c7dbfd35c0bc46612d3b6f0e6e3c7efaa829138bc226397",
+    "norulo_server/cloudflare_billing_catalog_write.py": "145ec58d410b47ba0f92a891db3aa8b6cf53a97ac0cfe8d51f8c6c45cb97f486",
+    "norulo_server/cloudflare_billing_mutations.py": "e235bedcb66197ea8072729e20c243c84d3e3d104d2a4d5a6086551c6e1d25bd",
+    "norulo_server/cloudflare_billing_read.py": "27dc12ec4d37e6885d11a699189b97111b686b704988595fb00fdecbef704759",
+    "norulo_server/cloudflare_creem_gateway.py": "5d465d8885dd492d63c096b798143447d63974f56799ab7da59c2be5aecadc27",
+    "norulo_server/cloudflare_creem_handler.py": "4af4c9917c59b450a2e593af6c88639589d1fef79b078158eb745a0470fddc0e",
+    "norulo_server/cloudflare_d1_batch.py": "f3e3e4df4f9d8892683b061cbac8a90c6ba33b5903216e8dc600a5dd3008ca9c",
+    "norulo_server/cloudflare_d1_mapping.py": "30a9bbc39b5e4e695d3c17aeb7a9b53eb2ed86c6faf12ac8e57e7c59ef61ba1c",
+    "norulo_server/cloudflare_email_admission.py": "b3da5314def108e817143e2b60d8bffa8beba7c876df9082d903b9d54b7bd9bc",
+    "norulo_server/cloudflare_email_auth.py": "43e34290f58742756b6d9a165611128d199f3f79b6ef1305a71a0d004a797294",
+    "norulo_server/cloudflare_email_gateway.py": "acffa2a5aebfcbf8430fbcdcff7460a164682656cb234efa6d43ab10007b12e1",
+    "norulo_server/cloudflare_expense_retention.py": "b7b295a80bd23508a00d0d0058dc27ee2d26f9f9504bed47b12130de6767ab3a",
+    "norulo_server/cloudflare_github_gateway.py": "f30b25bbafcf56e53b8573cb5fa74b16b9ec78892e4e8a44f5802042b42cf749",
+    "norulo_server/cloudflare_github_identity_http.py": "a799a2284bc8bf4ed74e8c9797dd6463ceb06e81ef48357b2dc17b7a1d0aaa44",
+    "norulo_server/cloudflare_github_refresh.py": "7923397edf1a789d1f1221f6bc48a9e9f9cb59347592129c9b34472ee922fe5e",
+    "norulo_server/cloudflare_http_contract.py": "d346222eca9f05a474dda4611c08ce61289beb08685da83cc894cb1fc724149d",
+    "norulo_server/cloudflare_jev_gateway.py": "eea97c86e6fbff8de9eb50418938e02a0b84e3016593c5b269b5d120cd697818",
+    "norulo_server/cloudflare_jev_preferences.py": "9db51604df3068277fd25b8f14a905142953a35b37d3a46e5933a9200be0aa2a",
+    "norulo_server/cloudflare_ledger_activity.py": "45c2f25ae916d71fa51ab3db4e7fcadb3b11dc0fe27cf31f8dc38b3e86615dad",
+    "norulo_server/cloudflare_ledger_api.py": "544160a5b342642e50bb86997970e850143a652fff99192fb835ec50b29e08c0",
+    "norulo_server/cloudflare_ledger_auth.py": "4e8931934bec62618ffcc4d388e0c6a62416c1a9d2fd3465886287ebbefef7fb",
+    "norulo_server/cloudflare_ledger_categories.py": "3b768281db66faf909a24e51495db62ca9df3fe8c8947025f6df41f3c76e5019",
+    "norulo_server/cloudflare_ledger_expenses.py": "c0e61d2369778c644f7c09d96555bca93eff71059d3fd7801e53745b48d0a31a",
+    "norulo_server/cloudflare_ledger_profile.py": "7a21ecbb5a7eda37f3e6dc4309f486dad8b7dd0c6c61a4037e7ae6e9c07a8e54",
+    "norulo_server/cloudflare_ledger_recurring.py": "78e4681b5c41b9398c7966fa68befe93effae291b90ba8c8975730e2a5c7e60d",
+    "norulo_server/cloudflare_ledger_reports.py": "e923a7b91f8d8cd4be5ce70b13d952c08b707138ad30ab73aeb90df7ff4bb949",
+    "norulo_server/cloudflare_ledger_review.py": "01818a0e473037e9b996a4802ef338795a71effac22c19621aba9c8c30117963",
+    "norulo_server/cloudflare_ledger_suggestions.py": "ed2d2efc5966ec539a92b843a86391193f3bf94aa8e39728f1dda99e4f88d2a6",
+    "norulo_server/cloudflare_native_d1.py": "b19bb7e352c24e76af94e3f5e4f0f6969bde9853ce92f7735a4189b80e67a930",
+    "norulo_server/cloudflare_oauth_state_adapter.py": "7586855d9deca10c0763d5d0ac24ad9c335c574fb98ef207b90a74c5cabe56bd",
+    "norulo_server/cloudflare_plan_limits.py": "fa84fcac5607b21a8f85376aa760a36d6eb924b8da149bef11067230d9c4fc81",
+    "norulo_server/cloudflare_preview_budget.py": "f3ffdae94208a9e6bec8c9e8aa36ca1d2b5a393e33e2e98ecba204f7bf6e739a",
+    "norulo_server/cloudflare_preview_business_clear.py": "aa41febdebb868ee047c596f650a8fab8c3958959527f388c2af95940a17a31c",
+    "norulo_server/cloudflare_preview_rate.py": "5aadbe66a803496d63db8493890b6ca665953f78bbe30b883a1599cbe9bc6ede",
+    "norulo_server/cloudflare_preview_schema.py": "5e2d47ca87de3e65856fe0e6ad11f4beccc9730a8aa915961984d688ccf6eb32",
+    "norulo_server/cloudflare_principal.py": "18aa5eece212bece3efea3a74e416a61f88e405a1d4b4111c11b34cc894b9002",
+    "norulo_server/cloudflare_project_erasure.py": "f0e53a07d01103ed1aa53089a8b6c0857137c20ddf12d6f29efe8522851784eb",
+    "norulo_server/cloudflare_project_repositories.py": "a7310b6721e6976d8424b904a1f0d90c8e52c0ba6ddbf3f1b3e1fd4601cfbf78",
+    "norulo_server/cloudflare_recurring_assistance.py": "8571f43be0aefb45423e6b8f0aa3e969c93165aed36306703749341993537bf3",
+    "norulo_server/cloudflare_recurring_notifications.py": "29c5c5a9fb21e8bb8dc6207d4a80d569d690984efbe2a10efe67f7d5b08f951a",
+    "norulo_server/cloudflare_recurring_scheduler.py": "314e0ead6a9844c7b8b3ee629efbb51bc5fc27e72b637e8b0b4ad3a885784930",
+    "norulo_server/cloudflare_session_adapter.py": "d908befe501dff08a7ab54e040ad39aba01b5565d72d158d8ae51478db7f6903",
+    "norulo_server/cloudflare_state_records.py": "2cdba726d10c884d8cb8346811aed9319ae1cebc25d79600672e5742f2d08e5f",
+    "norulo_server/cloudflare_validation_budget.py": "b7682bfafdea56de7cb6aeb9204378ea9b22bde95c71e5dc68f3a8c06bb5f65f",
+    "norulo_server/cloudflare_webhook_receipts.py": "71d4cdddba613b68f58c8dcd685bcc3fe7a176ff85eee0a36d09fabc9d1ff3e3",
+    "norulo_server/cloudflare_workspaces.py": "acbf606779357d756e87a86c812a8799214b8e10eaa75d22ac02eb5c63092a12",
+    "norulo_server/creem_event_rules.py": "7f1054d8bf4d04009a48385ed3d393ed983d9e33f940e260d5f757fcbcca1614",
+    "norulo_server/creem_public_catalog_rules.py": "45403e0a0b019bfbec6fcb81e116180127c5b60955fc5913f97f9b17e1ded9dd",
+    "norulo_server/creem_signature.py": "3cb105e50952a79365d64f8946db39f7647f5b5da1b52b3e1c4d70cab11787cc",
+    "norulo_server/json_input.py": "f0eb95eb53c52cceb31b69aa5b7c93dfd03aaee1af2376a1fc1277d3a76786cc",
+    "norulo_server/ledger_money_totals.py": "552c26b9c14343336f9e858488552e05ce1bd90345e3d2f10422c14634124de1",
+    "norulo_server/ledger_plan_policy.py": "67e6d5044820362ae7957aeeb8fb11eb52281de13fded1075e5da1b48740b3b7",
+    "norulo_server/ledger_recurrence_calendar.py": "21e33ed0fe7c92de453a8839dece749b2a964b0226ef182915843b859234af41",
+    "norulo_server/preview_plan_grants.py": "05f721de80a65033d7154f38a1601393ca96fcf694798b435e2aca9af3a3fa06",
+    "norulo_server/typesafe_client.py": "7a18ee3bd21267e6e18b751902ea55561e6074c7c6d9968fff7d173015e7d903"
+  },
+  "dependencySha256": {
+    "pyproject.toml": "9c7f1c1bc5541a5b33be846e90479b1efa1b251203eac5f6c9ee100548f0999c",
+    "uv.lock": "d8bbd3fca064e356204226ef9970278ef9b176523aaf1bc8c64792620e1fc9b0",
+    "pylock.toml": "d7a3bb80dc3055b5abd8b0bc2414b38c5cd6929f5c19434260a1b5c6654fa54e",
+    "package.json": "ee591b5b146a2cf7dc67f6018b42aa3f7d063fa35ab06ee4f9f382188a24fee1",
+    "package-lock.json": "2f92e86058d50ccbc0fb32c4e20dc67ae9cf0bede05238db32e2e4b5361493b0"
+  },
+  "fixtureEntrySha256": "d3372cbd47d025baa253738444ec8283a81b8da2b4fad45fa81120a8accae89d",
+  "localHttpCap": 24,
+  "localHttpRequestsAttempted": 21,
+  "localHttpRequestsCompleted": 21,
+  "localReservedRowCaps": {
+    "read": 40000,
+    "written": 1000
+  },
+  "nativeStatements": 466,
+  "meteredNativeRowsRead": 1298,
+  "meteredNativeRowsWritten": 201,
+  "integrityProbeNativeRowsRead": 398,
+  "nativeAttemptsObserved": [
+    null
+  ],
+  "nativeAttemptMetadataMissing": true,
+  "allJournalDeltasMatchNativeMeta": true,
+  "delegatedKeyRefreshAndFullRepositoryPage": true,
+  "nativeAesGcmEncryptedPairPersistence": true,
+  "singleUseRotationAndNoopNative": true,
+  "restartRetainsRotatedPair": true,
+  "interruptedClaimNeverRedispatchedAfterRestart": true,
+  "financialAndBindingRowsPreserved": true,
+  "runtimeStopped": true,
+  "remoteApplicationRequests": 0,
+  "remoteD1Operations": 0,
+  "realProviderRequests": 0,
+  "clientRetries": 0,
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "runner": "scripts/check-github-refresh-native-runtime.py --delegated",
+  "cases": [
+    {
+      "name": "setup",
+      "method": "POST",
+      "path": "/_fixture/setup",
+      "status": 200
+    },
+    {
+      "name": "authorize_link",
+      "method": "GET",
+      "path": "/auth/github/authorize",
+      "status": 200
+    },
+    {
+      "name": "callback_saves_encrypted_pair",
+      "method": "GET",
+      "path": "/auth/github/callback",
+      "status": 302
+    },
+    {
+      "name": "read_before_expiry",
+      "method": "GET",
+      "path": "/api/v1/repositories",
+      "status": 200
+    },
+    {
+      "name": "advance_to_expiry",
+      "method": "POST",
+      "path": "/_fixture/advance-clock",
+      "status": 200
+    },
+    {
+      "name": "expired_read_signals_refresh",
+      "method": "GET",
+      "path": "/api/v1/repositories",
+      "status": 200
+    },
+    {
+      "name": "untrusted_origin",
+      "method": "POST",
+      "path": "/integrations/github/refresh",
+      "status": 403
+    },
+    {
+      "name": "cookie_with_bearer_rejected",
+      "method": "POST",
+      "path": "/integrations/github/refresh",
+      "status": 401
+    },
+    {
+      "name": "anonymous_rejected",
+      "method": "POST",
+      "path": "/integrations/github/refresh",
+      "status": 401
+    },
+    {
+      "name": "rotate_once",
+      "method": "POST",
+      "path": "/api/v1/integrations/github/refresh",
+      "status": 200
+    },
+    {
+      "name": "repeat_refresh_no_rotation",
+      "method": "POST",
+      "path": "/api/v1/integrations/github/refresh",
+      "status": 200
+    },
+    {
+      "name": "read_after_rotation",
+      "method": "GET",
+      "path": "/api/v1/repositories",
+      "status": 200
+    },
+    {
+      "name": "stale_session_snapshot_cas",
+      "method": "POST",
+      "path": "/_fixture/rejected-cas",
+      "status": 200
+    },
+    {
+      "name": "stale_user_snapshot_cas",
+      "method": "POST",
+      "path": "/_fixture/rejected-cas",
+      "status": 200
+    },
+    {
+      "name": "restart_reads_rotated_pair",
+      "method": "GET",
+      "path": "/api/v1/repositories",
+      "status": 200
+    },
+    {
+      "name": "advance_rotated_token_to_expiry",
+      "method": "POST",
+      "path": "/_fixture/advance-clock",
+      "status": 200
+    },
+    {
+      "name": "persist_interrupted_claim",
+      "method": "POST",
+      "path": "/_fixture/pending-claim",
+      "status": 200
+    },
+    {
+      "name": "pending_claim_denied",
+      "method": "POST",
+      "path": "/api/v1/integrations/github/refresh",
+      "status": 409
+    },
+    {
+      "name": "advance_claim_beyond_ambiguity_window",
+      "method": "POST",
+      "path": "/_fixture/advance-clock",
+      "status": 200
+    },
+    {
+      "name": "unknown_claim_after_restart_denied",
+      "method": "POST",
+      "path": "/api/v1/integrations/github/refresh",
+      "status": 403
+    },
+    {
+      "name": "final_journal",
+      "method": "GET",
+      "path": "/_fixture/final",
+      "status": 200
+    }
+  ],
+  "limitations": [
+    "Synthetic GitHub HTTPS transport; no real-account credential rotation.",
+    "Native attempt metadata was absent; no attempt count is fabricated.",
+    "Local D1 fixture/setup costs are included; these are not production write costs."
+  ]
+}

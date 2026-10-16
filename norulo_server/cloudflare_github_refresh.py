@@ -5,6 +5,7 @@ and survives restarts or unknown provider/native outcomes without being retried.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Any
 
@@ -85,12 +86,69 @@ async def _current_claim(binding: Any, *, expected: dict, claim: dict) -> tuple[
     return current, snapshot
 
 
+async def _publish_key_user(binding: Any, *, user: dict, expected_json: str,
+                            proof: dict, now: int) -> bool:
+    """Rotate only the actor, fencing the delegated key and ledger membership.
+
+    The user CAS follows the current token generation. A shared ledger's owner
+    snapshot is a separate authorization fence, never a source of credentials.
+    """
+    if proof["actor_user_id"] != user["id"]:
+        return False
+    key = proof["key"]
+    checks = ["""EXISTS(SELECT 1 FROM api_keys WHERE key_hash=? AND user_id=?
+        AND scopes=? AND restrictions=? AND revoked_at IS NULL
+        AND (expires_at IS NULL OR expires_at>=?))"""]
+    values = [hashlib.sha256(proof["token"].encode()).hexdigest(), user["id"],
+              key["scopes"], key["restrictions"], now]
+    workspace = proof["workspace_id"]
+    if workspace != user["id"]:
+        checks.extend(["EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)",
+            """EXISTS(SELECT 1 FROM workspace_members WHERE workspace_id=?
+                AND user_id=? AND role=? AND revision=? AND removed_at IS NULL)"""])
+        values.extend([record_name("users", workspace), proof["owner_user"], workspace,
+                       user["id"], proof["workspace_role"], proof["workspace_revision"]])
+    statement = binding.prepare("""UPDATE app_state SET payload=?,updated_at=?
+        WHERE name=? AND payload=? AND """ + " AND ".join(checks) + " RETURNING name").bind(
+            encode_record("users", user["id"], user), now,
+            record_name("users", user["id"]), expected_json, *values)
+    result = await binding.batch([statement])
+    return len(list(_field(result[0], "results", []))) == 1
+
+
+async def handle_key_github_refresh(*, binding: Any, gateway: Any, method: str,
+                                   headers: dict, body: object, now: int):
+    """Explicit API-key maintenance of the actor's existing GitHub grant."""
+    from .cloudflare_ledger_auth import ledger_principal
+    from .cloudflare_principal import PrincipalAuthError
+    if method != "POST":
+        return 405, {"error": {"code": "METHOD_NOT_ALLOWED"}}
+    if body != {}:
+        return 422, {"error": {"code": "INVALID_INPUT"}}
+    proof = {}
+    try:
+        effective, _, auth, validate = await ledger_principal(binding=binding,
+            headers=headers, scope="projects:read", now=now, proof=proof)
+        snapshot = await binding.batch(auth)
+        validate([part.results for part in snapshot])
+        if proof.get("key") is None:
+            return 401, {"error": {"code": "UNAUTHENTICATED"}}
+        status, payload, _ = await handle_github_refresh(binding=binding, gateway=gateway,
+            session=None, user=effective["_actor"], now=now, key_proof=proof)
+        return status, payload
+    except PrincipalAuthError as error:
+        return error.status, {"error": {"code": error.code}}
+    except GitHubFailure as error:
+        return error.status, {"error": {"code": error.code}}
+
+
 def _error(status: int, code: str):
     return status, {"error": {"code": code}}, {"Cache-Control": "no-store"}
 
 
-async def handle_github_refresh(*, binding: Any, gateway: Any, session: dict, user: dict, now: int):
-    """Called only after a real cookie session and trusted Origin were checked."""
+async def handle_github_refresh(*, binding: Any, gateway: Any, session: dict | None,
+                               user: dict, now: int, key_proof: dict | None = None):
+    """Called after a trusted cookie session or a validated delegated-key proof."""
     claim = user.get("githubTokenRefresh")
     if "githubTokenRefresh" in user:
         started = claim.get("startedAt") if isinstance(claim, dict) else None
@@ -113,15 +171,26 @@ async def handle_github_refresh(*, binding: Any, gateway: Any, session: dict, us
     if validate is not None:
         await validate()
     user_json = await read_record_json(binding, "users", user["id"])
-    _, session_json = await read_session_snapshot(binding, session["id"])
-    if (user_json is None or json.loads(user_json) != user or session_json is None
-            or {**json.loads(session_json), "id": session["id"]} != session):
+    if user_json is None or json.loads(user_json) != user:
         return _error(409, "ACCOUNT_CHANGED")
+    if key_proof is None:
+        if session is None:
+            return _error(401, "UNAUTHENTICATED")
+        _, session_json = await read_session_snapshot(binding, session["id"])
+        if session_json is None or {**json.loads(session_json), "id": session["id"]} != session:
+            return _error(409, "ACCOUNT_CHANGED")
+
+    async def publish(updated, expected):
+        if key_proof is not None:
+            return await _publish_key_user(binding, user=updated, expected_json=expected,
+                                           proof=key_proof, now=now)
+        return await _publish_user(binding, user=updated, expected_json=expected,
+                                  session=session, session_json=session_json, now=now)
+
     from .cloudflare_github_identity_http import _random_urlsafe
     claim = {"id": _random_urlsafe(32), "startedAt": now}
     claimed = {**user, "githubTokenRefresh": claim}
-    if not await _publish_user(binding, user=claimed, expected_json=user_json,
-                               session=session, session_json=session_json, now=now):
+    if not await publish(claimed, user_json):
         return _error(409, "ACCOUNT_CHANGED")
 
     try:
@@ -134,8 +203,7 @@ async def handle_github_refresh(*, binding: Any, gateway: Any, session: dict, us
                 if failure.code == "GITHUB_REAUTHORIZATION_REQUIRED":
                     next_user.pop("githubRefreshToken", None)
                     next_user.pop("githubRefreshTokenExpiresAt", None)
-                await _publish_user(binding, user=next_user, expected_json=snapshot,
-                                    session=session, session_json=session_json, now=now)
+                await publish(next_user, snapshot)
         # Transport, malformed success and unknown D1 outcomes keep the claim.
         raise
     fields = await sealed_token_fields(bundle, gateway, now)
@@ -145,7 +213,6 @@ async def handle_github_refresh(*, binding: Any, gateway: Any, session: dict, us
     if current is None:
         return _error(409, "ACCOUNT_CHANGED")
     next_user = {**{key: value for key, value in current.items() if key not in TOKEN_FIELDS}, **fields}
-    if not await _publish_user(binding, user=next_user, expected_json=snapshot,
-                               session=session, session_json=session_json, now=now):
+    if not await publish(next_user, snapshot):
         return _error(401, "UNAUTHENTICATED")
     return 200, {"ok": True, "refreshed": True}, {"Cache-Control": "no-store"}

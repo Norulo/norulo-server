@@ -253,6 +253,7 @@ class _Application:
             return Response.json(payload, status=status, headers={"Cache-Control": "no-store"})
         if path.startswith(("/api/v1/projects", "/api/v1/categories",
                             "/api/v1/account/",
+                            "/api/v1/integrations/",
                             "/api/v1/expenses", "/api/v1/reports/",
                             "/api/v1/expense-suggestions", "/api/v1/expense-recurring-rules",
                             "/api/v1/recurring-expense-notifications", "/api/v1/workspaces",
@@ -288,7 +289,7 @@ class _Application:
             except (ValueError, UnicodeError):
                 status, payload = 422, {"error": {"code": "INVALID_INPUT"}}
             except Exception as error:
-                if path == "/api/v1/repositories":
+                if path in {"/api/v1/repositories", "/api/v1/integrations/github/refresh"}:
                     status, payload = _identity_failure(self.env, error)
                 else:
                     status, payload = 503, {"error": {"code": "SERVER_UNAVAILABLE"}}
@@ -391,19 +392,34 @@ class _Application:
 
 
 def _identity_failure(env, error):
+    import re
+    import traceback
+    import uuid
+
     status = error.status if isinstance(error, GitHubFailure) else 503
-    payload = {"error": {"code": error.code if isinstance(error, GitHubFailure) else "IDENTITY_UNAVAILABLE"}}
+    code = error.code if isinstance(error, GitHubFailure) else "IDENTITY_UNAVAILABLE"
+    request_id = uuid.uuid4().hex
+    payload = {"error": {"code": code, "requestId": request_id}}
+    # Fixed fields and code locations only. Never stringify exceptions, request
+    # headers, provider bodies, user records or credentials, including in logs.
+    kind = type(error).__name__
+    kind = kind if kind in {"GitHubFailure", "RuntimeError", "TypeError", "ValueError",
+        "KeyError", "AttributeError", "IndexError", "OperationalError", "JsException"} else "UnexpectedError"
+    diagnostic = {"code": "NORULO_IDENTITY_FAILURE", "errorCode": code,
+                  "requestId": request_id, "status": status, "exceptionType": kind}
+    frames = traceback.extract_tb(error.__traceback__)
+    if frames:
+        frame = frames[-1]
+        if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,79}", frame.name):
+            diagnostic.update(site=frame.name, line=frame.lineno)
+    if isinstance(error, GitHubFailure) and error.provider_status is not None:
+        diagnostic["providerStatus"] = error.provider_status
+    print(json.dumps(diagnostic))
     if getattr(env, "NORULO_MODE", "") == "preview":
-        import traceback
-        frames = traceback.extract_tb(error.__traceback__)
-        if frames:
-            frame = frames[-1]
-            payload["error"]["diagnosticSite"] = f"{type(error).__name__}:{frame.name}:{frame.lineno}"
+        if "site" in diagnostic:
+            payload["error"]["diagnosticSite"] = f"{kind}:{diagnostic['site']}:{diagnostic['line']}"
         if isinstance(error, GitHubFailure) and error.provider_status is not None:
             payload["error"]["providerStatus"] = error.provider_status
-        # Only allowlisted codes, function/line and numeric HTTP status. Never
-        # stringify the exception, request, user, provider body or credentials.
-        print(json.dumps({"identityFailure": payload["error"]}))
     return status, payload
 
 

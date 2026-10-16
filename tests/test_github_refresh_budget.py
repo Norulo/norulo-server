@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from norulo_server.cloudflare_github_refresh import _publish_user
-from norulo_server.cloudflare_preview_budget import _input_bound, _tokens, _where_keys, sql_write_bound
+from norulo_server.cloudflare_preview_budget import _input_bound, _tokens, _where_keys, sql_write_bound, _scalar_in_probes
 from norulo_server.cloudflare_preview_schema import INDEX_COUNTS
 from norulo_server.cloudflare_state_records import USER_RECORD_BYTES, encode_record
 from norulo_server.cloudflare_session_adapter import session_storage_id
@@ -23,6 +23,15 @@ class Capture:
     async def batch(self, statements):
         self.statements = statements
         return [SimpleNamespace(results=[{"name": "record:users:owner"}])]
+
+
+def test_repository_binding_cost_covers_absent_index_probes_on_full_pages():
+    sql = 'SELECT github_repo_id FROM ledger_project_repositories WHERE owner_id=? AND github_repo_id IN ('
+    full = sql + ','.join('?' for _ in range(99)) + ') LIMIT 100'
+    assert _scalar_in_probes(_tokens(full)) == 99
+    restricted = sql + ','.join('?' for _ in range(49)) + ') AND project_id IN (' + ','.join('?' for _ in range(50)) + ') LIMIT 100'
+    assert _scalar_in_probes(_tokens(restricted)) == 49 * 50
+    assert _scalar_in_probes(_tokens('SELECT name FROM app_state WHERE name IN (SELECT name FROM app_state)')) == 1
 
 
 def captured_refresh_cas(session_kind='legacy'):

@@ -147,6 +147,27 @@ def _json_size(value):
     return 0
 
 
+def _scalar_in_probes(tokens):
+    """Bound indexed probes for the reviewed repository binding SELECT.
+
+    Native D1 accounts for unsuccessful IN-key probes as rows read, even when
+    the physical binding table is smaller than the requested repository page.
+    Separate scalar IN lists conservatively multiply their probe counts.
+    """
+    bound = 1
+    for index, token in enumerate(tokens[:-2]):
+        if token != "IN" or tokens[index + 1] != "(":
+            continue
+        end = index + 2
+        while end < len(tokens) and tokens[end] != ")":
+            end += 1
+        values = tokens[index + 2:end]
+        if (values and all(value in {"?", "<VALUE>"} for value in values[::2])
+                and values[1::2] == [","] * (len(values) // 2)):
+            bound *= (len(values) + 1) // 2
+    return bound
+
+
 def _expense_json_parameters(sql, *, actors=False):
     """Locate reviewed expense/rule replay JSON in simple scalar INSERTs."""
     tokens = _tokens(sql) if sql else []
@@ -2011,6 +2032,9 @@ class ProductMeteredD1(MeteredD1):
                 # SELECTs have only traversal costs. DML additionally reserves
                 # eight indexed uniqueness/foreign-key probes for scalar rows.
                 per_read = (0 if tokens[0] == "SELECT" else 8) + 3 * max([1] + physical) * max(1, len(physical)) * virtual + 2 * loops * virtual
+                if " ".join(s.sql.lower().split()).startswith(
+                        "select github_repo_id from ledger_project_repositories where owner_id=? and github_repo_id in ("):
+                    per_read *= _scalar_in_probes(tokens)
                 # The pending cap triggers perform one PK-prefix count over at
                 # most ten rows; include catalog/probe margin even on UPDATE.
                 if tokens[0] in {"INSERT", "UPDATE"} and _target(tokens) == "expense_recurring_pending":
