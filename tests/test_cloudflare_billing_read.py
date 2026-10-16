@@ -139,3 +139,19 @@ def test_public_plan_drops_account_if_cookie_revoked_before_combined_batch(tmp_p
     assert payload["plans"][1]["entitlements"]["jev"]["eligible"] is True
     assert payload["plans"][1]["entitlements"]["jev"]["monthlyBudgetUsd"] == "3.00"
     assert binding.batch_count == 1
+
+
+def test_billing_account_normalizes_creem_iso_period_dates():
+    # Creem webhooks carry ISO 8601 dates; Billing must still show them.
+    user = {"billing": {"provider": "creem", "status": "canceling", "plan": "pro", "interval": "month",
+                        "subscriptionId": "sub_iso", "cancelAtPeriodEnd": True,
+                        "currentPeriodStart": "2026-10-16T08:00:00.000Z",
+                        "currentPeriodEnd": "2026-11-16T08:00:00.000Z",
+                        "canceledAt": "2026-10-20T12:30:00Z"},
+            "billingSubscriptionEvents": [{"eventId": "evt_iso", "subscriptionId": "sub_iso",
+                                           "status": "active", "currentPeriodEnd": "2026-11-16T08:00:00Z"}]}
+    account = billing_account_dto(user, "pro", timestamp=1792137600)
+    assert account["currentPeriodStart"] == 1792137600
+    assert account["currentPeriodEnd"] == 1794816000
+    assert account["canceledAt"] == 1792499400
+    assert account["subscriptionEvents"][0]["currentPeriodEnd"] == 1794816000

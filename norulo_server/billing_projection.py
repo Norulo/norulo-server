@@ -1,6 +1,7 @@
 """Pure Billing account DTO over persisted payment facts."""
 from __future__ import annotations
 
+from .account_cycle_rules import timestamp_value
 from .api_key_dto_rules import _timestamp
 from .creem_event_rules import normalize_interval
 
@@ -22,6 +23,12 @@ def _status(value: object) -> str:
     return text if text in _STATUSES else "none"
 
 
+def _period_timestamp(value: object) -> int | None:
+    # Creem sends period and cancellation dates as ISO 8601 strings; stored
+    # facts keep the provider value, so the DTO normalizes to epoch seconds.
+    return timestamp_value(value)
+
+
 def subscription_event_dto(record: dict) -> dict:
     plan = _text(record.get("plan"))
     return {"provider": _text(record.get("provider")),
@@ -32,10 +39,10 @@ def subscription_event_dto(record: dict) -> dict:
         "status": _status(record.get("status")),
         "plan": plan if plan in _PLANS else None,
         "interval": normalize_interval(record.get("interval")),
-        "currentPeriodStart": _timestamp(record.get("currentPeriodStart")),
-        "currentPeriodEnd": _timestamp(record.get("currentPeriodEnd")),
+        "currentPeriodStart": _period_timestamp(record.get("currentPeriodStart")),
+        "currentPeriodEnd": _period_timestamp(record.get("currentPeriodEnd")),
         "cancelAtPeriodEnd": record.get("cancelAtPeriodEnd") if isinstance(record.get("cancelAtPeriodEnd"), bool) else None,
-        "canceledAt": _timestamp(record.get("canceledAt")),
+        "canceledAt": _period_timestamp(record.get("canceledAt")),
         "eventType": _text(record.get("eventType")),
         "eventId": _text(record.get("eventId")),
         "eventCreated": _timestamp(record.get("eventCreated")),
@@ -88,10 +95,10 @@ def billing_account_dto(user: dict, plan: str, *, timestamp=None) -> dict:
         "subscriptionId": _text(current.get("subscriptionId")),
         "subscriptionItemId": _text(current.get("subscriptionItemId")),
         "customerEmail": _text(current.get("customerEmail")),
-        "currentPeriodStart": _timestamp(current.get("currentPeriodStart")),
-        "currentPeriodEnd": _timestamp(current.get("currentPeriodEnd")),
+        "currentPeriodStart": _period_timestamp(current.get("currentPeriodStart")),
+        "currentPeriodEnd": _period_timestamp(current.get("currentPeriodEnd")),
         "cancelAtPeriodEnd": current.get("cancelAtPeriodEnd") if isinstance(current.get("cancelAtPeriodEnd"), bool) else None,
-        "canceledAt": _timestamp(current.get("canceledAt")),
+        "canceledAt": _period_timestamp(current.get("canceledAt")),
         "lastEventId": _text(current.get("lastEventId")),
         "lastEventType": _text(current.get("lastEventType")),
         "lastEventCreated": _timestamp(current.get("lastEventCreated")),
