@@ -1,0 +1,157 @@
+{
+  "feature": "Full GitHub repository pagination, delegated credential renewal and private identity diagnostics",
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "status": "published-and-read-back",
+  "workers": {
+    "norulo-server-production": {
+      "sourceCommit": "61d6b4c9cd1d534668480fd4df163b461418d425",
+      "versionId": "0de13efc-2b50-4a1f-a9f2-03c43a90ecfe",
+      "deploymentId": "6eb40fa1-77ab-4f52-8ba5-e21778baa47a",
+      "trafficPercentage": 100,
+      "publishedAtAsiaShanghai": "2026-10-16T17:29:11.717641+08:00",
+      "domains": [
+        "api.norulo.com"
+      ]
+    },
+    "norulo-connect": {
+      "sourceCommit": "61d6b4c9cd1d534668480fd4df163b461418d425",
+      "versionId": "72a2b938-25fe-4a27-a677-e0981ae7d8fb",
+      "deploymentId": "86b14a12-89a7-4321-8478-da5866dd0c8a",
+      "trafficPercentage": 100,
+      "publishedAtAsiaShanghai": "2026-10-16T17:29:59.757765+08:00",
+      "domains": [
+        "mcp.norulo.com"
+      ]
+    },
+    "norulo-web": {
+      "sourceCommit": "815c4c48efabe51004389ab578ccf08ae980cf70",
+      "versionId": "82b7022a-e1e4-4ca2-9409-fcd56ad9d969",
+      "deploymentId": "6abcc1f7-2866-4e6e-9ae5-8b9fc34196b7",
+      "trafficPercentage": 100,
+      "publishedAtAsiaShanghai": "2026-10-16T17:30:14.767032+08:00",
+      "domains": [
+        "norulo.com",
+        "www.norulo.com"
+      ]
+    }
+  },
+  "validation": {
+    "localServerTestsPassed": 3343,
+    "localServerSubtestsPassed": 107,
+    "localWebTestsPassed": 1989,
+    "localMcpTestsPassed": 23,
+    "nativeLocalEvidence": "github-plugin-access-native-local-2026-10-16.json",
+    "nativeLocalHttpRequests": 21,
+    "serverCanonicalModulesMatched": 65,
+    "serverUploadFilesMatchedDryRun": 731,
+    "connectExecutableBundleByteMatched": true,
+    "sourceMaps": "Connect dry-run sourcemap is a local artifact; it was not uploaded.",
+    "webProductionWorkflow": {
+      "url": "https://github.com/Norulo/norulo-web/actions/runs/38880677890",
+      "conclusion": "success"
+    },
+    "serverSourceCi": {
+      "url": "https://github.com/Norulo/norulo-server/actions/runs/38880663852",
+      "statusAtReadback": "in_progress"
+    },
+    "webAdditionalCi": {
+      "url": "https://github.com/Norulo/norulo-web/actions/runs/38880677599",
+      "statusAtReadback": "in_progress"
+    },
+    "publicReadChecks": [
+      {
+        "url": "https://api.norulo.com/health",
+        "status": 200,
+        "payload": {
+          "ok": true,
+          "service": "norulo-server",
+          "database": {
+            "type": "d1",
+            "configured": true
+          }
+        }
+      },
+      {
+        "url": "https://norulo.com/api/health",
+        "status": 200,
+        "payload": {
+          "ok": true,
+          "service": "norulo-server",
+          "database": {
+            "type": "d1",
+            "configured": true
+          }
+        }
+      },
+      {
+        "url": "https://mcp.norulo.com/health",
+        "status": 200,
+        "payload": {
+          "ok": true,
+          "service": "Norulo OAuth MCP",
+          "version": "2.0.0"
+        }
+      },
+      {
+        "url": "https://norulo.com/openapi/ledger-v1.json",
+        "status": 200,
+        "byteIdentical": true,
+        "refreshOperationPresent": true,
+        "sha256": "5991478e92545f500ef643a53bddb649568bed7becdf95a71c3ae51bec84c4b0"
+      }
+    ],
+    "authenticatedRepositoryRead": {
+      "limit": 100,
+      "ok": true,
+      "githubAccess": "authorized",
+      "items": 100,
+      "nextCursorPresent": true,
+      "previousResult": "503 IDENTITY_UNAVAILABLE"
+    },
+    "authenticatedProjectRead": {
+      "projects": 5,
+      "linkedProjects": 1,
+      "CloudBrowser": "DFerryman/cloudbrowser-mono",
+      "githubAccess": "authorized"
+    }
+  },
+  "preserved": {
+    "allProductionSettingsExceptDeploymentAnnotations": true,
+    "publicVariables": {
+      "server": 19,
+      "connect": 0,
+      "web": 3
+    },
+    "serverSecretNames": [
+      "NORULO_CREEM_API_KEY",
+      "NORULO_CREEM_WEBHOOK_SECRET",
+      "NORULO_EMAIL_CODE_SECRET",
+      "NORULO_GITHUB_CLIENT_SECRET",
+      "NORULO_GITHUB_TOKEN_KEY",
+      "TYPESAFE_API_KEY"
+    ],
+    "webSecretNames": [
+      "NORULO_CF_ANALYTICS_TOKEN"
+    ],
+    "resourceBindingsAndDomains": true,
+    "cron": [
+      "10 16 * * *"
+    ]
+  },
+  "scope": {
+    "schemaMigrationExecuted": false,
+    "remoteSqlApiCalls": 0,
+    "productionFixturesWritten": 0,
+    "authenticatedProductionMutations": 0,
+    "realGitHubCredentialRotationTested": false,
+    "previewDeployed": false,
+    "runtimeD1RowMetrics": "Not exposed by connector/public HTTP responses; no zero-cost claim is made."
+  },
+  "notes": [
+    "Source commits were pushed to main before production publication.",
+    "The Server upload used the inspected live variables, all existing Secret names and the existing daily schedule.",
+    "Frozen vendor package versions matched pylock; the pinned Wrangler directly packaged the validated existing modules.",
+    "Later release-evidence commits change documentation only."
+  ]
+}

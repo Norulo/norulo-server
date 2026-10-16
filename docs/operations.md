@@ -410,3 +410,24 @@ writes or test notifications. Real scheduled financial posting,
 provider notification, native Worker paid AI, shared-team flows and GitHub App
 installation remain separate acceptance items. None requires real charges or
 remote synthetic business writes to prepare safely.
+# GitHub plugin access release, 2026-10-16
+
+Server/MCP source `61d6b4c9cd1d534668480fd4df163b461418d425` and Web contract
+source `815c4c48efabe51004389ab578ccf08ae980cf70` are published at 100% production
+traffic. Repository binding lookups split full pages within one authorized D1
+batch, keeping each statement at or below 100 parameters. The plugin exposes
+explicit actor-scoped GitHub renewal, and unexpected identity failures have
+private correlated diagnostics. See [client behavior](github-plugin-access.md).
+
+The authenticated plugin query with `limit: 100` now returns 100 authorized
+repositories; the previous result was `503 IDENTITY_UNAVAILABLE`. All five
+projects and CloudBrowser's existing association remain present. Local Server
+3,343 tests and 107 subtests, Web 1,989 tests, MCP 23 tests, and 21 native Worker
+requests passed. The Web production workflow succeeded. All 731 Server upload
+files and the MCP executable bundle match the inspected dry-runs.
+
+Production settings, resources, Secrets, domains and the daily cron are unchanged.
+No schema migration or authenticated production mutation was executed; real
+credential rotation is established by local synthetic transport evidence only.
+Exact versions, CI status at readback, native evidence and verification limits
+are in the [release record](validation/github-plugin-access-production-2026-10-16.json).
