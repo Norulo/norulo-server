@@ -1,0 +1,289 @@
+{
+  "date": "2026-10-16",
+  "source": {
+    "server": "75e1c492fff0162ca8addb47a5887f14eed730cb",
+    "web": "82a82d816bc6fb12fda93b51291e440d22e8b581"
+  },
+  "production": {
+    "norulo-server-production": {
+      "deploymentId": "7f7f36bc-f464-41b4-b030-962018902aeb",
+      "createdOn": "2026-10-16T10:35:08.225636Z",
+      "versions": [
+        {
+          "version_id": "f2a77405-19c8-4ef5-936e-ed8630506027",
+          "percentage": 100
+        }
+      ]
+    },
+    "norulo-web": {
+      "deploymentId": "1f616552-a4ee-43e7-b3e0-b902be9041eb",
+      "createdOn": "2026-10-16T10:37:53.676625Z",
+      "versions": [
+        {
+          "version_id": "be5fb290-ecf3-48c1-8c0b-6e438a986fe3",
+          "percentage": 100
+        }
+      ]
+    }
+  },
+  "baseline": {
+    "webStatus": {
+      "httpStatus": 200,
+      "available": false,
+      "reason": "unavailable",
+      "mcpReachable": true
+    },
+    "serverStatus": {
+      "httpStatus": 404,
+      "code": "NOT_FOUND"
+    }
+  },
+  "local": {
+    "serverTests": 3488,
+    "serverSubtests": 107,
+    "webTests": 1992,
+    "lintBuildPackageConfigChecks": "passed",
+    "native": {
+      "localOnly": true,
+      "pythonWorkerHttpFFI": true,
+      "canonicalEntry": true,
+      "canonicalStatusModule": true,
+      "providerTransport": "synthetic intercepted outbound",
+      "d1Bindings": 0,
+      "durableObjectBindings": 0,
+      "cases": [
+        {
+          "kind": "normal",
+          "status": 200,
+          "available": true,
+          "outbound": 3
+        },
+        {
+          "kind": "unconfigured",
+          "status": 200,
+          "available": false,
+          "outbound": 1
+        },
+        {
+          "kind": "scheduler-failure",
+          "status": 200,
+          "available": true,
+          "outbound": 3
+        },
+        {
+          "kind": "rejected",
+          "status": 200,
+          "available": false,
+          "outbound": 3
+        },
+        {
+          "kind": "http-failure",
+          "status": 200,
+          "available": false,
+          "outbound": 3
+        },
+        {
+          "kind": "redirect",
+          "status": 200,
+          "available": false,
+          "outbound": 3
+        },
+        {
+          "kind": "oversized",
+          "status": 200,
+          "available": false,
+          "outbound": 3
+        },
+        {
+          "kind": "timeout",
+          "status": 200,
+          "available": false,
+          "outbound": 3
+        },
+        {
+          "kind": "admission",
+          "status": 503,
+          "available": null,
+          "outbound": 0
+        }
+      ]
+    }
+  },
+  "ci": {
+    "server": {
+      "runId": 38888155195,
+      "conclusion": "success",
+      "tests": 3488
+    },
+    "webDeployment": {
+      "runId": 38888349913,
+      "conclusion": "success",
+      "tests": 1992
+    },
+    "webBrowserRegression": {
+      "runId": 38888349964,
+      "conclusion": "success",
+      "scope": "Chromium/Firefox/WebKit date fields, mobile/tablet, billing, overview, currency, projects, repository picker; dependency audit and Worker syntax"
+    }
+  },
+  "online": {
+    "checks": [
+      {
+        "name": "server-status",
+        "url": "https://api.norulo.com/status/traffic.json",
+        "method": "GET",
+        "status": 200,
+        "headers": {
+          "cacheControl": "public, max-age=300",
+          "hsts": null
+        }
+      },
+      {
+        "name": "web-status",
+        "url": "https://norulo.com/status/traffic.json",
+        "method": "GET",
+        "status": 200,
+        "headers": {
+          "cacheControl": "public, max-age=300",
+          "hsts": "max-age=15552000"
+        }
+      },
+      {
+        "name": "web-status-cached",
+        "url": "https://norulo.com/status/traffic.json?ignored=1",
+        "method": "GET",
+        "status": 200,
+        "headers": {
+          "cacheControl": "public, max-age=300",
+          "hsts": "max-age=15552000"
+        }
+      },
+      {
+        "name": "web-status-head",
+        "url": "https://norulo.com/status/traffic.json",
+        "method": "HEAD",
+        "status": 200,
+        "headers": {
+          "cacheControl": "public, max-age=300",
+          "hsts": "max-age=15552000"
+        }
+      },
+      {
+        "name": "server-status-head",
+        "url": "https://api.norulo.com/status/traffic.json",
+        "method": "HEAD",
+        "status": 200,
+        "headers": {
+          "cacheControl": "public, max-age=300",
+          "hsts": null
+        }
+      },
+      {
+        "name": "web-status-method",
+        "url": "https://norulo.com/status/traffic.json",
+        "method": "POST",
+        "status": 405,
+        "headers": {
+          "cacheControl": "no-store",
+          "hsts": "max-age=15552000"
+        }
+      },
+      {
+        "name": "server-status-method",
+        "url": "https://api.norulo.com/status/traffic.json",
+        "method": "POST",
+        "status": 405,
+        "headers": {
+          "cacheControl": "no-store",
+          "hsts": null
+        }
+      },
+      {
+        "name": "server-health",
+        "url": "https://api.norulo.com/health",
+        "method": "GET",
+        "status": 200,
+        "headers": {
+          "cacheControl": null,
+          "hsts": null
+        }
+      },
+      {
+        "name": "web-health",
+        "url": "https://norulo.com/api/health",
+        "method": "GET",
+        "status": 200,
+        "headers": {
+          "cacheControl": null,
+          "hsts": "max-age=15552000"
+        }
+      },
+      {
+        "name": "server-auth",
+        "url": "https://api.norulo.com/api/v1/me",
+        "method": "GET",
+        "status": 401,
+        "headers": {
+          "cacheControl": "no-store",
+          "hsts": null
+        }
+      },
+      {
+        "name": "web-auth",
+        "url": "https://norulo.com/api/api/v1/me",
+        "method": "GET",
+        "status": 401,
+        "headers": {
+          "cacheControl": "no-store",
+          "hsts": "max-age=15552000"
+        }
+      }
+    ],
+    "cachedWebBodyMatchesFirst": true,
+    "webAndDirectServerBodiesMatch": true,
+    "available": true,
+    "mcpReachable": true,
+    "scheduler": {
+      "lastRunAt": "2026-10-15T16:10:45.000Z",
+      "outcome": "success"
+    }
+  },
+  "uploadVerification": {
+    "server": {
+      "worker": "norulo-server-production",
+      "deployedFiles": 733,
+      "allFilesMatchDryRun": true
+    },
+    "canonicalModuleCount": 67,
+    "web": {
+      "worker": "norulo-web",
+      "newServerProxyMarkerPresent": true,
+      "analyticsCredentialReferencesAbsent": true,
+      "analyticsQueriesAbsent": true,
+      "deployedFiles": {
+        "worker-entry.js": "2b29a7b3dabe6b961cead197911829a025c127b3cec8971952045312ce70afc1"
+      }
+    }
+  },
+  "configuration": {
+    "serverPublicVariables": 20,
+    "webPublicVariables": 2,
+    "analyticsSecretPresentOnServer": true,
+    "webSecretNames": [],
+    "credentialValuesReadOrCopied": false,
+    "existingServerResourcesAndLimitsPreserved": true,
+    "existingWebServiceAssetBindingsPreserved": true,
+    "domainsPreserved": true,
+    "cron": "10 16 * * *",
+    "connectUnchanged": true
+  },
+  "scope": {
+    "migrations": 0,
+    "productionFixtures": 0,
+    "businessWrites": 0,
+    "directProductionD1Queries": 0,
+    "actualProductionRowMetrics": "not exposed by these public status/health/auth endpoints; no row-count estimate claimed",
+    "homepageBrowserAcceptance": "Existing Cloudflare Managed Challenge prevents scripted document verification; published API/status responses and deployed asset bytes passed",
+    "independentMonitor": "Status is Server-hosted; complete Server outages require independent observation"
+  }
+}

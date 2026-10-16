@@ -1,3 +1,32 @@
+# Status monitoring migration, 2026-10-16
+
+Server source `75e1c492fff0162ca8addb47a5887f14eed730cb` is published as
+`f2a77405-19c8-4ef5-936e-ed8630506027`; Web source
+`82a82d816bc6fb12fda93b51291e440d22e8b581` is version
+`be5fb290-ecf3-48c1-8c0b-6e438a986fe3`, both at 100% production traffic.
+Server now owns analytics queries, the credential, MCP probing, aggregation and
+caching. Web forwards only the fixed public GET/HEAD request through its
+existing service binding. The status screen's version-1 contract is unchanged.
+
+The user moved `NORULO_CF_ANALYTICS_TOKEN` to Server and removed it from Web.
+No Secret value was read or copied by release tooling. The public analytics
+account variable moved from Web to Server: current counts are 20 Server vars
+and two Web vars. Existing D1/DO/rate-limit/service/asset bindings, resource
+limits, domains and daily cron are preserved; Connect is unchanged.
+
+Local validation passed 3,488 Server tests plus 107 subtests, 1,992 Web tests,
+and nine native Python Worker scenarios. Exact-code Server CI and the Web
+production workflow passed. Web's complete browser regression and dependency
+audit passed too. All 733 Server upload files match the dry-run,
+including 67 canonical modules. Web code readback confirms the new proxy and
+absence of analytics queries/credential references. Eleven online checks
+passed, including both status endpoints, matching cached bodies, HEAD/method
+handling, health and anonymous auth rejection. Traffic is available, MCP is
+reachable and the latest natural scheduled outcome is successful. No migration,
+production fixture, financial write or direct production D1 query was needed.
+See the [ownership audit](status-monitoring-boundary.md) and
+[production evidence](validation/status-monitoring-production-2026-10-16.json).
+
 # Restricted read pagination release, 2026-10-16
 
 Server source `829467d5d88d0ed9129d4606ff9aa20eadaf0dad` is published as
