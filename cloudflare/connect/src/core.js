@@ -174,7 +174,7 @@ export async function handleAuthorization(request,env,oauth){
   if(workspace&&!idPattern.test(workspace))return json({error:'Invalid workspace'},400);
   const session=await backend(env,'/api/v1/me',{cookie,workspace});
   if(!session.ok){
-    if(session.status!==401)return html('<p class="eyebrow">Connection unavailable</p><h1>Unable to load your ledger</h1><p>The ledger service is temporarily unavailable. Please start authorization again from ChatGPT or Codex later.</p>');
+    if(session.status!==401)return html('<p class="eyebrow">Connection unavailable</p><h1>Unable to load your ledger</h1><p>The ledger service is temporarily unavailable. Please start authorization again from your AI app (such as Claude, ChatGPT or Codex) later.</p>');
     // No session capability is minted here. The existing Norulo login performs its normal verification.
     const login='/login?connect_return='+encodeURIComponent(url.pathname+url.search);
     return new Response(null,{status:303,headers:{Location:'https://norulo.com'+login,'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
@@ -185,7 +185,7 @@ export async function handleAuthorization(request,env,oauth){
     const details=await oauth.describeConsent(authRequest);
     const workspaces=await backend(env,'/api/v1/workspaces',{cookie});
     const projects=await backend(env,'/api/v1/projects?limit=100',{cookie,workspace:me.workspace.id});
-    if(!workspaces.ok||!projects.ok)return html('<p class="eyebrow">Connection unavailable</p><h1>Unable to load access options</h1><p>This connection is not complete. Please start authorization again from ChatGPT or Codex later.</p>');
+    if(!workspaces.ok||!projects.ok)return html('<p class="eyebrow">Connection unavailable</p><h1>Unable to load access options</h1><p>This connection is not complete. Please start authorization again from your AI app (such as Claude, ChatGPT or Codex) later.</p>');
     const consent=await oauth.beginConsent(authRequest);
     // Bind consent to the current Norulo actor and exact ledger, even if the browser signs into another account before POST.
     await env.OAUTH_KV.put('norulo-consent:'+consent.handle,JSON.stringify({userId:me.id,workspaceId:me.workspace.id}),{expirationTtl:600});
@@ -209,7 +209,7 @@ export async function handleAuthorization(request,env,oauth){
   const form=new URLSearchParams(raw),handle=form.get('handle');
   if(!handle||handle.length>512)return json({error:'Invalid consent'},400);
   const saved=await env.OAUTH_KV.get('norulo-consent:'+handle,'json');
-  if(!saved)return html('<p class="eyebrow">Authorization session ended</p><h1>Start authorization again</h1><p>This authorization was already submitted or has expired. If you were not redirected back, return to ChatGPT or Codex and start a new connection.</p>',{},400);
+  if(!saved)return html('<p class="eyebrow">Authorization session ended</p><h1>Start authorization again</h1><p>This authorization was already submitted or has expired. If you were not redirected back, return to your AI app (such as Claude, ChatGPT or Codex) and start a new connection.</p>',{},400);
   if(saved.userId!==me.id||saved.workspaceId!==me.workspace.id)return json({error:'Account or ledger changed; restart authorization.'},403);
   if(form.get('decision')!=='approve'){
     const denied=await oauth.denyConsent(request,handle);await env.OAUTH_KV.delete('norulo-consent:'+handle);

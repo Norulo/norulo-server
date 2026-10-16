@@ -22,7 +22,7 @@ export class Authorization extends WorkerEntrypoint {
     try{return await handleAuthorization(request,this.env,authorizationServer.getOAuthApi(this.env));}
     catch(error){
       if(error instanceof AuthorizationError&&error.redirectTo&&request.method==='GET')return new Response(null,{status:303,headers:{Location:error.redirectTo,'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
-      if(error instanceof AuthorizationError||error instanceof CimdFetchError)return html('<h1>Unable to authorize</h1><p>'+escape(error instanceof AuthorizationError?error.description:'This client could not be verified.')+'</p><p>Return to ChatGPT or Codex and start a new connection.</p>');
+      if(error instanceof AuthorizationError||error instanceof CimdFetchError)return html('<h1>Unable to authorize</h1><p>'+escape(error instanceof AuthorizationError?error.description:'This client could not be verified.')+'</p><p>Return to your AI app (such as Claude, ChatGPT or Codex) and start a new connection.</p>');
       console.error(JSON.stringify({code:'NORULO_AUTHORIZATION_FAILED'}));
       return json({error:'Authorization unavailable. Restart the connection from your client.'},503);
     }
@@ -35,7 +35,7 @@ export default {
     try{
       if(u.pathname==='/mcp'||u.pathname.startsWith('/mcp/')||u.pathname.startsWith('/.well-known/oauth-protected-resource'))return await resourceServer.fetch(request,env,ctx);
       if(u.pathname==='/health')return json({ok:true,service:'Norulo OAuth MCP',version:'2.0.0'});
-      if(u.pathname==='/')return html('<h1>Norulo for ChatGPT &amp; Codex</h1><p>Click Connect in the plugin, sign in to Norulo, and choose the ledger, projects and permissions to allow.</p><section><h2>Add an MCP connection</h2><p><code>https://mcp.norulo.com/mcp</code></p><p>Authentication: OAuth. No API key to copy.</p></section><p><a href="https://norulo.com/api-keys">Manage authorized connections in Norulo</a>. Revoke the corresponding OAuth key to stop its access.</p>');
+      if(u.pathname==='/')return html('<h1>Norulo for AI agents</h1><p>Add Norulo as a custom connector in Claude, ChatGPT or Codex, click Connect, sign in to Norulo, and choose the ledger, projects and permissions to allow.</p><section><h2>Add an MCP connection</h2><p><code>https://mcp.norulo.com/mcp</code></p><p>Authentication: OAuth. No API key to copy.</p></section><p><a href="https://norulo.com/api-keys">Manage authorized connections in Norulo</a>. Revoke the corresponding OAuth key to stop its access.</p>');
       return await authorizationServer.fetch(request,env,ctx);
     }catch{console.error(JSON.stringify({code:'NORULO_OAUTH_REQUEST_FAILED'}));return json({error:'Service unavailable'},503);}
   },

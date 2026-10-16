@@ -23,8 +23,11 @@ shared access and read/write scopes. New OAuth connections do not inherit any
 previous API-key connection's permissions.
 
 The native plugin connects directly to the MCP resource with OAuth; it does not
-need a Sites connection page or an App view. ChatGPT/Codex owns its connection,
-account selection and disconnect controls. Every tool declares its OAuth scopes
+need a Sites connection page or an App view. The host (ChatGPT, Codex or a
+Claude custom connector) owns its connection, account selection and disconnect
+controls. Claude registers through the same DCR endpoint with its callback
+`https://claude.ai/api/mcp/auth_callback`; no Claude-specific client, secret or
+allowlist is configured, and the test suite covers that flow. Every tool declares its OAuth scopes
 in `securitySchemes` (with the compatibility `_meta` mirror). The stable catalog
 includes tools beyond the current grant so the host can discover a needed
 permission; execution checks the exact grant before dispatch. Missing scopes

@@ -242,3 +242,33 @@ test('Modern discovery and list metadata are complete while legacy callers retai
     assert.equal(initialized.protocolVersion,version);assert.equal(initialized.resultType,undefined);
   }
 });
+
+// Claude custom connectors use the same standards path as other hosts: DCR with
+// Claude's callback, PKCE S256, the resource indicator and Streamable HTTP MCP.
+for(const authMethod of ['none','client_secret_post'])test('Claude custom connector completes OAuth and MCP with '+authMethod,async()=>{
+  const {env,ctx}=setup(),callback='https://claude.ai/api/mcp/auth_callback';
+  let r=await worker.fetch(new Request('https://mcp.norulo.com/oauth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_name:'Claude',redirect_uris:[callback,'https://claude.com/api/mcp/auth_callback'],grant_types:['authorization_code','refresh_token'],response_types:['code'],token_endpoint_auth_method:authMethod})}),env,ctx);
+  assert.equal(r.status,201,await r.clone().text());const client=await r.json();
+  assert.equal(Boolean(client.client_secret),authMethod!=='none');
+  const verifier='c'.repeat(64),challenge=Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))).toString('base64url');
+  const u=new URL(AUTHORIZE);u.search=new URLSearchParams({client_id:client.client_id,redirect_uri:callback,response_type:'code',scope:'profile:read projects:read categories:read expenses:read reports:read',resource:RESOURCE,state:'claude-state',code_challenge:challenge,code_challenge_method:'S256'});
+  const handler=new Authorization(ctx,env);r=await handler.fetch(new Request(u,{headers:{Cookie:cookie}}));
+  assert.equal(r.status,200,await r.clone().text());assert.match(r.headers.get('Content-Security-Policy'),/form-action 'self' https:\/\/claude\.ai;/);
+  const page=await r.text();assert.match(page,/Claude/);
+  const form=new URLSearchParams({handle:page.match(/name="handle" value="([^"]+)"/)[1],decision:'approve',project:'project_demo'});
+  for(const s of ['profile:read','projects:read','categories:read','expenses:read','reports:read'])form.append('scope',s);
+  const f=env.NORULO_SERVER.fetch;env.NORULO_SERVER.fetch=req=>{const h=new Headers(req.headers);if(h.get('Cookie')?.startsWith(cookie))h.set('Cookie',cookie);return f(new Request(req,{headers:h}));};
+  r=await handler.fetch(new Request(u,{method:'POST',headers:{Cookie:cookie+'; '+r.headers.getSetCookie().map(c=>c.split(';')[0]).join('; '),Origin:'https://norulo.com','Content-Type':'application/x-www-form-urlencoded'},body:form}));
+  assert.equal(r.status,303,await r.clone().text());const back=new URL(r.headers.get('Location'));
+  assert.equal(back.origin+back.pathname,callback);assert.equal(back.searchParams.get('state'),'claude-state');
+  r=await token(env,ctx,{grant_type:'authorization_code',client_id:client.client_id,...(client.client_secret?{client_secret:client.client_secret}:{}),code:back.searchParams.get('code'),redirect_uri:callback,code_verifier:verifier,resource:RESOURCE});
+  assert.equal(r.status,200,await r.clone().text());const t=await r.json();assert(t.access_token&&t.refresh_token);
+  const mcp=(body,headers={})=>worker.fetch(new Request(RESOURCE,{method:'POST',headers:{Authorization:'Bearer '+t.access_token,'Content-Type':'application/json',Accept:'application/json, text/event-stream',...headers},body:JSON.stringify(body)}),env,ctx);
+  r=await mcp({jsonrpc:'2.0',id:0,method:'initialize',params:{protocolVersion:'2025-06-18',capabilities:{},clientInfo:{name:'claude-ai',version:'0.1.0'}}});
+  assert.equal(r.status,200);assert.equal((await r.json()).result.protocolVersion,'2025-06-18');
+  r=await mcp({jsonrpc:'2.0',method:'notifications/initialized'},{'MCP-Protocol-Version':'2025-06-18'});assert.equal(r.status,202);
+  r=await mcp({jsonrpc:'2.0',id:1,method:'tools/list'},{'MCP-Protocol-Version':'2025-06-18'});assert(((await r.json()).result.tools).some(x=>x.name==='listExpenses'));
+  r=await mcp({jsonrpc:'2.0',id:2,method:'tools/call',params:{name:'get_profile',arguments:{}}},{'MCP-Protocol-Version':'2025-06-18'});
+  assert.deepEqual((await r.json()).result.structuredContent,{id:'user_test',nickname:'Demo ledger'});
+  r=await worker.fetch(new Request(RESOURCE,{headers:{Authorization:'Bearer '+t.access_token,Accept:'text/event-stream'}}),env,ctx);assert.equal(r.status,405,'no server-initiated SSE stream');
+});
