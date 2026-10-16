@@ -1,3 +1,23 @@
+# GitHub account unlinking release, 2026-10-16
+
+Server source `ceac04d6f28f5a56bfd6b8b657708656898690b4` is published as
+`d794e9f0-374b-48b7-8eac-faa980f6b719`; Web source
+`33cd662fe41ea36862910447b3366538ca18ce9b` is version
+`bf18d473-cb4d-43ee-b641-82a775bf2ad6`, both at 100% production traffic.
+GitHub unlinking requires an independently verified email login identity. The
+email, current account, sessions and ledger history remain intact. Pending
+authorization callbacks and refreshes cannot restore a removed connection.
+
+Exact-source Server CI passed all 3,319 tests. The Web production job passed
+all 1,989 tests, lint, build, upload/preflight checks and public health/asset
+verification. Local Settings/App checks, ten unlink browser profiles and
+22 existing account-onboarding Chromium profiles passed. All 731 Server upload
+files match the inspected dry-run, including 65 canonical modules.
+Production settings and the daily cron are unchanged. No migration, remote SQL
+API call, email send or authenticated production unlink was performed. Later
+evidence commits change documentation only. See the
+[production release record](validation/github-account-unlink-production-2026-10-16.json).
+
 # Integrated rounded Jev release, 2026-10-14
 
 The final frontend includes the concurrently published ledger navigation fix

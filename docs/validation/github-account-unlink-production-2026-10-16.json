@@ -1,0 +1,186 @@
+{
+  "feature": "Verified-email GitHub account unlinking",
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "status": "published-and-read-back",
+  "workers": {
+    "norulo-server-production": {
+      "sourceCommit": "ceac04d6f28f5a56bfd6b8b657708656898690b4",
+      "versionId": "d794e9f0-374b-48b7-8eac-faa980f6b719",
+      "deploymentId": "7f7c3e61-27f5-474b-a2ca-b4b16732d82c",
+      "trafficPercentage": 100,
+      "publishedAtAsiaShanghai": "2026-10-16T16:38:54.392053+08:00",
+      "previousVersionId": "e6b399db-4562-4a7b-bbfe-0cbe9a5dc202",
+      "domains": [
+        "api.norulo.com"
+      ]
+    },
+    "norulo-web": {
+      "sourceCommit": "33cd662fe41ea36862910447b3366538ca18ce9b",
+      "versionId": "bf18d473-cb4d-43ee-b641-82a775bf2ad6",
+      "deploymentId": "d15264fb-7bc0-4b68-8f6a-5264412d299e",
+      "trafficPercentage": 100,
+      "publishedAtAsiaShanghai": "2026-10-16T16:39:23.173074+08:00",
+      "previousVersionId": "399120c5-d2d5-461d-8484-28d29043a246",
+      "domains": [
+        "norulo.com",
+        "www.norulo.com"
+      ]
+    }
+  },
+  "behavior": {
+    "requiresVerifiedEmailIdentityForGitHubUnlink": true,
+    "emailRemainsPermanentlyLinked": true,
+    "preservesAccountIdSessionsLedgersProjectsExpensesMembershipsApiKeysAndBilling": true,
+    "fencesPendingOAuthCallbacksAndRefreshes": true,
+    "standaloneGitHubLoginCannotRecoverDetachedEmailAccount": true
+  },
+  "validation": {
+    "serverCi": {
+      "url": "https://github.com/Norulo/norulo-server/actions/runs/38874881461",
+      "conclusion": "success",
+      "testsPassed": 3319
+    },
+    "webDeploymentJob": {
+      "url": "https://github.com/Norulo/norulo-web/actions/runs/38874895847",
+      "conclusion": "success",
+      "testsPassed": 1989,
+      "testFilesPassed": 95,
+      "lintBuildConfigDryRunAndPreflightPassed": true
+    },
+    "additionalWebCi": {
+      "url": "https://github.com/Norulo/norulo-web/actions/runs/38874895714",
+      "statusAtReadback": "in_progress"
+    },
+    "localFinalSettingsAndAppTestsPassed": 119,
+    "localUnlinkBrowserProfilesPassed": 10,
+    "localExistingOnboardingChromiumProfilesPassed": 22,
+    "serverCanonicalModulesMatched": 65,
+    "serverUploadFilesMatchedDryRunByteForByte": 731,
+    "blankPackageMarker": "Matches the existing packager policy",
+    "directAndProxiedHealthFromDeploymentJob": "passed",
+    "deployedAssetsByteMatchedByDeploymentJob": [
+      "catalog-CB_8youO.js",
+      "catalog-CdHrIQB9.js",
+      "catalog-DX5Htxk3.js",
+      "catalog-Z0u_vM7z.js",
+      "catalog-nqpNXnuU.js",
+      "index-B-X4-NJa.css",
+      "index-CcChHqrq.js",
+      "plugins-C1qOvTYq.js"
+    ],
+    "independentAnonymousGetChecks": [
+      {
+        "url": "https://api.norulo.com/health",
+        "status": 200,
+        "payload": {
+          "ok": true,
+          "service": "norulo-server",
+          "database": {
+            "type": "d1",
+            "configured": true
+          }
+        }
+      },
+      {
+        "url": "https://norulo.com/api/health",
+        "status": 200,
+        "payload": {
+          "ok": true,
+          "service": "norulo-server",
+          "database": {
+            "type": "d1",
+            "configured": true
+          }
+        }
+      },
+      {
+        "url": "https://api.norulo.com/auth/session",
+        "status": 200,
+        "payload": {
+          "authenticated": false,
+          "user": null,
+          "github": {
+            "identityConnected": false,
+            "repositoriesConnected": false
+          }
+        }
+      },
+      {
+        "url": "https://api.norulo.com/integrations/github",
+        "status": 405,
+        "payload": {
+          "error": {
+            "code": "METHOD_NOT_ALLOWED"
+          }
+        }
+      },
+      {
+        "url": "https://norulo.com/api/integrations/github",
+        "status": 405,
+        "payload": {
+          "error": {
+            "code": "METHOD_NOT_ALLOWED"
+          }
+        }
+      },
+      {
+        "url": "https://norulo.com/assets/settings-DMYedjGg.js",
+        "status": 200,
+        "byteIdentical": true,
+        "sha256": "9611f6e02bb62e1a35a58935205e460e88df87e13399cc5136a0f4315ecf4c5c"
+      },
+      {
+        "url": "https://norulo.com/assets/settings-_c03yQSu.css",
+        "status": 200,
+        "byteIdentical": true,
+        "sha256": "1fcc86ae4480684dfa525329c33c91494bc3b12ee0b25558fef2b3ad471cdd72"
+      },
+      {
+        "url": "https://norulo.com/openapi/ledger-v1.json",
+        "status": 200,
+        "byteIdentical": true,
+        "unlinkOperationPresent": true
+      }
+    ],
+    "homepage": "Existing Cloudflare Managed Challenge; deployment job recognizes the explicit cf-mitigated challenge signal.",
+    "initialDefaultPythonClientProbe": "Blocked with HTTP 403 / Cloudflare error 1010. The existing repository production-monitor client profile subsequently passed the bounded read-only checks."
+  },
+  "preserved": {
+    "serverPublicVariables": 19,
+    "serverSecretNames": [
+      "NORULO_CREEM_API_KEY",
+      "NORULO_CREEM_WEBHOOK_SECRET",
+      "NORULO_EMAIL_CODE_SECRET",
+      "NORULO_GITHUB_CLIENT_SECRET",
+      "NORULO_GITHUB_TOKEN_KEY",
+      "TYPESAFE_API_KEY"
+    ],
+    "webSecretNames": [
+      "NORULO_CF_ANALYTICS_TOKEN"
+    ],
+    "allBindingsCompatibilityFlagsLimitsObservabilityAndDomainsUnchanged": true,
+    "serverSchedulesUnchanged": true,
+    "cron": [
+      "10 16 * * *"
+    ]
+  },
+  "scope": {
+    "schemaMigrationExecuted": false,
+    "remoteSqlApiCalls": 0,
+    "productionTestFixturesWritten": 0,
+    "authenticatedCustomerMutations": 0,
+    "emailSendsOrProviderEvaluations": 0,
+    "manualSchedulerInvocations": 0,
+    "githubAppRegistrationChanges": 0,
+    "previewDeployed": false,
+    "runtimeD1RowMetrics": "Not exposed by public HTTP responses; no zero-cost claim is made."
+  },
+  "notes": [
+    "Both source commits were pushed to main before production publication.",
+    "Server deployed with inspected current production public variables, all six required Secret names and the existing daily schedule.",
+    "Web deployed once through the existing GitHub Actions production workflow.",
+    "Later release-evidence commits change documentation only.",
+    "No authenticated real-account unlink acceptance was executed; identity lifecycle behavior is established by local synthetic tests."
+  ]
+}
