@@ -49,6 +49,7 @@ from norulo_server.cloudflare_preview_schema import SCHEMA_VERSION
 from norulo_server.cloudflare_preview_business_clear import business_clear_pending, clear_preview_business, business_clear_receipt
 from norulo_server.cloudflare_preview_rate import PreviewRateLimiter, PreviewRateLimit, EmailRateLimiter, EmailRateLimit, request_channel
 from norulo_server.cloudflare_native_d1 import NativeD1
+from norulo_server.cloudflare_status_traffic import STATUS_TRAFFIC_PATH, status_traffic
 from norulo_server.json_input import validate_json_unicode, decode_json_body
 from norulo_server.preview_plan_grants import (
     PreviewPlanGrantError, apply_preview_plan_grant, parse_preview_plan_grant_request,
@@ -500,6 +501,13 @@ class Default(WorkerEntrypoint):
                 log_recurring_receipt("returned", result=result, scheduled_time=scheduled)
 
     async def fetch(self, request):
+        if urlsplit(str(request.url)).path == STATUS_TRAFFIC_PATH:
+            admitted = await api_admission(self.env, request)
+            if admitted is not None:
+                status, payload, headers = admitted
+                return Response.json(payload, status=status, headers=headers)
+            status, body, headers = await status_traffic(str(request.method), self.env)
+            return Response(body, status=status, headers=headers)
         if str(getattr(self.env, "NORULO_D1_ACCESS_ENABLED", "0")) != "1":
             return _unavailable("D1_ACCESS_PAUSED")
         mode = getattr(self.env, "NORULO_MODE", "")

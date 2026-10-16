@@ -57,6 +57,7 @@ MODULES = (
     "cloudflare_project_repositories",
     "cloudflare_project_erasure",
     "cloudflare_session_adapter",
+    "cloudflare_status_traffic",
     "cloudflare_state_records",
     "cloudflare_webhook_receipts",
     "cloudflare_workspaces",

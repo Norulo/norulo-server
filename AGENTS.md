@@ -1,5 +1,18 @@
 # Norulo Server
 
+## 2026-10-16 status monitoring boundary
+
+Server owns /status/traffic.json and cloudflare_status_traffic.py. This public
+GET/HEAD route retains production frequency admission before provider work,
+but runs before D1/DO and product activation checks. Analytics uses optional
+NORULO_CF_ANALYTICS_TOKEN plus public NORULO_CF_ACCOUNT_ID; no ledger writes.
+Keep fixed provider URLs, time/body bounds and redacted diagnostics. Public
+responses contain relative levels only. Cache serialized public data, never
+cross-request IO promises; preserve expiry across isolate/edge cache hits.
+The user moved the same-named analytics Secret to Server; read fresh names
+before uploads. The production account variable raises Server's current public
+variable count to 20; inherit existing Secrets and resources from live settings.
+
 ## 2026-10-16 project-grant read queries
 
 Project, expense and recurring-rule lists, reports and CSV export use the

@@ -41,6 +41,7 @@
     }
   ],
   "vars": {
+    "NORULO_CF_ACCOUNT_ID": "84e421f26c708c0cf437e287eed11fa1",
     "NORULO_D1_ACCESS_ENABLED": "0",
     "NORULO_MODE": "production",
     "NORULO_PREVIEW_SCHEMA_V11_UPGRADE_ENABLED": "0",
