@@ -223,18 +223,18 @@ async def _http(binding, gateway, method, identifier, headers, params, body, now
         if project:
             clauses.append("project_id=?")
             values.append(project)
-        from .cloudflare_ledger_reports import restriction_filter
+        from .cloudflare_ledger_filters import restriction_filters, merge_page
         user, restrictions, auth, validate = await ledger_principal(
             binding=binding, headers=headers, scope="expenses:read", now=now)
         if ((target == "shared" and not restrictions.get("shared"))
                 or (project and not target_allowed(restrictions, "project", project))):
             return _error(403, "TARGET_FORBIDDEN")
-        restricted, restricted_values = restriction_filter(restrictions)
-        parts = await binding.batch([*auth, binding.prepare("SELECT * FROM expense_recurring_rules WHERE " +
+        parts = await binding.batch([*auth, *[binding.prepare("SELECT * FROM expense_recurring_rules WHERE " +
             " AND ".join(clauses) + " " + restricted + " ORDER BY id LIMIT ?").bind(
-                user["id"], *values, *restricted_values, limit + 1)])
+                user["id"], *values, *restricted_values, limit + 1)
+            for restricted, restricted_values in restriction_filters(restrictions)]])
         validate([part.results for part in parts[:len(auth)]])
-        found = parts[-1].results
+        found = merge_page(parts[len(auth):], limit + 1)
         items = found[:limit]
         pending_parts = []
         for offset in range(0, len(items), 32):

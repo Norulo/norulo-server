@@ -267,7 +267,8 @@ async def _read(binding, headers, params, item_id, now):
         if not target_allowed(restrictions, row["target_kind"], row["project_id"]):
             return _error(403, "TARGET_FORBIDDEN")
         return 200, _dto(row)
-    from .cloudflare_ledger_reports import expense_filter, restriction_filter
+    from .cloudflare_ledger_reports import expense_filter
+    from .cloudflare_ledger_filters import restriction_filters, merge_page
     try:
         where, values, limit, cursor = expense_filter(params, paged=True)
     except ValueError:
@@ -278,13 +279,13 @@ async def _read(binding, headers, params, item_id, now):
             _param(params, "projectId") and not target_allowed(
                 restrictions, "project", _param(params, "projectId"))):
         return _error(403, "TARGET_FORBIDDEN")
-    restricted, restricted_values = restriction_filter(restrictions)
-    parts = await binding.batch([*auth, binding.prepare(
+    parts = await binding.batch([*auth, *[binding.prepare(
         "SELECT * FROM expenses WHERE owner_id=? AND deleted_at IS NULL " + where +
         " " + restricted + " AND id>? ORDER BY id LIMIT ?").bind(
-        user["id"], *values, *restricted_values, cursor, limit + 1)])
+        user["id"], *values, *restricted_values, cursor, limit + 1)
+        for restricted, restricted_values in restriction_filters(restrictions)]])
     validate([part.results for part in parts[:len(auth)]])
-    items = parts[-1].results
+    items = merge_page(parts[len(auth):], limit + 1)
     page = items[:limit]
     return 200, {"items": [_dto(row) for row in page],
                  "nextCursor": page[-1]["id"] if len(items) > limit else None}

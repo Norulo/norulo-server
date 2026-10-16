@@ -1,0 +1,717 @@
+{
+  "passed": true,
+  "localOnly": true,
+  "remoteWrites": 0,
+  "canonicalPythonHandlers": true,
+  "nativeD1": true,
+  "pythonWorkerHttpFFI": false,
+  "fixtureSetup": {
+    "statements": 399,
+    "rowsRead": 84,
+    "rowsWritten": 2130
+  },
+  "cases": [
+    {
+      "path": "/api/v1/projects",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 3,
+      "nativeRowsRead": 968,
+      "nativeRowsWritten": 0,
+      "reservedRead": 12078
+    },
+    {
+      "path": "/api/v1/expenses",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 100,
+      "nativeRowsRead": 696,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/expense-recurring-rules",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 3,
+      "nativeRowsRead": 20,
+      "nativeRowsWritten": 0,
+      "reservedRead": 10971
+    },
+    {
+      "path": "/api/v1/reports/summary",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 10,
+      "nativeRowsRead": 1095,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/timeseries",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 6,
+      "nativeRowsRead": 1095,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/categories",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 6,
+      "nativeRowsRead": 1095,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/expenses/export",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 233,
+      "nativeRowsRead": 862,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/expenses",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": true,
+      "status": 200,
+      "rows": 52,
+      "nativeRowsRead": 368,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/summary",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": true,
+      "status": 200,
+      "rows": 3,
+      "nativeRowsRead": 265,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/timeseries",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": true,
+      "status": 200,
+      "rows": 1,
+      "nativeRowsRead": 265,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/categories",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": true,
+      "status": 200,
+      "rows": 1,
+      "nativeRowsRead": 265,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/expenses/export",
+      "projectGrant": 100,
+      "shared": false,
+      "filtered": true,
+      "status": 200,
+      "rows": 52,
+      "nativeRowsRead": 265,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/projects",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 3,
+      "nativeRowsRead": 968,
+      "nativeRowsWritten": 0,
+      "reservedRead": 12078
+    },
+    {
+      "path": "/api/v1/expenses",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 100,
+      "nativeRowsRead": 559,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/expense-recurring-rules",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 4,
+      "nativeRowsRead": 21,
+      "nativeRowsWritten": 0,
+      "reservedRead": 10980
+    },
+    {
+      "path": "/api/v1/reports/summary",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 12,
+      "nativeRowsRead": 1172,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/timeseries",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 8,
+      "nativeRowsRead": 1172,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/categories",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 8,
+      "nativeRowsRead": 1172,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/expenses/export",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 310,
+      "nativeRowsRead": 1031,
+      "nativeRowsWritten": 0,
+      "reservedRead": 1127070
+    },
+    {
+      "path": "/api/v1/expenses",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": true,
+      "status": 200,
+      "rows": 52,
+      "nativeRowsRead": 368,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/summary",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": true,
+      "status": 200,
+      "rows": 3,
+      "nativeRowsRead": 265,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/timeseries",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": true,
+      "status": 200,
+      "rows": 1,
+      "nativeRowsRead": 265,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/reports/categories",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": true,
+      "status": 200,
+      "rows": 1,
+      "nativeRowsRead": 265,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/expenses/export",
+      "projectGrant": 100,
+      "shared": true,
+      "filtered": true,
+      "status": 200,
+      "rows": 52,
+      "nativeRowsRead": 265,
+      "nativeRowsWritten": 0,
+      "reservedRead": 563544
+    },
+    {
+      "path": "/api/v1/projects",
+      "projectGrant": 0,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 0,
+      "nativeRowsRead": 862,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/expenses",
+      "projectGrant": 0,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 0,
+      "nativeRowsRead": 4,
+      "nativeRowsWritten": 0,
+      "reservedRead": 144
+    },
+    {
+      "path": "/api/v1/expense-recurring-rules",
+      "projectGrant": 0,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 0,
+      "nativeRowsRead": 4,
+      "nativeRowsWritten": 0,
+      "reservedRead": 144
+    },
+    {
+      "path": "/api/v1/reports/summary",
+      "projectGrant": 0,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 0,
+      "nativeRowsRead": 4,
+      "nativeRowsWritten": 0,
+      "reservedRead": 144
+    },
+    {
+      "path": "/api/v1/reports/timeseries",
+      "projectGrant": 0,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 0,
+      "nativeRowsRead": 4,
+      "nativeRowsWritten": 0,
+      "reservedRead": 144
+    },
+    {
+      "path": "/api/v1/reports/categories",
+      "projectGrant": 0,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 0,
+      "nativeRowsRead": 4,
+      "nativeRowsWritten": 0,
+      "reservedRead": 144
+    },
+    {
+      "path": "/api/v1/expenses/export",
+      "projectGrant": 0,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 0,
+      "nativeRowsRead": 4,
+      "nativeRowsWritten": 0,
+      "reservedRead": 144
+    },
+    {
+      "path": "/api/v1/projects",
+      "projectGrant": 0,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 0,
+      "nativeRowsRead": 862,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/expenses",
+      "projectGrant": 0,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 77,
+      "nativeRowsRead": 316,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/expense-recurring-rules",
+      "projectGrant": 0,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 1,
+      "nativeRowsRead": 10,
+      "nativeRowsWritten": 0,
+      "reservedRead": 261
+    },
+    {
+      "path": "/api/v1/reports/summary",
+      "projectGrant": 0,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 4,
+      "nativeRowsRead": 158,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/reports/timeseries",
+      "projectGrant": 0,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 2,
+      "nativeRowsRead": 158,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/reports/categories",
+      "projectGrant": 0,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 2,
+      "nativeRowsRead": 158,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/expenses/export",
+      "projectGrant": 0,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 77,
+      "nativeRowsRead": 316,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/projects",
+      "projectGrant": null,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 4,
+      "nativeRowsRead": 868,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5841
+    },
+    {
+      "path": "/api/v1/expenses",
+      "projectGrant": null,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 100,
+      "nativeRowsRead": 239,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/expense-recurring-rules",
+      "projectGrant": null,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 4,
+      "nativeRowsRead": 17,
+      "nativeRowsWritten": 0,
+      "reservedRead": 288
+    },
+    {
+      "path": "/api/v1/reports/summary",
+      "projectGrant": null,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 11,
+      "nativeRowsRead": 709,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/reports/timeseries",
+      "projectGrant": null,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 7,
+      "nativeRowsRead": 709,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/reports/categories",
+      "projectGrant": null,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 7,
+      "nativeRowsRead": 709,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/expenses/export",
+      "projectGrant": null,
+      "shared": false,
+      "filtered": false,
+      "status": 200,
+      "rows": 234,
+      "nativeRowsRead": 551,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/projects",
+      "projectGrant": null,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 4,
+      "nativeRowsRead": 868,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5841
+    },
+    {
+      "path": "/api/v1/expenses",
+      "projectGrant": null,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 100,
+      "nativeRowsRead": 181,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/expense-recurring-rules",
+      "projectGrant": null,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 5,
+      "nativeRowsRead": 18,
+      "nativeRowsWritten": 0,
+      "reservedRead": 297
+    },
+    {
+      "path": "/api/v1/reports/summary",
+      "projectGrant": null,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 13,
+      "nativeRowsRead": 862,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/reports/timeseries",
+      "projectGrant": null,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 9,
+      "nativeRowsRead": 862,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/reports/categories",
+      "projectGrant": null,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 9,
+      "nativeRowsRead": 862,
+      "nativeRowsWritten": 0,
+      "reservedRead": 5778
+    },
+    {
+      "path": "/api/v1/expenses/export",
+      "projectGrant": null,
+      "shared": true,
+      "filtered": false,
+      "status": 200,
+      "rows": 311,
+      "nativeRowsRead": 554,
+      "nativeRowsWritten": 0,
+      "reservedRead": 11538
+    }
+  ],
+  "requests": 52,
+  "nativeStatements": 366,
+  "nativeRowsRead": 25655,
+  "nativeRowsWritten": 0,
+  "maximumParameters": 59,
+  "nativeAccountingCoveredEveryRead": true,
+  "completeResponsesMatchSQLite": true,
+  "csvMoneyAndOrderMatchFixture": true,
+  "feature": "D1 parameter limits for restricted ledger reads and empty CSV grants",
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "verification": {
+    "referencePython": "3.10.12",
+    "fullSuitePassed": 3436,
+    "finalFocusedPassed": 116,
+    "additionalTestsAfterFullCollection": 23,
+    "uniqueServerTestsVerified": 3459,
+    "mcpTestsPassed": 23,
+    "preChangeLocalRequests": 225,
+    "preChangeLocalParameterFailures": 59,
+    "preChangeLocalEmptyCsvFailures": 1,
+    "postChangeLocalRequests": 225,
+    "postChangeLocalSqlErrors": 0,
+    "preChangeProductionSelectFailures": [
+      {
+        "name": "projects",
+        "parameterCount": 103,
+        "success": false,
+        "errors": [
+          {
+            "code": 7500,
+            "message": "too many SQL variables at offset 287: SQLITE_ERROR"
+          }
+        ],
+        "statements": []
+      },
+      {
+        "name": "expenses",
+        "parameterCount": 103,
+        "success": false,
+        "errors": [
+          {
+            "code": 7500,
+            "message": "too many SQL variables at offset 569: SQLITE_ERROR"
+          }
+        ],
+        "statements": []
+      },
+      {
+        "name": "recurring",
+        "parameterCount": 103,
+        "success": false,
+        "errors": [
+          {
+            "code": 7500,
+            "message": "too many SQL variables at offset 303: SQLITE_ERROR"
+          }
+        ],
+        "statements": []
+      },
+      {
+        "name": "summary",
+        "parameterCount": 101,
+        "success": false,
+        "errors": [
+          {
+            "code": 7500,
+            "message": "too many SQL variables at offset 681: SQLITE_ERROR"
+          }
+        ],
+        "statements": []
+      },
+      {
+        "name": "csv-first",
+        "parameterCount": 101,
+        "success": false,
+        "errors": [
+          {
+            "code": 7500,
+            "message": "too many SQL variables at offset 607: SQLITE_ERROR"
+          }
+        ],
+        "statements": []
+      },
+      {
+        "name": "csv-next",
+        "parameterCount": 103,
+        "success": false,
+        "errors": [
+          {
+            "code": 7500,
+            "message": "too many SQL variables at offset 630: SQLITE_ERROR"
+          }
+        ],
+        "statements": []
+      },
+      {
+        "name": "csv-empty",
+        "parameterCount": 1,
+        "success": false,
+        "errors": [
+          {
+            "code": 7500,
+            "message": "no query solution: SQLITE_ERROR"
+          }
+        ],
+        "statements": []
+      }
+    ],
+    "pythonWorkerHttpFfi": {
+      "passed": true,
+      "localHttpRequestsCompleted": 21,
+      "nativeStatements": 466,
+      "meteredNativeRowsRead": 1298,
+      "meteredNativeRowsWritten": 201,
+      "integrityProbeNativeRowsRead": 398,
+      "runtimeStopped": true
+    }
+  },
+  "sourceSha256": {
+    "norulo_server/cloudflare_ledger_filters.py": "486a1dca05caec585652f73a54eabc0bb1adbba1db8253ac338431bf713c5dd2",
+    "norulo_server/cloudflare_ledger_api.py": "c2f0d6b9bb2071f592c1ee297322bc1041de899f5bc77e49c88dbae241eecea9",
+    "norulo_server/cloudflare_ledger_expenses.py": "2b61fe8007e9e74887e10df71c50cfc4efab33fc0d08d84a72feaf9d2c3485db",
+    "norulo_server/cloudflare_ledger_recurring.py": "93be1a5bbf2c8f36ada4b0b25c29fa625a9219f0e0a056d011599a3e95e7a8c3",
+    "norulo_server/cloudflare_ledger_reports.py": "1f618ba44f2b4443617b1f886e062748ff175c48c2157c3709ce4456cc1e7500",
+    "norulo_server/cloudflare_preview_budget.py": "8d333c4c54da88e66a53f13376b5a8d9fcd495100369b099e0b1df9ada7258d1",
+    "scripts/check-ledger-read-native-runtime.py": "b08736b48a6369cc94c1cff013a1297bb6d9f8833c7dee6a781e492b9dc7af7c",
+    "scripts/check-ledger-read-native-runtime.cjs": "5fa03e0cb48ad3f88d96ea8d7bd022890d0ba3781f229dad7dbe7f7ff9179e9c",
+    "tests/test_ledger_read_parameter_limits.py": "403df6b53539e1bbcb3306ceb10e2c33b8fd02e61fc0e2b19ecf3a7ae8b1856e"
+  }
+}

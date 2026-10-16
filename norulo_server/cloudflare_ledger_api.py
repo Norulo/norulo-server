@@ -350,25 +350,29 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
             return _error(422, "INVALID_INPUT")
         user, restrictions, auth, validate = await ledger_principal(
             binding=binding, headers=headers, scope=scope, now=now)
-        project_ids = restrictions.get("projectIds")
-        visible = "" if project_ids is None else (
-            " AND id IN (" + ",".join("?" for _ in project_ids) + ")" if project_ids else " AND 0")
+        from .cloudflare_ledger_filters import project_filters, merge_page
+        filters = project_filters(restrictions.get("projectIds"), column="id")
         date_where = (" AND occurred_on>=?" if start else "") + (" AND occurred_on<?" if end else "")
         date_values = ([start] if start else []) + ([end] if end else [])
         from .cloudflare_ledger_reports import VISIBLE_EXPENSE_TARGET_SQL
-        commands = [binding.prepare("SELECT * FROM ledger_projects WHERE owner_id=? AND deleted_at IS NULL AND id>?" +
+        project_queries = [binding.prepare("SELECT * FROM ledger_projects WHERE owner_id=? AND deleted_at IS NULL AND id>?" +
             visible + " ORDER BY id LIMIT ?").bind(user["id"], cursor,
-                *(project_ids or []), limit + 1),
+                *project_ids, limit + 1) for visible, project_ids in filters]
+        commands = [*project_queries,
             binding.prepare(f"""SELECT project_id,currency,{AGGREGATE_SQL} FROM expenses
             WHERE owner_id=? AND deleted_at IS NULL """ + VISIBLE_EXPENSE_TARGET_SQL + date_where +
                 " GROUP BY project_id,currency").bind(user["id"], *date_values),
-            binding.prepare("""SELECT * FROM ledger_project_repositories
+            *[binding.prepare("""SELECT * FROM ledger_project_repositories
                 WHERE owner_id=? AND project_id>?""" + visible.replace("id IN", "project_id IN") +
                 " ORDER BY project_id,github_repo_id LIMIT ?").bind(
-                    user["id"], cursor, *(project_ids or []), (limit + 1) * MAX_REPOSITORIES)]
+                    user["id"], cursor, *project_ids, (limit + 1) * MAX_REPOSITORIES)
+              for visible, project_ids in filters]]
         rows = await binding.batch([*auth, *commands])
         validate([part.results for part in rows[:len(auth)]])
-        projects, totals, bindings = [part.results for part in rows[len(auth):]]
+        found = rows[len(auth):]
+        projects = merge_page(found[:len(project_queries)], limit + 1)
+        totals = found[len(project_queries)].results
+        bindings = [row for part in found[len(project_queries) + 1:] for row in part.results]
         page = projects[:limit]
         by_project = {}
         for total in totals:

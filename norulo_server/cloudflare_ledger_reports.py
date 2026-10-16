@@ -48,6 +48,7 @@ class CsvExport:
 
 from .cloudflare_ledger_api import _error, _page_inputs, _param, _valid_resource_id
 from .cloudflare_ledger_auth import ledger_principal, target_allowed
+from .cloudflare_ledger_filters import restriction_filters, merge_page
 from .cloudflare_principal import PrincipalAuthError
 from .ledger_money_totals import AGGREGATE_SQL, aggregate_minor, public_minor
 
@@ -95,18 +96,6 @@ def expense_filter(params: Mapping[str, object], *, paged: bool = False):
     return " ".join(clauses), values
 
 
-def restriction_filter(restrictions: dict):
-    project_ids = restrictions.get("projectIds")
-    shared = restrictions.get("shared") is True
-    if project_ids is None:
-        return ("", []) if shared else ("AND target_kind='project'", [])
-    if not project_ids:
-        return ("AND target_kind='shared'", []) if shared else ("AND 0", [])
-    slots = ",".join("?" for _ in project_ids)
-    return (f"AND (project_id IN ({slots}) OR target_kind='shared')", project_ids) if shared else (
-        f"AND project_id IN ({slots})", project_ids)
-
-
 def _csv_cell(value):
     text = "" if value is None else str(value)
     stripped = text.lstrip(" \t\r\n")
@@ -135,7 +124,7 @@ async def handle_report_request(*, binding, method, path, headers, params, now):
                 _param(params, "projectId") and not target_allowed(
                     restrictions, "project", _param(params, "projectId"))):
             return _error(403, "TARGET_FORBIDDEN")
-        restricted, restricted_values = restriction_filter(restrictions)
+        filters = restriction_filters(restrictions)
         if is_export:
             # Keep every page on the owner/date/id index. More selective filter
             # indexes can require a full sort again for every page, whereas this
@@ -144,8 +133,8 @@ async def handle_report_request(*, binding, method, path, headers, params, now):
             export_sql = ("SELECT " + ",".join(EXPORT_COLUMNS) +
                           " FROM expenses INDEXED BY expenses_owner_export_date "
                           "WHERE owner_id=? AND deleted_at IS NULL ")
-            base_sql = export_sql + where + " " + restricted
-            sql = base_sql + f" ORDER BY occurred_on,id LIMIT {EXPORT_PAGE_SIZE}"
+            suffix = f" ORDER BY occurred_on,id LIMIT {EXPORT_PAGE_SIZE}"
+            base_sql = export_sql + where
         else:
             bucket_sql = "substr(occurred_on,1,7)" if bucket == "month" else "occurred_on"
             if name == "summary":
@@ -157,12 +146,16 @@ async def handle_report_request(*, binding, method, path, headers, params, now):
             else:
                 dimensions = "target_kind,project_id,category_id,currency"
                 projection = "target_kind,project_id,category_id,NULL AS bucket,currency"
-            sql = (f"SELECT {projection},{AGGREGATE_SQL} FROM expenses "
-                   "WHERE owner_id=? AND deleted_at IS NULL " + where + " " + restricted +
-                   f" GROUP BY {dimensions}")
-        parts = await binding.batch([*auth, binding.prepare(sql).bind(user["id"], *values, *restricted_values)])
+            base_sql = (f"SELECT {projection},{AGGREGATE_SQL} FROM expenses "
+                        "WHERE owner_id=? AND deleted_at IS NULL " + where)
+            suffix = f" GROUP BY {dimensions}"
+        # Each chunk shares the same credential/owner/member snapshot. Empty
+        # grants still validate auth, without an impossible indexed CSV SELECT.
+        parts = await binding.batch([*auth, *[binding.prepare(base_sql + restricted + suffix).bind(
+            user["id"], *values, *restricted_values) for restricted, restricted_values in filters]])
         validate([part.results for part in parts[:len(auth)]])
-        rows = parts[-1].results
+        rows = (merge_page(parts[len(auth):], EXPORT_PAGE_SIZE, columns=("occurred_on", "id")) if is_export
+                else [row for part in parts[len(auth):] for row in part.results])
     except PrincipalAuthError as exc:
         return _error(exc.status, exc.code)
     if is_export:
@@ -171,13 +164,12 @@ async def handle_report_request(*, binding, method, path, headers, params, now):
             # the equivalent OR predicate can rescan its prefix on every page.
             # Place the cursor before any optional date lower bound so SQLite
             # chooses the cursor as its seek bound even for a dated export.
-            page_sql = (export_sql + " AND (occurred_on,id)>(?,?) " + where + " " + restricted +
-                        f" ORDER BY occurred_on,id LIMIT {EXPORT_PAGE_SIZE}")
-            commands = [*auth, binding.prepare(page_sql).bind(user["id"], after_date,
-                after_id, *values, *restricted_values)]
+            page_sql = export_sql + " AND (occurred_on,id)>(?,?) " + where
+            commands = [*auth, *[binding.prepare(page_sql + restricted + suffix).bind(user["id"], after_date,
+                after_id, *values, *restricted_values) for restricted, restricted_values in filters]]
             page = await binding.batch(commands)
             validate([part.results for part in page[:len(auth)]])
-            return page[-1].results
+            return merge_page(page[len(auth):], EXPORT_PAGE_SIZE, columns=("occurred_on", "id"))
         return 200, CsvExport(rows, next_page)
     groups = {}
     for row in rows:

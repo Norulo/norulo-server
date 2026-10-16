@@ -148,7 +148,7 @@ def _json_size(value):
 
 
 def _scalar_in_probes(tokens):
-    """Bound indexed probes for the reviewed repository binding SELECT.
+    """Bound indexed probes in scalar IN lists, including absent grant IDs.
 
     Native D1 accounts for unsuccessful IN-key probes as rows read, even when
     the physical binding table is smaller than the requested repository page.
@@ -2032,8 +2032,7 @@ class ProductMeteredD1(MeteredD1):
                 # SELECTs have only traversal costs. DML additionally reserves
                 # eight indexed uniqueness/foreign-key probes for scalar rows.
                 per_read = (0 if tokens[0] == "SELECT" else 8) + 3 * max([1] + physical) * max(1, len(physical)) * virtual + 2 * loops * virtual
-                if " ".join(s.sql.lower().split()).startswith(
-                        "select github_repo_id from ledger_project_repositories where owner_id=? and github_repo_id in ("):
+                if tokens[0] == "SELECT":
                     per_read *= _scalar_in_probes(tokens)
                 # The pending cap triggers perform one PK-prefix count over at
                 # most ten rows; include catalog/probe margin even on UPDATE.

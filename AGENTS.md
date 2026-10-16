@@ -1,5 +1,18 @@
 # Norulo Server
 
+## 2026-10-16 project-grant read queries
+
+Project, expense and recurring-rule lists, reports and CSV export use the
+disjoint filters in cloudflare_ledger_filters.py. Keep at most 50 project IDs
+per SELECT, append every chunk to the same authorization snapshot batch, and
+merge sorted prefixes before applying the public limit/cursor. Include the
+shared pool in one chunk only. CSV rechecks authority on every page; an empty
+grant validates auth and returns a header without an indexed AND 0 query.
+Retain scalar-IN probe accounting, integer money aggregation and input bounds.
+No migration or public API change is needed. Local native read verification is
+scripts/check-ledger-read-native-runtime.py; its CPython/native-D1 transport is
+distinct from the separate Python Worker HTTP/FFI acceptance.
+
 ## 2026-10-14 Jev calls and paid plan allowances
 
 Canonical Max defaults are now 200,000 retained expenses and $12 of Jev model

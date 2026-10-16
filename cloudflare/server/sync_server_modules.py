@@ -41,6 +41,7 @@ MODULES = (
     "cloudflare_ledger_categories",
     "cloudflare_ledger_auth",
     "cloudflare_ledger_expenses",
+    "cloudflare_ledger_filters",
     "cloudflare_ledger_profile",
     "cloudflare_ledger_reports",
     "cloudflare_ledger_review",
