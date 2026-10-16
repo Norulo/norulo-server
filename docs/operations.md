@@ -1,3 +1,31 @@
+# Restricted read pagination release, 2026-10-16
+
+Server source `829467d5d88d0ed9129d4606ff9aa20eadaf0dad` is published as
+`3af46477-27ce-4a6c-b3d9-67102052ced2` at 100% production traffic. Restricted
+project/expense/recurring lists, reports and CSV now split project grants into
+disjoint 50-ID queries, merge global pages and keep shared totals unique.
+Empty CSV grants validate authority and return the header. Current keys,
+membership, integer money and per-page authorization fences are retained.
+
+Exact-code GitHub CI passed all 3,459 tests and dependency/static/package checks.
+Local final focused checks passed 116 cases; 52 canonical-handler/native-D1
+profiles and 21 separate Python Worker HTTP/FFI cases passed. The read-profile
+phase reported zero D1 Rows Written, separately from synthetic local setup.
+Before publication, seven SELECT-only production probes reproduced the old SQL
+failures. Twelve corrected production SELECTs passed with 433 Rows Read and zero
+Rows Written. Authenticated lists, reports, CSV and sampled cursor pages match
+the prior production results, including the unchanged ledger records.
+
+All 732 uploaded files match the inspected dry-run, including 66 canonical
+modules. The 19 public variables, six Secret names, resource bindings, limits
+and daily cron remain unchanged. Web and Connect retain their previous versions.
+No migration, production fixture, financial write, model call or credential
+rotation was required. The production connection is unrestricted; complete
+100-project key HTTP-equivalent handler acceptance remains local, while online
+boundary checks execute the corresponding read-only SQL. See the
+[release record](validation/ledger-read-pagination-production-2026-10-16.json)
+and [query design](ledger-read-pagination.md).
+
 # GitHub account unlinking release, 2026-10-16
 
 Server source `ceac04d6f28f5a56bfd6b8b657708656898690b4` is published as
