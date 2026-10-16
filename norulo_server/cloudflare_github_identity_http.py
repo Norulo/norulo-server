@@ -147,13 +147,24 @@ def _provider_union(user: dict, provider: str) -> list[str]:
 async def _github_login_identity(binding: Any, github_id: str) -> tuple[str, str | None]:
     snapshot = await read_record_json(binding, "githubIdentities", github_id)
     if snapshot is None:
-        return "usr_github_" + github_id, None
+        legacy_id = "usr_github_" + github_id
+        legacy = await _user(binding, legacy_id)
+        # The original account keeps its ledger and email after unlinking.
+        # A later GitHub login must never recover that account implicitly.
+        if legacy is not None and _github_detached(legacy):
+            return "usr_github_" + _random_urlsafe(32), None
+        return legacy_id, None
     mapping = json.loads(snapshot)
     owner_id = mapping.get("userId")
     user = await _user(binding, owner_id)
     if mapping.get("githubId") != github_id or user is None or str(user.get("githubId")) != github_id:
         raise ValueError("GITHUB_IDENTITY_CONFLICT")
     return owner_id, snapshot
+
+
+def _github_detached(user: dict) -> bool:
+    return (has_verified_email_identity(user) and not user.get("githubId")
+            and "github" not in user.get("providers", []))
 
 
 async def _github_identity_owner(binding: Any, github_id: str) -> str:
@@ -185,8 +196,9 @@ async def _write_linked_user(binding: Any, *, user: dict, expected_user: dict,
     if current_github is not None and str(current_github) != github_id:
         raise ValueError("GITHUB_IDENTITY_CONFLICT")
     legacy_id = "usr_github_" + github_id
-    legacy = await _user(binding, legacy_id) if legacy_id != owner_id else None
-    if legacy is not None:
+    legacy_snapshot = await read_record_json(binding, "users", legacy_id) if legacy_id != owner_id else None
+    legacy = json.loads(legacy_snapshot) if legacy_snapshot is not None else None
+    if legacy is not None and not _github_detached(legacy):
         raise ValueError("GITHUB_IDENTITY_CONFLICT")
     user_name, session_name = record_name("users", owner_id), record_name("sessions", session_identity)
     mapping_name = record_name("githubIdentities", github_id)
@@ -194,8 +206,12 @@ async def _write_linked_user(binding: Any, *, user: dict, expected_user: dict,
               "EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)"]
     params = [user_name, user_snapshot, session_name, session_snapshot]
     if legacy_id != owner_id:
-        checks.append("NOT EXISTS(SELECT 1 FROM app_state WHERE name=?)")
-        params.append(record_name("users", legacy_id))
+        if legacy is None:
+            checks.append("NOT EXISTS(SELECT 1 FROM app_state WHERE name=?)")
+            params.append(record_name("users", legacy_id))
+        else:
+            checks.append("EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)")
+            params.extend([record_name("users", legacy_id), legacy_snapshot])
     if mapping_snapshot is None:
         checks.append("NOT EXISTS(SELECT 1 FROM app_state WHERE name=?)")
         params.append(mapping_name)
@@ -238,6 +254,13 @@ async def _write_user(binding: Any, user: dict, now: int, expected_user: dict | 
             predicate, params = "EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)", (identity_name, identity_snapshot)
         commands.append(binding.prepare("INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN "
             + predicate + " THEN 1 ELSE 0 END)").bind(*params))
+        if identity_snapshot is None and owner_id != "usr_github_" + github_id:
+            # A new account after legacy unlinking has a fresh owner ID and
+            # must claim its mapping atomically. Unchanged legacy logins keep
+            # their deterministic identity without an extra mapping write.
+            commands.append(binding.prepare("INSERT INTO app_state(name,payload,updated_at) VALUES(?,?,?)")
+                .bind(identity_name, encode_record("githubIdentities", github_id,
+                    {"githubId": github_id, "userId": owner_id, "createdAt": now}), now))
     next_payload = encode_record("users", owner_id, user)
     if snapshot is not None:
         command = binding.prepare("""UPDATE app_state SET payload=?,updated_at=?
@@ -249,6 +272,59 @@ async def _write_user(binding: Any, user: dict, now: int, expected_user: dict | 
     await binding.batch([*commands, command,
         binding.prepare("INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)"),
         binding.prepare("DELETE FROM d1_command_guard")])
+
+
+async def _unlink_github(binding: Any, *, user: dict, session: dict, now: int) -> dict:
+    """Release only this login identity, fencing the verified fallback in D1."""
+    from .cloudflare_email_auth import email_key
+    if not has_verified_email_identity(user):
+        raise ValueError("EMAIL_REQUIRED_FOR_GITHUB_UNLINK")
+    email_id = email_key(user["email"])
+    email_snapshot = await read_record_json(binding, "emailIdentities", email_id)
+    email_identity = json.loads(email_snapshot) if email_snapshot is not None else None
+    if (email_identity is None or email_identity.get("userId") != user["id"]
+            or email_identity.get("email") != user["email"] or email_identity.get("verifiedAt", 0) <= 0):
+        raise ValueError("EMAIL_REQUIRED_FOR_GITHUB_UNLINK")
+    github_id = user.get("githubId")
+    if not github_id:
+        return user
+    github_id = str(github_id)
+    mapping_snapshot = await read_record_json(binding, "githubIdentities", github_id)
+    mapping = json.loads(mapping_snapshot) if mapping_snapshot is not None else None
+    if mapping is not None and mapping.get("userId") != user["id"]:
+        raise ValueError("GITHUB_IDENTITY_CONFLICT")
+    user_snapshot = await read_record_json(binding, "users", user["id"])
+    session_id, session_snapshot = await read_session_snapshot(binding, session["id"])
+    if (user_snapshot is None or json.loads(user_snapshot) != user
+            or session_snapshot is None or {**json.loads(session_snapshot), "id": session["id"]} != session):
+        raise ValueError("ACCOUNT_CHANGED")
+    # No provider request is necessary. Remove all stored GitHub credentials and
+    # grants; project associations and every financial/account fact stay put.
+    updated = {key: value for key, value in user.items() if not key.startswith("github")}
+    updated["providers"] = [provider for provider in user["providers"] if provider != "github"]
+    updated["githubLinkRevision"] = _random_urlsafe(32)
+    checks = ["EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)"] * 3
+    params = [record_name("users", user["id"]), user_snapshot,
+              record_name("sessions", session_id), session_snapshot,
+              record_name("emailIdentities", email_id), email_snapshot]
+    mapping_name = record_name("githubIdentities", github_id)
+    if mapping_snapshot is None:
+        checks.append("NOT EXISTS(SELECT 1 FROM app_state WHERE name=?)")
+        params.append(mapping_name)
+    else:
+        checks.append("EXISTS(SELECT 1 FROM app_state WHERE name=? AND payload=?)")
+        params.extend([mapping_name, mapping_snapshot])
+    commands = [binding.prepare("INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN "
+        + " AND ".join(checks) + " THEN 1 ELSE 0 END)").bind(*params)]
+    if mapping_snapshot is not None:
+        commands.append(binding.prepare("DELETE FROM app_state WHERE name=? AND payload=?")
+            .bind(mapping_name, mapping_snapshot))
+    commands.extend([binding.prepare("UPDATE app_state SET payload=?,updated_at=? WHERE name=? AND payload=?")
+        .bind(encode_record("users", user["id"], updated), now, record_name("users", user["id"]), user_snapshot),
+        binding.prepare("INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)"),
+        binding.prepare("DELETE FROM d1_command_guard")])
+    await binding.batch(commands)
+    return updated
 
 
 def _oauth_url(client_id: str, callback_url: str, state: str, verifier: str) -> str:
@@ -367,10 +443,28 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
     """Return (status, payload, headers), or None for another HTTP domain."""
     paths = {"/auth/session", "/auth/sign-out", "/auth/github/authorize",
              "/auth/github/callback", "/integrations", "/integrations/github/authorize",
-             "/integrations/github/callback", "/integrations/github/refresh", "/repositories", "/repositories/sync", "/api/v1/repositories"}
+             "/integrations/github/callback", "/integrations/github/refresh", "/integrations/github",
+             "/repositories", "/repositories/sync", "/api/v1/repositories"}
     if path not in paths:
         return None
     no_store = {"Cache-Control": "no-store"}
+    if path == "/integrations/github":
+        if method != "DELETE":
+            return 405, {"error": {"code": "METHOD_NOT_ALLOWED"}}, no_store
+        origin = urlsplit(_header(headers, "Origin") or _header(headers, "Referer"))
+        if f"{origin.scheme}://{origin.netloc}" not in trusted_origins:
+            return 403, {"error": {"code": "UNTRUSTED_ORIGIN"}}, no_store
+        session, user = await _session_user(binding, headers, now)
+        if not session:
+            return 401, {"error": {"code": "UNAUTHENTICATED"}}, no_store
+        try:
+            updated = await _unlink_github(binding, user=user, session=session, now=now)
+        except ValueError as failure:
+            code = str(failure)
+            if code not in {"EMAIL_REQUIRED_FOR_GITHUB_UNLINK", "GITHUB_IDENTITY_CONFLICT", "ACCOUNT_CHANGED"}:
+                raise
+            return 409, {"error": {"code": code}}, no_store
+        return 200, session_payload(updated), no_store
     if path == "/integrations/github/refresh":
         if method != "POST":
             return 405, {"error": {"code": "METHOD_NOT_ALLOWED"}}, no_store
@@ -416,7 +510,8 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
                         "expiresAt": now + 600}
         if intent == "link":
             state_record.update(intent="link", userId=link_user["id"],
-                                sessionId=session_storage_id(link_session["id"]))
+                                sessionId=session_storage_id(link_session["id"]),
+                                githubLinkRevision=link_user.get("githubLinkRevision"))
         await D1OAuthStates(binding).issue(state_id=state, record=state_record, now=now)
         url = _oauth_url(gateway.client_id, callback_url, state, verifier)
         cookie = None if intent == 'link' else _oauth_cookie(state)
@@ -438,6 +533,8 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
             session, linked_user = await _session_user(binding, headers, now)
             if not session or not session_binding_matches(record.get("sessionId"), session["id"]) or linked_user["id"] != record.get("userId"):
                 return 401, {"error": {"code": "UNAUTHENTICATED"}}, no_store
+            if record.get("githubLinkRevision") != linked_user.get("githubLinkRevision"):
+                return 409, {"error": {"code": "ACCOUNT_CHANGED"}}, no_store
         destination = _redirect(record.get("redirectTo", ""), app_url, "/projects")
         if _param(params, "error") or not _param(params, "code"):
             parsed = urlsplit(destination)
@@ -454,6 +551,8 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
             session, existing = await _session_user(binding, headers, now)
             if not session or not session_binding_matches(record.get("sessionId"), session["id"]) or existing["id"] != record.get("userId"):
                 return 401, {"error": {"code": "UNAUTHENTICATED"}}, no_store
+            if record.get("githubLinkRevision") != existing.get("githubLinkRevision"):
+                return 409, {"error": {"code": "ACCOUNT_CHANGED"}}, no_store
             owner_id = existing["id"]
         else:
             try:
@@ -516,6 +615,7 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
         state = _random_urlsafe(32)
         await D1OAuthStates(binding).issue(state_id=state,
             record={"kind": "install", "userId": user["id"], "sessionId": session_storage_id(session["id"]),
+                    "githubLinkRevision": user.get("githubLinkRevision"),
                     "redirectTo": destination, "expiresAt": now + 600}, now=now)
         url = f"https://github.com/apps/{gateway.app_slug}/installations/new?" + urlencode({"state": state})
         return 200, {"url": url, "mode": "github-app"}, no_store
@@ -530,6 +630,8 @@ async def handle_identity_request(*, binding: Any, gateway: Any, now: int,
             return 401, {"error": {"code": "UNAUTHENTICATED"}}, no_store
         if not user.get("githubId") or not user.get("githubAccessToken"):
             return 409, {"error": {"code": "GITHUB_IDENTITY_REQUIRED"}}, no_store
+        if record.get("githubLinkRevision") != user.get("githubLinkRevision"):
+            return 409, {"error": {"code": "ACCOUNT_CHANGED"}}, no_store
         installation_text = _param(params, "installation_id")
         if not installation_text.isdigit() or int(installation_text) <= 0:
             return 422, {"error": {"code": "INVALID_INSTALLATION"}}, no_store

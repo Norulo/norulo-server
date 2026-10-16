@@ -334,7 +334,8 @@ paths:
         after successful verification; it does not disclose account existence.
         purpose link requires the current cookie session, binds the challenge
         to that account and session, and never merges accounts. Changing an
-        already verified login email requires a separate flow and is rejected.
+        already verified login email is rejected. Once linked, a login email
+        cannot be unlinked or changed.
         An email already owned by another account is rejected before sending
         a code, creating a challenge or starting its send cooldown. Ownership
         is checked only for authenticated linking and rechecked at verification.
@@ -446,6 +447,30 @@ paths:
         '401': {description: UNAUTHENTICATED; original link session is missing or changed, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
         '409': {description: GITHUB_IDENTITY_CONFLICT or ACCOUNT_CHANGED; account IDs and billing are preserved, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
         '502': {description: GITHUB_PROFILE_INVALID; no trusted numeric identity, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+  /integrations/github:
+    delete:
+      operationId: unlinkGithubAccount
+      x-norulo-scope: account:auth
+      security: [{cookieSession: []}]
+      tags: [Authentication]
+      parameters: [{$ref: '#/components/parameters/AuthOrigin'}]
+      description: |
+        Unlink the current account's GitHub login identity and remove its stored
+        GitHub credentials and repository grants. Requires a current cookie
+        session, a trusted Origin or Referer and an independently verified email
+        login identity belonging to this account. GitHub contact or billing email
+        is insufficient. Email remains permanently linked. Account ID, current
+        session, ledger history, projects, project repository associations,
+        memberships, API keys and billing are retained. Pending authorization
+        callbacks cannot restore the removed connection. The released GitHub
+        identity can be linked again explicitly; a later standalone GitHub login
+        cannot recover the original email account. No GitHub API call or App
+        uninstall is performed. An already unlinked account is a read-only no-op.
+      responses:
+        '200': {description: GitHub unlinked; current email-backed session, headers: {Cache-Control: {$ref: '#/components/headers/NoStore'}}, content: {application/json: {schema: {$ref: '#/components/schemas/AccountSession'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {description: UNTRUSTED_ORIGIN, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+        '409': {description: EMAIL_REQUIRED_FOR_GITHUB_UNLINK, GITHUB_IDENTITY_CONFLICT or ACCOUNT_CHANGED; reload before trying again, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
   /integrations/github/refresh:
     post:
       operationId: refreshGithubCredential

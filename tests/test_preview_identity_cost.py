@@ -55,4 +55,6 @@ def test_identity_trace_replays_fresh_schema_and_keeps_providers_synthetic(tmp_p
     # This is an offline trace, explicitly not an admitted remote plan.
     # Browser-bound callback preflight adds one finite read. Versioned new
     # session reads and collision checks bind only the storage fingerprint.
-    assert len(trace) == 139
+    # Resolve a legacy account before login so a detached email-backed account
+    # cannot be recovered implicitly through its former GitHub identity.
+    assert len(trace) == 140
