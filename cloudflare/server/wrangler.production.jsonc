@@ -37,7 +37,7 @@
     {
       "pattern": "api.norulo.com",
       "custom_domain": true,
-      "zone_id": "deef49a196452b7efa6f9b7128e4d37b"
+      "zone_id": "02f4bd56f5b0c3a448ced5045d84939b"
     }
   ],
   "vars": {
