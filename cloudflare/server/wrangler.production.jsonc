@@ -41,7 +41,7 @@
     }
   ],
   "vars": {
-    "NORULO_CF_ACCOUNT_ID": "84e421f26c708c0cf437e287eed11fa1",
+    "NORULO_CF_ACCOUNT_ID": "a659b71fbdcc5e9023f24bd247b76933",
     "NORULO_D1_ACCESS_ENABLED": "0",
     "NORULO_MODE": "production",
     "NORULO_PREVIEW_SCHEMA_V11_UPGRADE_ENABLED": "0",
@@ -100,11 +100,11 @@
     {
       "binding": "DB",
       "database_name": "norulo-ledger-production",
-      "database_id": "c41a1ab7-dffa-4c5d-a213-25f1bb6c78c5",
+      "database_id": "6dce80a9-ec07-4d88-8de9-462e8d973bfa",
       "migrations_dir": "migrations"
     }
   ],
-  "account_id": "84e421f26c708c0cf437e287eed11fa1",
+  "account_id": "a659b71fbdcc5e9023f24bd247b76933",
   "ratelimits": [
     {
       "name": "AUTH_RATE_LIMIT",

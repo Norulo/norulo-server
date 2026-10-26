@@ -1,13 +1,13 @@
 {
   "name":"norulo-connect",
   "main":"src/index.js",
-  "account_id":"84e421f26c708c0cf437e287eed11fa1",
+  "account_id":"a659b71fbdcc5e9023f24bd247b76933",
   "compatibility_date":"2026-10-15",
   "compatibility_flags":["global_fetch_strictly_public"],
   "workers_dev":false,
   "preview_urls":false,
   "routes":[{"pattern":"mcp.norulo.com","custom_domain":true}],
-  "kv_namespaces":[{"binding":"OAUTH_KV","id":"707a338efe2a4d418c594495abaa6574"}],
+  "kv_namespaces":[{"binding":"OAUTH_KV","id":"c08651caf76d486ea19bf998923cb8e7"}],
   "services":[{"binding":"NORULO_SERVER","service":"norulo-server-production"}],
   "observability":{"enabled":true,"redact_query_string":true,"logs":{"enabled":true,"invocation_logs":false,"head_sampling_rate":0.01},"traces":{"enabled":false}}
 }
