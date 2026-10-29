@@ -44,7 +44,7 @@ def test_identity_trace_replays_fresh_schema_and_keeps_providers_synthetic(tmp_p
             "session", "install_authorize", "install_callback", "repositories",
             "sign_out", "signed_out_session"} <= cases
     assert manifest["tables"] == 23 and manifest["indexes"] == 54
-    assert manifest["migrations"][-1]["name"] == "0015_jev_trial_calls.sql"
+    assert manifest["migrations"][-1]["name"] == "0016_project_admin_console_url.sql"
     assert manifest["http_cases"] == 9
     assert manifest["remote_admissible"] is False
     assert manifest["provider_mode"] == "synthetic"
@@ -57,4 +57,4 @@ def test_identity_trace_replays_fresh_schema_and_keeps_providers_synthetic(tmp_p
     # session reads and collision checks bind only the storage fingerprint.
     # Resolve a legacy account before login so a detached email-backed account
     # cannot be recovered implicitly through its former GitHub identity.
-    assert len(trace) == 140
+    assert len(trace) == 141

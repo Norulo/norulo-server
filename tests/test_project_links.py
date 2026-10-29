@@ -8,7 +8,8 @@ from norulo_server.cloudflare_project_repositories import MAX_PROJECT_URL_BYTES,
 from test_project_repositories import ledger, member, update
 
 
-FIELDS = {"developmentUrl": "http://localhost:3000/dev", "productUrl": "https://product.example/app"}
+FIELDS = {"developmentUrl": "http://localhost:3000/dev", "productUrl": "https://product.example/app",
+          "adminConsoleUrl": "https://admin.example/console"}
 
 
 def blank(ledger, **fields):
@@ -65,14 +66,16 @@ def test_project_url_byte_limit_covers_both_input_and_serialized_unicode():
 
 def test_default_and_explicit_null_links_are_returned_in_create_list_and_detail(ledger):
     first = blank(ledger)
-    second = blank(ledger, developmentUrl=None, productUrl=None)
+    second = blank(ledger, developmentUrl=None, productUrl=None, adminConsoleUrl=None)
     for project in (first, second):
         assert project["developmentUrl"] is None and project["productUrl"] is None
+        assert project["adminConsoleUrl"] is None
         status, loaded = ledger.call("GET", "/api/v1/projects/" + project["id"])
         assert status == 200 and loaded == project
     status, page = ledger.call("GET", "/api/v1/projects")
     assert status == 200 and len(page["items"]) == 2
-    assert all(item["developmentUrl"] is None and item["productUrl"] is None for item in page["items"])
+    assert all(item["developmentUrl"] is None and item["productUrl"] is None
+               and item["adminConsoleUrl"] is None for item in page["items"])
     assert ledger.gateway.calls == []
 
 
@@ -86,16 +89,18 @@ def test_links_persist_and_omitted_patch_fields_retain_then_null_explicitly_clea
     status, retained = update(ledger, changed, {"description": "Only the description changes"})
     assert status == 200 and retained["developmentUrl"] == changed["developmentUrl"]
     assert retained["productUrl"] == changed["productUrl"]
-    status, cleared = update(ledger, retained, {"developmentUrl": None, "productUrl": None})
+    assert retained["adminConsoleUrl"] == FIELDS["adminConsoleUrl"]
+    status, cleared = update(ledger, retained, {"developmentUrl": None, "productUrl": None, "adminConsoleUrl": None})
     assert status == 200 and cleared["revision"] == 4
     assert cleared["developmentUrl"] is None and cleared["productUrl"] is None
+    assert cleared["adminConsoleUrl"] is None
     with ledger.store.connect() as db:
-        assert tuple(db.execute("SELECT development_url,product_url FROM ledger_projects").fetchone()) == (None, None)
+        assert tuple(db.execute("SELECT development_url,product_url,admin_console_url FROM ledger_projects").fetchone()) == (None, None, None)
     assert ledger.call("GET", "/api/v1/projects/" + project["id"])[1] == cleared
     assert ledger.gateway.calls == []
 
 
-@pytest.mark.parametrize("field", ["developmentUrl", "productUrl"])
+@pytest.mark.parametrize("field", ["developmentUrl", "productUrl", "adminConsoleUrl"])
 def test_invalid_url_create_and_patch_never_write_or_call_providers(ledger, field):
     project = blank(ledger, **FIELDS)
     ledger.gateway.calls.clear()
@@ -166,3 +171,15 @@ def test_links_survive_attach_detach_archive_and_actor_gitHub_metadata_loss(ledg
     status, archived = update(ledger, unlinked, {"status": "archived"})
     assert status == 200 and not archived["canCreateExpense"]
     assert archived["developmentUrl"] == FIELDS["developmentUrl"] and archived["productUrl"] == edited["productUrl"]
+
+
+def test_admin_console_link_is_independent_of_the_other_links(ledger):
+    project = blank(ledger, adminConsoleUrl=" https://ADMIN.example/console ")
+    assert project["adminConsoleUrl"] == "https://admin.example/console"
+    assert project["developmentUrl"] is None and project["productUrl"] is None
+    status, changed = update(ledger, project, {"productUrl": "https://product.example/app"})
+    assert status == 200 and changed["adminConsoleUrl"] == project["adminConsoleUrl"]
+    status, cleared = update(ledger, changed, {"adminConsoleUrl": None})
+    assert status == 200 and cleared["adminConsoleUrl"] is None
+    assert cleared["productUrl"] == "https://product.example/app"
+    assert ledger.gateway.calls == []

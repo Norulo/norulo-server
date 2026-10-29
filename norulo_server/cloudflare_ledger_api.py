@@ -86,6 +86,7 @@ def _project(row: dict, allowed_repos: dict[int, dict], totals: list[dict], gith
                 if organization_id is not None else None,
             "description": row["description"],
             "developmentUrl": row.get("development_url"), "productUrl": row.get("product_url"),
+            "adminConsoleUrl": row.get("admin_console_url"),
             "status": row["status"], "githubAccess": state,
             **({"githubRefreshRequired": True} if refresh_required and not standalone else {}),
             "canCreateExpense": row["status"] == "active" and (standalone or authorized > 0),
@@ -316,7 +317,7 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
         if "name" in body:
             body = {**body, "name": body["name"].strip()}
         body = {**body, **{field: project_url(body[field])
-            for field in ("developmentUrl", "productUrl") if field in body}}
+            for field in ("developmentUrl", "productUrl", "adminConsoleUrl") if field in body}}
     if method == "GET":
         if item_id:
             user, _, auth, validate = await ledger_principal(binding=binding, headers=headers,
@@ -442,17 +443,19 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
         repo_id = selected[0] if selected else None
         record = {"id": project_id, "github_repo_id": repo_id, "name": body.get("name", ""),
             "github_organization_id": organization_id, "development_url": body.get("developmentUrl"),
-            "product_url": body.get("productUrl"), "description": body.get("description", ""),
+            "product_url": body.get("productUrl"), "admin_console_url": body.get("adminConsoleUrl"),
+            "description": body.get("description", ""),
             "status": "active", "revision": 1}
         activity = await activity_commands(binding, user, "project", project_id, "create", None,
             project_snapshot(record, [{"github_repo_id": value} for value in selected]), now, proof=proof)
         commands = [_write_guard(binding, proof, user["id"], now),
             binding.prepare("""INSERT INTO ledger_projects(id,owner_id,github_repo_id,
                 github_full_name,description,status,revision,created_at,updated_at,name,github_organization_id,
-                development_url,product_url)
-                VALUES(?,?,?,?,?,'active',1,?,?,?,?,?,?)""").bind(project_id, user["id"], repo_id,
+                development_url,product_url,admin_console_url)
+                VALUES(?,?,?,?,?,'active',1,?,?,?,?,?,?,?)""").bind(project_id, user["id"], repo_id,
                     repos[repo_id]["fullName"] if repo_id is not None else None, body.get("description", ""), stamp, stamp,
-                    body.get("name", ""), organization_id, body.get("developmentUrl"), body.get("productUrl")),
+                    body.get("name", ""), organization_id, body.get("developmentUrl"), body.get("productUrl"),
+                    body.get("adminConsoleUrl")),
             *_insert_repository_bindings(binding, user["id"], project_id, selected, repos, stamp),
             *activity,
             binding.prepare("DELETE FROM d1_command_guard")]
@@ -465,6 +468,7 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
         return 201, _project({"id": project_id, "github_repo_id": repo_id,
             "name": body.get("name", ""), "github_organization_id": organization_id,
             "development_url": body.get("developmentUrl"), "product_url": body.get("productUrl"),
+            "admin_console_url": body.get("adminConsoleUrl"),
             "description": body.get("description", ""), "status": "active", "revision": 1}, repos, [],
             bindings=[{"github_repo_id": value} for value in selected], organizations=organizations)
     repo_id = (selected[0] if selected else None) if selected is not None else existing["github_repo_id"]
@@ -472,6 +476,7 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
     updated = {**existing, "description": body.get("description", existing["description"]),
         "development_url": body.get("developmentUrl", existing.get("development_url")),
         "product_url": body.get("productUrl", existing.get("product_url")),
+        "admin_console_url": body.get("adminConsoleUrl", existing.get("admin_console_url")),
         "name": body.get("name", existing["name"]), "github_organization_id": organization_id,
         "github_repo_id": repo_id, "status": status, "revision": expected + 1}
     bindings = [{"github_repo_id": value} for value in selected] if selected is not None else current_bindings
@@ -482,12 +487,13 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
     commands = [_write_guard(binding, proof, user["id"], now),
         binding.prepare("""UPDATE ledger_projects SET name=?,github_organization_id=?,
             github_repo_id=?,github_full_name=?,description=?,development_url=?,product_url=?,
-            status=?,revision=revision+1,
+            admin_console_url=?,status=?,revision=revision+1,
             updated_at=? WHERE id=? AND owner_id=? AND revision=? AND deleted_at IS NULL""").bind(
             body.get("name", existing["name"]), organization_id, repo_id, full_name,
             body.get("description", existing["description"]),
             body.get("developmentUrl", existing.get("development_url")),
-            body.get("productUrl", existing.get("product_url")), status, stamp, item_id,
+            body.get("productUrl", existing.get("product_url")),
+            body.get("adminConsoleUrl", existing.get("admin_console_url")), status, stamp, item_id,
             user["id"], expected),
         binding.prepare("INSERT INTO d1_command_guard(ok) VALUES(CASE WHEN changes()=1 THEN 1 ELSE 0 END)")]
     if selected is not None:
@@ -510,6 +516,7 @@ async def _projects(binding, gateway, method, item_id, headers, params, body, no
     updated = {**existing, "description": body.get("description", existing["description"]),
         "development_url": body.get("developmentUrl", existing.get("development_url")),
         "product_url": body.get("productUrl", existing.get("product_url")),
+        "admin_console_url": body.get("adminConsoleUrl", existing.get("admin_console_url")),
         "name": body.get("name", existing["name"]), "github_organization_id": organization_id,
         "github_repo_id": repo_id, "status": status, "revision": expected + 1}
     bindings = [{"github_repo_id": value} for value in selected] if selected is not None else current_bindings

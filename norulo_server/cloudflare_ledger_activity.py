@@ -19,7 +19,7 @@ RETENTION_PAGE = 16
 _ID = re.compile(r"[A-Za-z0-9_-]{1,120}")
 _FIELDS = {
     "expense": ("target", "purpose", "amount", "currency", "occurredOn", "categoryId", "note", "quantity", "unit"),
-    "project": ("target", "name", "description", "developmentUrl", "productUrl", "status", "githubRepoIds", "githubOrganizationId"),
+    "project": ("target", "name", "description", "developmentUrl", "productUrl", "adminConsoleUrl", "status", "githubRepoIds", "githubOrganizationId"),
     "recurring_rule": ("target", "purpose", "amount", "currency", "categoryId", "note", "quantity", "unit", "schedule", "status"),
 }
 
@@ -48,6 +48,7 @@ def project_snapshot(row, bindings):
     return {"target": {"kind": "project", "projectId": row["id"]},
             "name": row.get("name", ""), "description": row.get("description", ""),
             "developmentUrl": row.get("development_url"), "productUrl": row.get("product_url"),
+            "adminConsoleUrl": row.get("admin_console_url"),
             "status": row["status"],
             "githubRepoIds": sorted({item["github_repo_id"] for item in bindings}),
             "githubOrganizationId": row.get("github_organization_id")}

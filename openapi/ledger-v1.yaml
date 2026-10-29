@@ -1745,6 +1745,7 @@ components:
         description: {type: string, maxLength: 2000}
         developmentUrl: {$ref: '#/components/schemas/ProjectUrl'}
         productUrl: {$ref: '#/components/schemas/ProjectUrl'}
+        adminConsoleUrl: {$ref: '#/components/schemas/ProjectUrl'}
         githubOrganizationId: {type: [integer, 'null'], minimum: 1, maximum: 9007199254740991, description: "Optional association on a repository-backed project, verified against current actor installation account metadata; never selects all organization repositories. Must be absent or null on standalone creation."}
     ProjectPatch:
       type: object
@@ -1771,13 +1772,14 @@ components:
         description: {type: string, maxLength: 2000}
         developmentUrl: {$ref: '#/components/schemas/ProjectUrl'}
         productUrl: {$ref: '#/components/schemas/ProjectUrl'}
+        adminConsoleUrl: {$ref: '#/components/schemas/ProjectUrl'}
         status: {type: string, enum: [active, archived]}
     ProjectUrl:
       type: [string, 'null']
       minLength: 1
       maxLength: 2048
       pattern: '^[Hh][Tt][Tt][Pp][Ss]?://'
-      description: Absolute HTTP(S) URL, at most 2048 UTF-8 bytes. Server rejects missing/invalid hosts or ports, userinfo, whitespace, control characters and backslashes. Null clears the link; omission preserves it on PATCH and defaults to null on POST. Empty strings are invalid. Development/product links are ledger metadata and never grant repository access.
+      description: Absolute HTTP(S) URL, at most 2048 UTF-8 bytes. Server rejects missing/invalid hosts or ports, userinfo, whitespace, control characters and backslashes. Null clears the link; omission preserves it on PATCH and defaults to null on POST. Empty strings are invalid. Development, product and admin console links are ledger metadata and never grant repository access.
     BoundRepository:
       type: object
       required: [githubRepoId, githubFullName, githubAccess, installationId, account]
@@ -1798,7 +1800,7 @@ components:
         githubAccess: {type: string, enum: [authorized, lost, reauthorization_required, unavailable]}
     Project:
       type: object
-      required: [id, name, githubRepoId, githubRepoIds, repositories, githubOrganizationId, githubOrganization, description, developmentUrl, productUrl, status, githubAccess, canCreateExpense, revision, totals]
+      required: [id, name, githubRepoId, githubRepoIds, repositories, githubOrganizationId, githubOrganization, description, developmentUrl, productUrl, adminConsoleUrl, status, githubAccess, canCreateExpense, revision, totals]
       properties:
         id: {type: string}
         name: {type: string, maxLength: 120}
@@ -1812,6 +1814,7 @@ components:
         description: {type: string}
         developmentUrl: {$ref: '#/components/schemas/ProjectUrl'}
         productUrl: {$ref: '#/components/schemas/ProjectUrl'}
+        adminConsoleUrl: {$ref: '#/components/schemas/ProjectUrl'}
         status: {type: string, enum: [active, archived]}
         githubAccess: {type: string, enum: [not_linked, authorized, partial, lost, reauthorization_required, unavailable], description: "not_linked identifies an explicitly standalone project, with null GitHub anchor and organization and empty repository arrays; loss or unavailability of a bound grant never implicitly disconnects a project."}
         githubRefreshRequired: {type: boolean, description: The actual actor may renew their own GitHub credential through the separate cookie or API-key authenticated refresh endpoint}
@@ -2093,7 +2096,7 @@ components:
       additionalProperties: false
       required: [field, before, after]
       properties:
-        field: {type: string, enum: [target, purpose, amount, currency, occurredOn, categoryId, note, quantity, unit, name, description, developmentUrl, productUrl, status, githubRepoIds, githubOrganizationId, schedule]}
+        field: {type: string, enum: [target, purpose, amount, currency, occurredOn, categoryId, note, quantity, unit, name, description, developmentUrl, productUrl, adminConsoleUrl, status, githubRepoIds, githubOrganizationId, schedule]}
         before: {$ref: '#/components/schemas/ActivityValue'}
         after: {$ref: '#/components/schemas/ActivityValue'}
     ActivityValue:

@@ -100,14 +100,14 @@ def repository_ids(body: dict, *, required: bool = False) -> list[int] | None:
 def project_input(body: object, *, creating: bool) -> list[int] | None:
     if (not isinstance(body, dict) or not body
             or set(body) - {"githubRepoId", "githubRepoIds", "name", "description",
-                            "githubOrganizationId", "developmentUrl", "productUrl",
+                            "githubOrganizationId", "developmentUrl", "productUrl", "adminConsoleUrl",
                             *({"status"} if not creating else set())}):
         raise ValueError("invalid fields")
     for field, maximum in (("name", 120), ("description", 2000)):
         if field in body and (not isinstance(body[field], str)
                 or len(body[field].strip() if field == "name" else body[field]) > maximum):
             raise ValueError("invalid text")
-    for field in ("developmentUrl", "productUrl"):
+    for field in ("developmentUrl", "productUrl", "adminConsoleUrl"):
         if field in body:
             project_url(body[field])
     if "status" in body and (not isinstance(body["status"], str)

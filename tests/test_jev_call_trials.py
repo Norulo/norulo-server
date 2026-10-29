@@ -11,7 +11,7 @@ import pytest
 from ledger_d1_fixture import D1ShapedSQLite, seed, seed_auth
 from norulo_server.cloudflare_billing_read import read_billing
 from norulo_server.cloudflare_plan_limits import PlanLimitedD1, PlanLimitError
-from norulo_server.cloudflare_preview_schema import V14_SCHEMA_SQL, UPGRADE_V15_SQL, SCHEMA_OBJECTS, SCHEMA_FINGERPRINT
+from norulo_server.cloudflare_preview_schema import V14_SCHEMA_SQL, UPGRADE_V15_SQL, V15_SCHEMA_OBJECTS as SCHEMA_OBJECTS, V15_SCHEMA_FINGERPRINT as SCHEMA_FINGERPRINT
 from test_ledger_plan_limits import account_plan, write
 
 

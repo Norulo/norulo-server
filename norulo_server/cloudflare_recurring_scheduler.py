@@ -35,6 +35,7 @@ MIGRATION_NAMES = (
     "0007_recurring_expenses_project_links.sql", "0008_workspace_join_approval.sql",
     "0009_activity_log.sql", "0010_project_removal.sql", "0011_business_erasure.sql",
     "0012_recurring_pending.sql", "0013_export_key_indexes.sql", "0014_expense_last_source.sql", "0015_jev_trial_calls.sql",
+    "0016_project_admin_console_url.sql",
 )
 SCHEMA_QUERY = """SELECT type,name,tbl_name,sql FROM sqlite_schema
     WHERE name NOT GLOB '_cf_*' AND tbl_name NOT GLOB '_cf_*'
@@ -318,7 +319,7 @@ class RecurringJournal:
 
 async def verify_recurring_schema(binding):
     """Read only, once per coordinator incarnation; no migration/seed/repair path."""
-    if SCHEMA_VERSION != 15:
+    if SCHEMA_VERSION != 16:
         raise RecurringFailure("RECURRING_SCHEMA_REQUIRED")
     results = await binding.batch([binding.prepare(SCHEMA_QUERY), binding.prepare(MIGRATION_QUERY)])
     schema = list(_field(results[0], "results", []))
