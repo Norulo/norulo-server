@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, timedelta
 from typing import Mapping
 import csv
 import io
@@ -105,6 +105,12 @@ def _csv_cell(value):
 async def handle_report_request(*, binding, method, path, headers, params, now):
     is_export = path == "/api/v1/expenses/export"
     name = path.removeprefix("/api/v1/reports/")
+    if name.startswith("projects/"):
+        parts = name.split("/")
+        if len(parts) != 3:
+            return _error(404, "NOT_FOUND")
+        return await handle_project_period_report(binding=binding, method=method,
+            project_id=parts[1], report=parts[2], headers=headers, params=params, now=now)
     if not is_export and name not in {"summary", "timeseries", "categories"}:
         return None
     if method != "GET":
@@ -191,3 +197,107 @@ async def handle_report_request(*, binding, method, path, headers, params, now):
         "categoryId": category_id, "bucket": time_bucket, "currency": currency,
         "amountMinor": public_minor(amount)} for (target, project_id, category_id, time_bucket, currency), amount
         in sorted(groups.items(), key=lambda item: tuple(part or "" for part in item[0]))]}
+
+
+PERIOD_REPORTS = {"monthly": "month", "quarterly": "quarter", "annual": "year"}
+_PERIOD_CURSOR = re.compile(r"([0-9]{4}-[0-9]{2}-[0-9]{2})_([A-Za-z0-9_-]{1,120})")
+
+
+def project_period(granularity: str, params: Mapping[str, object]):
+    """Return the inclusive business-date bounds of one calendar period.
+
+    occurred_on is a user-entered calendar date without a time or zone, so a
+    period is bounded by dates alone. The inclusive last day keeps 9999-12-31
+    reachable without an unrepresentable exclusive 10000-01-01 bound.
+    """
+    raw_year = _param(params, "year")
+    if not re.fullmatch(r"[0-9]{4}", raw_year) or raw_year == "0000":
+        raise ValueError("year")
+    year = int(raw_year)
+    period = {"granularity": granularity, "year": year}
+    if granularity == "month":
+        raw = _param(params, "month")
+        if not re.fullmatch(r"[0-9]{1,2}", raw) or not 1 <= int(raw) <= 12:
+            raise ValueError("month")
+        first_month = last_month = period["month"] = int(raw)
+    elif granularity == "quarter":
+        raw = _param(params, "quarter")
+        if not re.fullmatch(r"[1-4]", raw):
+            raise ValueError("quarter")
+        period["quarter"] = int(raw)
+        first_month, last_month = 3 * int(raw) - 2, 3 * int(raw)
+    else:
+        first_month, last_month = 1, 12
+    start = date(year, first_month, 1)
+    end = date(year, 12, 31) if last_month == 12 else (
+        date(year, last_month + 1, 1) - timedelta(days=1))
+    period.update(startOn=start.isoformat(), endOn=end.isoformat())
+    return period
+
+
+def _period_page(params: Mapping[str, object]):
+    raw_limit = _param(params, "limit")
+    limit, _ = _page_inputs({"limit": raw_limit} if raw_limit else {})
+    cursor = _param(params, "cursor")
+    if not cursor:
+        return limit, None
+    match = _PERIOD_CURSOR.fullmatch(cursor)
+    if match is None:
+        raise ValueError("cursor")
+    try:
+        if date.fromisoformat(match.group(1)).isoformat() != match.group(1):
+            raise ValueError("cursor")
+    except ValueError:
+        raise ValueError("cursor") from None
+    return limit, (match.group(1), match.group(2))
+
+
+async def handle_project_period_report(*, binding, method, project_id, report, headers, params, now):
+    from .cloudflare_ledger_expenses import _decimal_amount, _dto
+    if report not in PERIOD_REPORTS or not _valid_resource_id(project_id):
+        return _error(404, "NOT_FOUND")
+    if method != "GET":
+        return _error(405, "METHOD_NOT_ALLOWED")
+    try:
+        period = project_period(PERIOD_REPORTS[report], params)
+        limit, cursor = _period_page(params)
+    except ValueError:
+        return _error(422, "INVALID_INPUT")
+    # Itemized expenses are returned beside the totals, so the read follows the
+    # expenses:read scope that also governs CSV export of the same records.
+    try:
+        user, restrictions, auth, validate = await ledger_principal(
+            binding=binding, headers=headers, scope="expenses:read", now=now)
+        if not target_allowed(restrictions, "project", project_id):
+            return _error(403, "TARGET_FORBIDDEN")
+        # Both statements use the owner/target/project/date index. Totals cover
+        # the whole period on every page; only the itemized list is paginated.
+        scope_sql = ("FROM expenses WHERE owner_id=? AND deleted_at IS NULL AND target_kind='project' "
+                     "AND project_id=? AND occurred_on>=? AND occurred_on<=?")
+        bounds = (user["id"], project_id, period["startOn"], period["endOn"])
+        seek_sql, seek_values = (" AND (occurred_on,id)>(?,?)", cursor) if cursor else ("", ())
+        parts = await binding.batch([*auth,
+            binding.prepare("""SELECT id,name,status FROM ledger_projects
+                WHERE owner_id=? AND id=? AND deleted_at IS NULL""").bind(user["id"], project_id),
+            binding.prepare(f"SELECT currency,COUNT(*) AS expense_count,{AGGREGATE_SQL} {scope_sql} "
+                            "GROUP BY currency ORDER BY currency").bind(*bounds),
+            binding.prepare(f"SELECT * {scope_sql}{seek_sql} ORDER BY occurred_on,id LIMIT ?").bind(
+                *bounds, *seek_values, limit + 1)])
+        validate([part.results for part in parts[:len(auth)]])
+    except PrincipalAuthError as exc:
+        return _error(exc.status, exc.code)
+    projects, totals, items = (part.results for part in parts[len(auth):])
+    if not projects:
+        return _error(404, "NOT_FOUND")
+    page = items[:limit]
+    project = projects[0]
+    return 200, {
+        "project": {"id": project["id"], "name": project["name"], "status": project["status"]},
+        "period": period,
+        "totals": [{"currency": row["currency"],
+                    "amount": _decimal_amount(aggregate_minor(row), row["currency"]),
+                    "amountMinor": public_minor(aggregate_minor(row)),
+                    "expenseCount": row["expense_count"]} for row in totals],
+        "items": [_dto(row) for row in page],
+        "nextCursor": page[-1]["occurred_on"] + "_" + page[-1]["id"] if len(items) > limit else None,
+    }

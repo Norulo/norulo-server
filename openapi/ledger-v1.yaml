@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Norulo Project Expense Ledger API
-  version: 0.10.0
+  version: 0.11.0
   description: |
     Current ledger contract for Norulo, the project expense tracker for
     developers and teams at norulo.com. Users and authorized API clients
@@ -1187,6 +1187,42 @@ paths:
       parameters: [{$ref: '#/components/parameters/Target'}, {$ref: '#/components/parameters/ProjectId'}, {$ref: '#/components/parameters/CategoryId'}, {$ref: '#/components/parameters/From'}, {$ref: '#/components/parameters/To'}, {$ref: '#/components/parameters/Currency'}, {$ref: '#/components/parameters/WorkspaceHeader'}]
       responses:
         '200': {description: Per-currency category buckets including historical archived categories, content: {application/json: {schema: {$ref: '#/components/schemas/Report'}}}}
+  /api/v1/reports/projects/{projectId}/monthly:
+    get:
+      operationId: getProjectMonthlyExpenses
+      x-norulo-scope: expenses:read
+      description: "Project expenses whose business date falls in one calendar month, from its first through its last day. Totals are grouped by currency and never combined or converted; they always cover the whole period, while itemized expenses are paginated in occurredOn,id order. Requires expenses:read because itemized records are returned. Archived projects keep their history; removed or unknown projects return 404."
+      parameters: [{$ref: '#/components/parameters/ReportProjectPath'}, {$ref: '#/components/parameters/Year'}, {$ref: '#/components/parameters/Month'}, {$ref: '#/components/parameters/Limit'}, {$ref: '#/components/parameters/PeriodCursor'}, {$ref: '#/components/parameters/WorkspaceHeader'}]
+      responses:
+        '200': {description: Per-currency totals and itemized project expenses for the period, content: {application/json: {schema: {$ref: '#/components/schemas/ProjectPeriodReport'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/InvalidInput'}
+  /api/v1/reports/projects/{projectId}/quarterly:
+    get:
+      operationId: getProjectQuarterlyExpenses
+      x-norulo-scope: expenses:read
+      description: "Project expenses whose business date falls in one calendar quarter (Q1 January-March through Q4 October-December). Totals are grouped by currency and never combined or converted; they always cover the whole period, while itemized expenses are paginated in occurredOn,id order. Requires expenses:read because itemized records are returned. Archived projects keep their history; removed or unknown projects return 404."
+      parameters: [{$ref: '#/components/parameters/ReportProjectPath'}, {$ref: '#/components/parameters/Year'}, {$ref: '#/components/parameters/Quarter'}, {$ref: '#/components/parameters/Limit'}, {$ref: '#/components/parameters/PeriodCursor'}, {$ref: '#/components/parameters/WorkspaceHeader'}]
+      responses:
+        '200': {description: Per-currency totals and itemized project expenses for the period, content: {application/json: {schema: {$ref: '#/components/schemas/ProjectPeriodReport'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/InvalidInput'}
+  /api/v1/reports/projects/{projectId}/annual:
+    get:
+      operationId: getProjectAnnualExpenses
+      x-norulo-scope: expenses:read
+      description: "Project expenses whose business date falls in one calendar year, January 1 through December 31. Totals are grouped by currency and never combined or converted; they always cover the whole period, while itemized expenses are paginated in occurredOn,id order. Requires expenses:read because itemized records are returned. Archived projects keep their history; removed or unknown projects return 404."
+      parameters: [{$ref: '#/components/parameters/ReportProjectPath'}, {$ref: '#/components/parameters/Year'}, {$ref: '#/components/parameters/Limit'}, {$ref: '#/components/parameters/PeriodCursor'}, {$ref: '#/components/parameters/WorkspaceHeader'}]
+      responses:
+        '200': {description: Per-currency totals and itemized project expenses for the period, content: {application/json: {schema: {$ref: '#/components/schemas/ProjectPeriodReport'}}}}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/InvalidInput'}
   /api/v1/expense-suggestions:
     post:
       parameters: [{$ref: '#/components/parameters/WorkspaceHeader'}]
@@ -1239,6 +1275,11 @@ components:
     To: {name: to, in: query, schema: {type: string, format: date}, description: Exclusive business date}
     Currency: {name: currency, in: query, schema: {type: string, pattern: '^[A-Z]{3}$'}}
     Cursor: {name: cursor, in: query, schema: {type: string, pattern: '^[A-Za-z0-9_-]{1,120}$'}}
+    ReportProjectPath: {name: projectId, in: path, required: true, schema: {type: string, pattern: '^[A-Za-z0-9_-]{1,120}$'}}
+    Year: {name: year, in: query, required: true, schema: {type: string, pattern: '^[0-9]{4}$'}, description: Four-digit calendar year 0001 through 9999}
+    Month: {name: month, in: query, required: true, schema: {type: string, pattern: '^[0-9]{1,2}$'}, description: Calendar month 1 through 12; a leading zero is accepted}
+    Quarter: {name: quarter, in: query, required: true, schema: {type: string, enum: ['1', '2', '3', '4']}}
+    PeriodCursor: {name: cursor, in: query, schema: {type: string, maxLength: 131, pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}_[A-Za-z0-9_-]{1,120}$'}, description: Opaque nextCursor returned by the same period report}
     Limit: {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
   responses:
     Unauthorized: {description: Authentication required, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
@@ -2106,6 +2147,41 @@ components:
       oneOf:
         - {type: integer, minimum: 0, maximum: 9007199254740991}
         - {type: string, pattern: '^[0-9]+$'}
+    ProjectPeriodReport:
+      type: object
+      required: [project, period, totals, items, nextCursor]
+      properties:
+        project:
+          type: object
+          required: [id, name, status]
+          properties:
+            id: {type: string}
+            name: {type: string}
+            status: {type: string, enum: [active, archived]}
+        period:
+          type: object
+          required: [granularity, year, startOn, endOn]
+          description: Inclusive business-date bounds. Expense dates have no time or zone, so no timezone conversion applies.
+          properties:
+            granularity: {type: string, enum: [month, quarter, year]}
+            year: {type: integer, minimum: 1, maximum: 9999}
+            month: {type: integer, minimum: 1, maximum: 12}
+            quarter: {type: integer, minimum: 1, maximum: 4}
+            startOn: {type: string, format: date}
+            endOn: {type: string, format: date}
+        totals:
+          type: array
+          description: One entry per currency present in the period, sorted by currency code. Amounts in different currencies are never combined.
+          items:
+            type: object
+            required: [currency, amount, amountMinor, expenseCount]
+            properties:
+              currency: {type: string, pattern: '^[A-Z]{3}$'}
+              amount: {type: string, description: Exact decimal total in the currency's standard exponent}
+              amountMinor: {$ref: '#/components/schemas/AggregateMinor'}
+              expenseCount: {type: integer, minimum: 1}
+        items: {type: array, items: {$ref: '#/components/schemas/Expense'}}
+        nextCursor: {type: [string, 'null']}
     Report:
       type: object
       required: [groups]
