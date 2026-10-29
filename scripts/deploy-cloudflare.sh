@@ -75,6 +75,22 @@ if ((activate_recurring_expenses)); then
 fi
 if ((!execute)); then checker_args+=(--allow-placeholders); fi
 "${NORULO_PYTHON:-python3}" scripts/check-ledger-s01.py "${checker_args[@]}"
+# Live paid plans depend on these Creem product IDs. An upload replaces every
+# public variable, so never publish production with an empty or partial list.
+if [[ "$environment" == production ]] && ((execute)); then
+  "${NORULO_PYTHON:-python3}" - "cloudflare/server/wrangler.production.jsonc" <<'PY' || exit 2
+import json, re, sys
+text = open(sys.argv[1], encoding="utf-8").read()
+match = re.search(r'"NORULO_CREEM_PRODUCT_IDS_JSON"\s*:\s*("(?:[^"\\]|\\.)*")', text)
+products = json.loads(json.loads(match.group(1))) if match else {}
+complete = (set(products) == {"pro", "max"} and all(
+    isinstance(products[plan], dict) and set(products[plan]) == {"month", "year"}
+    and all(isinstance(value, str) and value for value in products[plan].values())
+    for plan in products))
+if not complete:
+    sys.exit("Refusing production deploy: NORULO_CREEM_PRODUCT_IDS_JSON must list pro and max month/year Creem product IDs.")
+PY
+fi
 if ((activate_recurring_expenses)); then
   production_cron="$("${NORULO_PYTHON:-python3}" -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["triggers"]["crons"][0])' "$temporary_config")"
 fi

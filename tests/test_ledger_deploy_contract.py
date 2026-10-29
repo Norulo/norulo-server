@@ -6,6 +6,7 @@ import sqlite3
 import subprocess
 import os
 import sys
+import re
 import shutil
 import shlex
 import importlib.util
@@ -214,6 +215,28 @@ class LedgerDeployContractTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("local checks", result.stderr.lower())
 
+    def test_production_release_refuses_empty_creem_products(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            repo = folder / "repo"
+            scripts = repo / "scripts"
+            worker = repo / "cloudflare/server"
+            scripts.mkdir(parents=True)
+            worker.mkdir(parents=True)
+            shutil.copyfile(SCRIPT, scripts / SCRIPT.name)
+            (scripts / "check-ledger-s01.py").write_text("print('Fixture offline checks')\n")
+            config = (SCRIPT.parents[1] / "cloudflare/server/wrangler.production.jsonc").read_text()
+            emptied = re.sub(r'"NORULO_CREEM_PRODUCT_IDS_JSON":\s*"(?:[^"\\]|\\.)*"',
+                             '"NORULO_CREEM_PRODUCT_IDS_JSON": "{}"', config)
+            self.assertNotEqual(config, emptied)
+            (worker / "wrangler.production.jsonc").write_text(emptied)
+            result = subprocess.run([BASH, "scripts/deploy-cloudflare.sh", "--environment",
+                    "production", "--activate-production", "--execute", "--local-checks-passed"],
+                cwd=repo, text=True, capture_output=True, check=False,
+                env={**os.environ, "NORULO_PYTHON": Path(sys.executable).as_posix()})
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("Refusing production deploy", result.stderr)
+
     def test_release_uses_pinned_python_package_builder(self):
         with tempfile.TemporaryDirectory() as directory:
             folder = Path(directory)
@@ -225,6 +248,8 @@ class LedgerDeployContractTests(unittest.TestCase):
             shutil.copyfile(SCRIPT, scripts / SCRIPT.name)
             (scripts / "check-ledger-s01.py").write_text("print('Fixture offline checks')\n")
             (worker / "sync_server_modules.py").write_text("print('Fixture source sync')\n")
+            shutil.copyfile(SCRIPT.parents[1] / "cloudflare/server/wrangler.production.jsonc",
+                            worker / "wrangler.production.jsonc")
             cli = worker / "node_modules/wrangler/wrangler-dist/cli.js"
             cli.parent.mkdir(parents=True)
             cli.touch()
