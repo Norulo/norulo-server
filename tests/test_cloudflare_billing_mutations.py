@@ -296,3 +296,63 @@ class BillingMutationTests(unittest.TestCase):
         self.assertEqual(first[0], 200)
         self.assertEqual(second[0], 200)
         self.assertEqual(len([call for call in self.gateway.calls if call[0] == "product"]), 4)
+
+    def _catalog_table(self):
+        with self.store.connect() as db:
+            db.execute("""CREATE TABLE billing_public_catalog(id INTEGER PRIMARY KEY,
+                payload_json TEXT NOT NULL,expires_at INTEGER NOT NULL,
+                source_revision INTEGER NOT NULL,updated_at INTEGER NOT NULL)""")
+
+    def _pro_month(self, result):
+        plan = next(item for item in result[1]["plans"] if item["id"] == "pro")
+        return plan["prices"]["month"]["amount"]
+
+    def test_catalog_refresh_follows_a_creem_price_change_within_a_minute(self):
+        self._catalog_table()
+        first = asyncio.run(read_or_refresh_catalog(binding=self.binding, gateway=self.gateway,
+            headers={}, products=PRODUCTS, now=self.now))
+        self.assertEqual(self._pro_month(first), "29")
+        original = self.gateway.product
+
+        async def repriced(product_id):
+            product = await original(product_id)
+            return {**product, "price": 399} if product_id == "prod-pro-month" else product
+
+        self.gateway.product = repriced
+        cached = asyncio.run(read_or_refresh_catalog(binding=self.binding, gateway=self.gateway,
+            headers={}, products=PRODUCTS, now=self.now + 30))
+        self.assertEqual(self._pro_month(cached), "29")
+        refreshed = asyncio.run(read_or_refresh_catalog(binding=self.binding, gateway=self.gateway,
+            headers={}, products=PRODUCTS, now=self.now + 61))
+        self.assertEqual(self._pro_month(refreshed), "3.99")
+
+    def test_catalog_refresh_replaces_snapshot_saved_under_a_longer_expiry(self):
+        self._catalog_table()
+        asyncio.run(read_or_refresh_catalog(binding=self.binding, gateway=self.gateway,
+            headers={}, products=PRODUCTS, now=self.now))
+        with self.store.connect() as db:
+            db.execute("UPDATE billing_public_catalog SET expires_at=? WHERE id=1",
+                (self.now + 3600,))
+        self.gateway.calls.clear()
+        asyncio.run(read_or_refresh_catalog(binding=self.binding, gateway=self.gateway,
+            headers={}, products=PRODUCTS, now=self.now + 120))
+        self.assertEqual(len([call for call in self.gateway.calls if call[0] == "product"]), 4)
+
+    def test_catalog_refresh_serves_a_concurrent_winner_after_losing_the_write(self):
+        self._catalog_table()
+        asyncio.run(read_or_refresh_catalog(binding=self.binding, gateway=self.gateway,
+            headers={}, products=PRODUCTS, now=self.now))
+        original = self.gateway.product
+
+        async def raced(product_id):
+            # Another request publishes a newer snapshot while this one reads Creem.
+            with self.store.connect() as db:
+                db.execute("""UPDATE billing_public_catalog SET source_revision=?,
+                    updated_at=?,expires_at=? WHERE id=1""",
+                    (self.now + 10_000, self.now + 120, self.now + 180))
+            return await original(product_id)
+
+        self.gateway.product = raced
+        result = asyncio.run(read_or_refresh_catalog(binding=self.binding, gateway=self.gateway,
+            headers={}, products=PRODUCTS, now=self.now + 120))
+        self.assertEqual(result[0], 200)
