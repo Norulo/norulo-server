@@ -308,3 +308,28 @@ for(const authMethod of ['none','client_secret_post'])test('Claude custom connec
   assert.deepEqual((await r.json()).result.structuredContent,{id:'user_test',nickname:'Demo ledger'});
   r=await worker.fetch(new Request(RESOURCE,{headers:{Authorization:'Bearer '+t.access_token,Accept:'text/event-stream'}}),env,ctx);assert.equal(r.status,405,'no server-initiated SSE stream');
 });
+
+test('project period reports dispatch as expenses:read GETs with year and period query',async()=>{
+  const {env,calls}=backendResult(200,{project:{id:'project_demo',name:'Demo',status:'active'},period:{granularity:'quarter',year:2026,quarter:3,startOn:'2026-07-01',endOn:'2026-09-30'},totals:[],items:[],nextCursor:null});
+  const cases=[['getProjectMonthlyExpenses',{month:'7'},'/monthly?year=2026&month=7&limit=10'],['getProjectQuarterlyExpenses',{quarter:'3'},'/quarterly?year=2026&quarter=3&limit=10'],['getProjectAnnualExpenses',{},'/annual?year=2026&limit=10']];
+  for(const [name,extra,suffix] of cases){
+    const tool=DEFS.find(d=>d.name===name);assert.match(tool.description,/Scope: expenses:read/);assert.equal(tool.annotations.readOnlyHint,true);
+    const result=(await mcp(env,'tools/call',{name,arguments:{projectId:'project_demo',year:'2026',...extra,limit:10}},['profile:read','expenses:read'])).result;
+    assert.equal(result.isError,false);
+    const call=calls.at(-1);assert.equal(call.method,'GET');assert.equal(new URL(call.url).pathname+new URL(call.url).search,'/api/v1/reports/projects/project_demo'+suffix);
+  }
+  const denied=(await mcp(env,'tools/call',{name:'getProjectAnnualExpenses',arguments:{projectId:'project_demo',year:'2026'}},['profile:read','reports:read'])).result;
+  assert.equal(denied.isError,true);assert.equal(calls.length,3);
+});
+
+test('project create and update accept adminConsoleUrl and forward it unchanged',async()=>{
+  for(const name of ['createLedgerProject','updateLedgerProject']){
+    const body=DEFS.find(d=>d.name===name).inputSchema.properties.body;
+    assert.equal(body.additionalProperties,false);assert.deepEqual(body.properties.adminConsoleUrl,body.properties.productUrl);
+  }
+  const {env}=setup(),bodies=[];
+  env.NORULO_SERVER.fetch=async request=>{bodies.push({method:request.method,path:new URL(request.url).pathname,body:await request.json()});return Response.json({id:'project_demo'});};
+  await mcp(env,'tools/call',{name:'createLedgerProject',arguments:{body:{name:'Demo',adminConsoleUrl:'https://admin.example.com'}}});
+  await mcp(env,'tools/call',{name:'updateLedgerProject',arguments:{id:'project_demo',revision:2,body:{adminConsoleUrl:null}}});
+  assert.deepEqual(bodies,[{method:'POST',path:'/api/v1/projects',body:{name:'Demo',adminConsoleUrl:'https://admin.example.com'}},{method:'PATCH',path:'/api/v1/projects/project_demo',body:{adminConsoleUrl:null}}]);
+});
