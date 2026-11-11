@@ -34,7 +34,7 @@ Projects remain Free 3 / Pro 20 / Max 100. Monthly and annual subscriptions use
 the same monthly model allowance, without rollover. Keep all runtime policies,
 examples, public contract, Web translations and boundary checks aligned.
 Prices remain verified Creem facts; the live catalog was checked at Pro
-$4.99/month or $49.99/year and Max $12.99/month or $129.99/year.
+$3.99/month or $39.99/year and Max $12.99/month or $129.99/year (rechecked 2026-11-11).
 Count-based Jev adds the canonical 0015 migration for persistent Free trials; paid usage is preserved. See
 docs/subscription-policy.md for the capacity and cost reasoning.
 

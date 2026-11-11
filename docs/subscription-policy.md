@@ -7,7 +7,7 @@ confirmed all four prices before any application change.
 | Plan | Monthly price | Annual price | Retained expenses | Projects | Jev calls |
 | --- | --- | --- | --- | --- | --- |
 | Free | $0 | — | 300 | 3 | 20 one-time trials |
-| Pro | $4.99 | $49.99 | 20,000 | 20 | 1,000/month |
+| Pro | $3.99 | $39.99 | 20,000 | 20 | 1,000/month |
 | Max | $12.99 | $129.99 | 200,000 | 100 | 4,000/month |
 
 Prices are provider facts, not hardcoded application defaults. Existing product
