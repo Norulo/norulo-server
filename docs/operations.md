@@ -185,6 +185,8 @@ Direct and proxied public catalogs confirm Pro $4.99/month or $49.99/year with
 200,000 expenses and $12/month Jev. Projects remain 3/20/100. Annual subscriptions
 retain the monthly UTC model allowance without rollover. No migration or usage
 reset was needed; configured prices remain verified provider facts.
+As of 2026-11-11 the live plan API returns Pro $3.99/month or $39.99/year;
+the API is the source of truth and the figures above are historical.
 
 Local validation covered all 3,280 Server test cases and 107 subtests; the sole
 sandbox-denied loopback test passed after the appropriate execution permission.
